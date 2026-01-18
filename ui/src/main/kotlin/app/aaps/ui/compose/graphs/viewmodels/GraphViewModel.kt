@@ -50,6 +50,10 @@ class GraphViewModel @Inject constructor(
     val bgReadingsFlow: StateFlow<List<BgDataPoint>> = cache.bgReadingsFlow
     val bucketedDataFlow: StateFlow<List<BgDataPoint>> = cache.bucketedDataFlow
 
+    // Secondary graph flows
+    val iobGraphFlow = cache.iobGraphFlow
+    val cobGraphFlow = cache.cobGraphFlow
+
     // Derived time range from actual data (recalculates as series arrive)
     val derivedTimeRange: StateFlow<Pair<Long, Long>?> = combine(
         cache.bgReadingsFlow,
