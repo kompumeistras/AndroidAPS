@@ -99,7 +99,7 @@
     <string name="action_wizard_confirmation">Yêu cầu tính toán</string>
     <string name="action_fill_confirmation">Yêu cầu nạp insulin</string>
     <string name="action_ecarb_confirmation">Lượng carb cần nạp</string>
-    <string name="action_profile_switch_confirmation">Yêu cầu chuyển đổi cấu hình</string>
+    <string name="action_profile_switch_confirmation">Yêu cầu chuyển đổi Hồ sơ</string>
     <string name="action_target_unit" comment="In temp target menu, single target value">Mục tiêu\n [%s]</string>
     <string name="action_low_unit" comment="In temp target menu, lower value from range">Thấp\n[%s]</string>
     <string name="action_high_unit" comment="In temp target menu, higher value from range">Cao\n[%s]</string>
@@ -123,7 +123,7 @@
     <string name="cancel_bolus">HỦY LIỀU BOLUS</string>
     <string name="status_pump">Pump</string>
     <string name="status_loop">Loop</string>
-    <string name="status_profile_switch">Chuyển cấu hình</string>
+    <string name="status_profile_switch">Chuyển Hồ sơ</string>
     <string name="status_tdd">TDD</string>
     <string name="activity_carb">Carb</string>
     <string name="activity_IOB">IOB</string>
