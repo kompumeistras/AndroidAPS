@@ -31,9 +31,9 @@
     <string name="status">Trạng thái:</string>
     <string name="patient_name">Tên người dùng</string>
     <string name="patient_name_summary">Vui lòng cung cấp tên bệnh nhân hoặc biệt danh để phân biệt giữa nhiều thiết lập</string>
-    <string name="diawarning">Lưu ý: các Cấu hình insulin mới yêu cầu DIA ít nhất 5 giờ. DIA 5–6 giờ trên Cấu hình mới tương đương với DIA 3 giờ trên hồ sơ insulin cũ.</string>
-    <string name="profile">Cấu hình</string>
-    <string name="doprofileswitch">Thực hiện chuyển Cấu hình</string>
+    <string name="diawarning">Lưu ý: Các Hồ sơ insulin mới yêu cầu DIA ít nhất 5 giờ. DIA 5–6 giờ trên Hồ sơ mới tương đương với DIA 3 giờ trên hồ sơ insulin cũ.</string>
+    <string name="profile">Hồ sơ</string>
+    <string name="doprofileswitch">Thực hiện chuyển Hồ sơ</string>
     <string name="exitwizard">Bỏ qua cài đặt nhanh</string>
     <string name="setupwizard_sensitivity_description">Plugin Sensitivity được sử dụng để phát hiện độ nhạy và tính toán COB. Để biết thêm thông tin, hãy truy cập:</string>
     <string name="setupwizard_sensitivity_url">https://wiki.aaps.app/en/latest/DailyLifeWithAaps/SensitivityDetectionAndCob.html</string>
@@ -56,8 +56,8 @@
     <string name="config_builder">Config Builder</string>
     <string name="configbuilder_pump">Pump</string>
     <string name="configbuilder_pump_description">Bạn muốn sử dụng loại bơm nào với AAPS?</string>
-    <string name="configbuilder_profile">Cấu hình</string>
-    <string name="configbuilder_profile_description">AAPS nên dùng Cấu hình điều trị nào?</string>
+    <string name="configbuilder_profile">Hồ sơ</string>
+    <string name="configbuilder_profile_description">AAPS nên dùng Hồ sơ điều trị nào?</string>
     <string name="configbuilder_aps">APS</string>
     <string name="configbuilder_aps_description">Thuật toán APS nào sẽ thực hiện điều chỉnh điều trị?</string>
     <string name="configbuilder_general">General</string>
@@ -76,7 +76,7 @@
     <string name="configbuilder_sensitivity_description">Bạn muốn chọn thuật toán độ nhạy nào?</string>
     <string name="config_builder_shortname">CONF</string>
     <string name="description_config_builder">Được dùng để thiết lập các plugin đang chạy</string>
-    <string name="allow_hardware_pump_text">Chú ý: Nếu bạn kích hoạt và kết nối với phần cứng bơm insulin, AAPS sẽ sao chép các thiết lập liều nền từ Cấu hình sang bơm, ghi đè lên tốc độ basal hiện có được lưu trên bơm. Hãy đảm bảo rằng bạn đã có thiết lập basal chính xác trong AAPS. Nếu bạn không chắc chắn hoặc không muốn ghi đè các thiết lập liều nền trên bơm, hãy nhấn Hủy và thực hiện lại việc chuyển sang bơm sau.</string>
+    <string name="allow_hardware_pump_text">Chú ý: Nếu bạn kích hoạt và kết nối với phần cứng bơm insulin, AAPS sẽ sao chép các thiết lập liều nền từ Hồ sơ sang bơm, ghi đè lên tốc độ liều nền hiện có được lưu trên bơm. Hãy đảm bảo rằng bạn đã có thiết lập liều nền chính xác trong AAPS. Nếu bạn không chắc chắn hoặc không muốn ghi đè các thiết lập liều nền trên bơm, hãy nhấn Hủy và thực hiện lại việc chuyển sang bơm sau.</string>
     <string name="a11y_open_settings">mở cài đặt</string>
     <string name="nsclient_version_does_not_match">Phiên bản AAPSClient không khớp với phiên bản AAPS. Vui lòng cập nhật.</string>
     <string name="expand_category">Mở rộng danh mục</string>
