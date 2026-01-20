@@ -77,7 +77,7 @@
     <string name="danar_glucose_units">Đơn vị đường huyết</string>
     <string name="danar_shutdown">Tắt máy [giờ]</string>
     <string name="danar_low_reservoir">Sắp hết Insulin [u]</string>
-    <string name="danar_save_user_options">Lưu tùy chọn vào pump</string>
+    <string name="danar_save_user_options">Lưu tùy chọn vào bơm</string>
     <string name="description_pump_dana_r">Tích hợp pump insulin DANA Diabecare R</string>
     <string name="description_pump_dana_r_korean">Tích hợp pump DANA Diabecare R (bản nội địa)</string>
     <string name="description_pump_dana_r_v2">Tích hợp pump DANA Diabecare R với firmware đã nâng cấp</string>
