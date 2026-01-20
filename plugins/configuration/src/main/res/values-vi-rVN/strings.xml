@@ -4,7 +4,7 @@
     <string name="setupwizard_units_prompt">Chọn đơn vị mà bạn muốn hiển thị giá trị</string>
     <string name="next_button">Tiếp theo</string>
     <string name="previous_button">Trước đó</string>
-    <string name="nav_setupwizard">Hướng dẫn thiết lập</string>
+    <string name="nav_setupwizard">Các bước cài đặt nhanh</string>
     <string name="setupwizard_finish">KẾT THÚC</string>
     <string name="welcome">Chào mừng</string>
     <string name="welcometosetupwizard">Chào mừng đến với trình hướng dẫn cài đặt. Hệ thống sẽ hướng dẫn bạn từng bước trong quá trình thiết lập.\n</string>
@@ -54,7 +54,7 @@
     <string name="alert_dialog_permission_battery_optimization_failed">Thiết bị này dường như không hỗ trợ loại trừ khỏi tối ưu pin – bạn có thể gặp các vấn đề về hiệu suất.</string>
     <!--    ConfigBuilder-->
     <string name="config_builder">Xây dựng Cấu hình</string>
-    <string name="configbuilder_pump">Pump</string>
+    <string name="configbuilder_pump">Bơm Insulin</string>
     <string name="configbuilder_pump_description">Bạn muốn sử dụng loại bơm nào với AAPS?</string>
     <string name="configbuilder_profile">Hồ sơ</string>
     <string name="configbuilder_profile_description">AAPS nên dùng Hồ sơ điều trị nào?</string>
@@ -82,7 +82,7 @@
     <string name="expand_category">Mở rộng danh mục</string>
     <string name="collapse_category">Thu gọn danh mục</string>
     <!--ImportExport-->
-    <string name="nav_preferences">Tùy chọn</string>
+    <string name="nav_preferences">Cài đặt tùy chọn</string>
     <string name="password_preferences_encrypt_prompt">Hệ thống sẽ yêu cầu mật khẩu chính để mã hóa các thiết lập bạn xuất ra.</string>
     <string name="preferences_export_canceled">Xuất dữ liệu đã bị hủy! Tùy chọn KHÔNG được xuất dữ liệu!</string>
     <string name="preferences_import_canceled">Nhập dữ liệu đã bị hủy! Tùy chọn KHÔNG được nhập dữ liệu!</string>
@@ -103,7 +103,7 @@
     <string name="old_master_password">Mật khẩu chính cũ</string>
     <string name="different_password_used">Tệp này đã được xuất và mã hóa bằng mật khẩu khác. Vui lòng nhập mật khẩu cũ để giải mã tệp.</string>
     <string name="master_password_will_be_replaced">Khi nhập thành công, mật khẩu chính hiện tại SẼ BỊ THAY THẾ bằng mật khẩu chính cũ!</string>
-    <string name="exported">Tùy chọn đã xuất</string>
+    <string name="exported">Đã xuất cài đặt</string>
     <string name="exported_failed">Xuất tùy cài đặt thất bại!</string>
     <string name="filenotfound">Không tìm thấy tệp</string>
     <string name="goto_main_try_again">Vui lòng quay lại màn hình chính và thử lại.</string>
