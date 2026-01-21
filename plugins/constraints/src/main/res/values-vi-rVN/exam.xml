@@ -93,7 +93,7 @@
     <string name="troubleshooting_hint3">https://discord.gg/4fQUWHZ4Mw</string>
     <string name="troubleshooting_hint4">https://github.com/nightscout/AndroidAPS/issues</string>
     <string name="insulin_plugins">Insulin Plugins</string>
-    <string name="insulin_ultrarapid">Bạn nên sử dụng loại insulin nào với plugin Ultra-Rapid Oref?</string>
+    <string name="insulin_ultrarapid">Bạn sử dụng loại insulin nào với Insulin siêu nhanh Oref?</string>
     <string name="insulin_fiasp">Fiasp®</string>
     <string name="insulin_novorapid">NovoRapid®/Novolog®</string>
     <string name="insulin_humalog">Humalog®</string>
