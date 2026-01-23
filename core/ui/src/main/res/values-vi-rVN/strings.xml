@@ -25,7 +25,7 @@
     <string name="virtual_pump">Virtual Pump</string>
     <string name="constraints">Giới hạn</string>
     <string name="superbolus">Superbolus</string>
-    <string name="pump_paused">Pump đã tạm dừng</string>
+    <string name="pump_paused">Bơm đã tạm dừng</string>
     <string name="and">Và</string>
     <string name="patient_name_default" comment="This is default patient display name, when user does not provide real one">Người dùng</string>
     <string name="result">Kết quả</string>
@@ -51,7 +51,7 @@
     <string name="tdd_total">Tổng TDD</string>
     <string name="tdd_old_data">Dữ liệu cũ</string>
     <string name="goingtodeliver">Đang tiêm %1$.2f U Insulin</string>
-    <string name="waitingforpump">Đang chờ phản hồi từ Pump</string>
+    <string name="waitingforpump">Đang chờ phản hồi từ Bơm</string>
     <string name="androidaps_start">AAPS đã khởi động</string>
     <string name="formatsignedinsulinunits">%1$+.2f U</string>
     <string name="format_carbs">%1$d g</string>
@@ -117,7 +117,7 @@
     <string name="duration_label">Thời lượng</string>
     <string name="shortgramm">g</string>
     <string name="pumpsuspended">Bơm đã tạm dừng</string>
-    <string name="pump_running">Pump đang chạy</string>
+    <string name="pump_running">Bơm đang chạy</string>
     <string name="notconfigured">Chưa được thiết lập</string>
     <string name="loopsuspended">Vòng lặp đã tạm dừng</string>
     <string name="loop_suspended_by_dst">Vòng lặp bị tạm dừng do thay đổi múi giờ (DST)</string>
@@ -163,8 +163,8 @@
     <string name="closedloop">Vòng lặp kín</string>
     <string name="openloop">Vòng lặp mở</string>
     <string name="lowglucosesuspend">Tạm ngừng khi đường huyết thấp</string>
-    <string name="pump_disconnected">Pump đã ngắt kết nối</string>
-    <string name="pump_suspended">Pump đã tạm ngưng</string>
+    <string name="pump_disconnected">Bơm đã ngắt kết nối</string>
+    <string name="pump_suspended">Bơm đã tạm ngưng</string>
     <string name="mode_reverted">Chế độ đã được khôi phục</string>
     <string name="dia">DIA</string>
     <string name="ic_short">IC</string>
@@ -239,7 +239,7 @@
     <string name="careportal_tempbasalend">Kết thúc liều nền tạm thời</string>
     <string name="careportal_carbscorrection">Điều chỉnh Carbs</string>
     <string name="careportal_openapsoffline">OpenAPS Offline</string>
-    <string name="pump_battery_change">Thay pin Pump</string>
+    <string name="pump_battery_change">Thay pin Bơm</string>
     <string name="temporary_target">Mục tiêu Tạm thời</string>
     <string name="running_mode">Chế độ đang chạy</string>
     <string name="careportal_temporarytargetvalue">Giá trị mục tiêu tạm thời</string>
@@ -343,7 +343,7 @@
     <string name="uel_disconnect">NGẮT KẾT NỐI</string>
     <string name="uel_resume">TIẾP TỤC</string>
     <string name="uel_suspend">TẠM DỪNG</string>
-    <string name="uel_hw_pump_allowed">CHO PHÉP PHẦN CỨNG PUMP</string>
+    <string name="uel_hw_pump_allowed">CHO PHÉP PHẦN CỨNG BƠM</string>
     <string name="uel_clear_pairing_keys">XÓA KHÓA GHÉP NỐI</string>
     <string name="uel_accepts_temp_basal">CHO PHÉP LIỀU NỀN TẠM THỜI</string>
     <string name="uel_cancel_temp_basal">HỦY LIỀU NỀN TẠM</string>
@@ -447,8 +447,8 @@
     <string name="set_profile">THIẾT LẬP HỒ SƠ</string>
     <string name="set_user_settings">CÀI ĐẶT NGƯỜI DÙNG</string>
     <string name="smb_bolus_u">SMB BOLUS %1$.2f U</string>
-    <string name="start_pump">KHỞI ĐỘNG PUMP</string>
-    <string name="stop_pump">DỪNG PUMP</string>
+    <string name="start_pump">KHỞI ĐỘNG BƠM</string>
+    <string name="stop_pump">DỪNG BƠM</string>
     <string name="temp_basal_absolute">LIỀU NỀN TẠM THỜI %1$.2f U/h %2$d min</string>
     <string name="temp_basal_percent">LIỀU NỀN TẠM THỜI %1$d%% %2$d min</string>
     <string name="insight_set_tbr_over_notification">INSIGHT: TBR VƯỢT QUÁ GIỚI HẠN</string>
@@ -528,10 +528,10 @@
     <string name="serial_number">Số sê-ri</string>
     <string name="disconnected">Ngắt kết nối</string>
     <string name="connecting">Đang kết nối</string>
-    <string name="clicked_connect_to_pump" comment="26 characters max for translation">Đã nhấn kết nối với pump</string>
+    <string name="clicked_connect_to_pump" comment="26 characters max for translation">Đã nhấn kết nối với Bơm</string>
     <string name="reservoir_value">%1$.0f / %2$d U</string>
     <string name="daily_units">Đơn vị hàng ngày</string>
-    <string name="pump_icon">Biểu tượng pump</string>
+    <string name="pump_icon">Biểu tượng Bơm</string>
     <string name="view_profile">Xem Hồ sơ</string>
     <string name="pump_history">Lịch sử bơm</string>
     <string name="stats">Thống kê</string>
@@ -540,7 +540,7 @@
     <string name="bolus_ok" comment="26 characters max for translation">Bolus thành công</string>
     <string name="temp_basal_delivery_error">Lỗi khi tiêm liều nền tạm thời</string>
     <string name="not_set_short">Chưa đặt</string>
-    <string name="pump_busy">Pump đang bận</string>
+    <string name="pump_busy">Bơm đang bận</string>
     <string name="connection_error">Lỗi kết nối bơm</string>
     <string name="reading_pump_history">Đang đọc lịch sử bơm</string>
     <string name="password_cleared">Đã xóa bỏ mật khẩu!</string>
@@ -549,7 +549,7 @@
     <string name="secs" comment="second short">%1$d s</string>
     <!--    Constraints-->
     <string name="limitingbasalratio">Giới hạn tỷ lệ nền tối đa ở %1$.2f U/h do %2$s</string>
-    <string name="pumplimit">giới hạn pump</string>
+    <string name="pumplimit">giới hạn Bơm</string>
     <string name="limitingpercentrate">Giới hạn tỷ lệ phần trăm tối đa %1$d%% do %2$s</string>
     <string name="itmustbepositivevalue">phải nhập giá trị dương</string>
     <string name="limitingbolus">Giới hạn bolus ở %1$.1f U do %2$s</string>
@@ -588,7 +588,7 @@
     <string name="need_connect_permission">Ứng dụng yêu cầu quyền Bluetooth</string>
     <!--    Combo-->
     <string name="user_request" comment="26 characters max for translation">Yêu cầu người dùng</string>
-    <string name="pump_paired" comment="26 characters max for translation">Pump đã ghép nối</string>
+    <string name="pump_paired" comment="26 characters max for translation">Bơm đã ghép nối</string>
     <!--    BlePreCheck-->
     <string name="ble_not_supported">Thiết bị không hỗ trợ Bluetooth.</string>
     <string name="ble_not_supported_or_not_paired">Không hỗ trợ Bluetooth hoặc thiết bị chưa được ghép nối.</string>
