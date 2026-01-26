@@ -21,7 +21,7 @@
     <string name="mgdl">mg/dl</string>
     <string name="mmol">mmol/l</string>
     <string name="save">Lưu</string>
-    <string name="snooze">Nhắc lại</string>
+    <string name="snooze">Nhắc lại sau</string>
     <string name="virtual_pump">Virtual Pump</string>
     <string name="constraints">Giới hạn</string>
     <string name="superbolus">Superbolus</string>
