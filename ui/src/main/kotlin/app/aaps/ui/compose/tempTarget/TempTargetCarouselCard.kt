@@ -64,7 +64,7 @@ fun TempTargetCarouselCard(
     profileUtil: ProfileUtil,
     modifier: Modifier = Modifier
 ) {
-    val isActiveCard = preset == null && activeTT != null
+    val isActiveCard = activeTT != null
     val reason = preset?.reason ?: activeTT?.reason ?: TT.Reason.CUSTOM
 
     // Auto-update progress for active TT
@@ -131,10 +131,11 @@ fun TempTargetCarouselCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Preset/TT name
+                // Preset/TT name - for standalone active card show TT reason as name
                 val nameText = when {
-                    isActiveCard -> stringResource(app.aaps.core.ui.R.string.active)
-                    else         -> preset?.nameRes?.let { stringResource(it) } ?: preset?.name ?: ""
+                    preset != null -> preset.nameRes?.let { stringResource(it) } ?: preset.name ?: ""
+                    isActiveCard   -> stringResource(getTTReasonStringRes(reason))
+                    else           -> ""
                 }
                 Text(
                     text = nameText,

@@ -17,6 +17,9 @@ data class TempTargetManagementUiState(
     /** List of user-defined presets (minimum 3 default presets) */
     val presets: List<TTPreset> = emptyList(),
 
+    /** Index of preset matching active TT (null = no match, show standalone active card) */
+    val activePresetIndex: Int? = null,
+
     /** Currently selected card index in carousel (0 = active TT if exists, then presets) */
     val currentCardIndex: Int = 0,
 

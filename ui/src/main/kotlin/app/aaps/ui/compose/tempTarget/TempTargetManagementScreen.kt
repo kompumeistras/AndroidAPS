@@ -245,15 +245,18 @@ fun TempTargetManagementScreen(
                     isLoading = uiState.isLoading,
                     isEmpty = uiState.presets.isEmpty()
                 ) {
-                    // Calculate number of cards (active TT + presets)
-                    val cardCount = if (uiState.activeTT != null) {
+                    // Standalone active card only when active TT doesn't match any preset
+                    val hasStandaloneActiveTT = uiState.activeTT != null && uiState.activePresetIndex == null
+                    val cardCount = if (hasStandaloneActiveTT) {
                         uiState.presets.size + 1
                     } else {
                         uiState.presets.size
                     }
 
+                    // Start on matching active preset page if available
+                    val initialPage = uiState.activePresetIndex ?: 0
                     val pagerState = rememberPagerState(
-                        initialPage = 0,
+                        initialPage = initialPage,
                         pageCount = { cardCount }
                     )
 
@@ -268,13 +271,12 @@ fun TempTargetManagementScreen(
                     // Update selected preset when pager changes
                     LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
                         if (!pagerState.isScrollInProgress) {
-                            val hasActiveTT = uiState.activeTT != null
-                            val presetIndex = if (hasActiveTT && pagerState.currentPage > 0) {
+                            val presetIndex = if (hasStandaloneActiveTT && pagerState.currentPage > 0) {
                                 pagerState.currentPage - 1
-                            } else if (!hasActiveTT) {
+                            } else if (!hasStandaloneActiveTT) {
                                 pagerState.currentPage
                             } else {
-                                null // Active TT card selected
+                                null // Standalone active TT card selected
                             }
 
                             presetIndex?.let { viewModel.selectPreset(it) }
@@ -294,18 +296,18 @@ fun TempTargetManagementScreen(
                             contentPadding = PaddingValues(horizontal = 64.dp),
                             pageSpacing = 16.dp
                         ) { page ->
-                            val hasActiveTT = uiState.activeTT != null
-                            val isActiveCard = hasActiveTT && page == 0
-                            val preset = if (isActiveCard) {
-                                null
-                            } else {
-                                val presetIndex = if (hasActiveTT) page - 1 else page
-                                uiState.presets.getOrNull(presetIndex)
+                            val isStandaloneActiveCard = hasStandaloneActiveTT && page == 0
+                            val presetIndex = when {
+                                isStandaloneActiveCard  -> null
+                                hasStandaloneActiveTT   -> page - 1
+                                else                    -> page
                             }
+                            val preset = presetIndex?.let { uiState.presets.getOrNull(it) }
+                            val isActivePreset = presetIndex != null && presetIndex == uiState.activePresetIndex
 
                             TempTargetCarouselCard(
                                 preset = preset,
-                                activeTT = if (isActiveCard) uiState.activeTT else null,
+                                activeTT = if (isStandaloneActiveCard || isActivePreset) uiState.activeTT else null,
                                 remainingTimeMs = uiState.remainingTimeMs,
                                 isSelected = pagerState.currentPage == page,
                                 units = viewModel.units,

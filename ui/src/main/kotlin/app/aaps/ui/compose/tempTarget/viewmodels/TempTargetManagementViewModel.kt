@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -99,8 +100,17 @@ class TempTargetManagementViewModel @Inject constructor(
                 // Check if notes field should be shown
                 val showNotes = preferences.get(BooleanKey.OverviewShowNotesInDialogs)
 
-                // Default to first preset
-                val initialPreset = presets.firstOrNull()
+                // Check if active TT matches a preset (same reason + target value)
+                val activePresetIndex = activeTT?.let { tt ->
+                    presets.indexOfFirst { preset ->
+                        preset.reason == tt.reason &&
+                            abs(preset.targetValue - tt.lowTarget) < 0.01
+                    }.takeIf { it >= 0 }
+                }
+
+                // Default to first preset (or matched active preset)
+                val initialPreset = activePresetIndex?.let { presets.getOrNull(it) }
+                    ?: presets.firstOrNull()
 
                 // Convert target from mg/dL (storage) to user units (display) with proper rounding
                 val targetInUserUnits = initialPreset?.targetValue?.let {
@@ -110,6 +120,7 @@ class TempTargetManagementViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         activeTT = activeTT,
+                        activePresetIndex = activePresetIndex,
                         remainingTimeMs = remainingTime,
                         presets = presets,
                         selectedPreset = initialPreset,
@@ -300,7 +311,7 @@ class TempTargetManagementViewModel @Inject constructor(
         val editorTargetMgdl = profileUtil.convertToMgdl(currentState.editorTarget, units)
 
         // Compare with tolerance for floating point
-        val targetDiffers = kotlin.math.abs(editorTargetMgdl - defaultTargetMgdl) > 0.01
+        val targetDiffers = abs(editorTargetMgdl - defaultTargetMgdl) > 0.01
         val durationDiffers = currentState.editorDuration != defaultDurationMs
 
         return targetDiffers || durationDiffers
@@ -318,7 +329,7 @@ class TempTargetManagementViewModel @Inject constructor(
         val editorTargetMgdl = profileUtil.convertToMgdl(currentState.editorTarget, units)
 
         // Compare with tolerance for floating point
-        val targetDiffers = kotlin.math.abs(editorTargetMgdl - preset.targetValue) > 0.01
+        val targetDiffers = abs(editorTargetMgdl - preset.targetValue) > 0.01
         val durationDiffers = currentState.editorDuration != preset.duration
 
         // For custom presets, also check name changes
@@ -402,9 +413,9 @@ class TempTargetManagementViewModel @Inject constructor(
                 val presetIndex = updatedPresets.size - 1
                 selectPreset(presetIndex)
 
-                // Scroll to new preset (account for active TT card at position 0)
-                val hasActiveTT = _uiState.value.activeTT != null
-                val pageIndex = if (hasActiveTT) presetIndex + 1 else presetIndex
+                // Scroll to new preset (account for standalone active TT card at position 0)
+                val hasStandaloneActiveTT = _uiState.value.activeTT != null && _uiState.value.activePresetIndex == null
+                val pageIndex = if (hasStandaloneActiveTT) presetIndex + 1 else presetIndex
                 _navigationEvent.emit(NavigationEvent.ScrollToPreset(pageIndex))
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to add preset", e)
