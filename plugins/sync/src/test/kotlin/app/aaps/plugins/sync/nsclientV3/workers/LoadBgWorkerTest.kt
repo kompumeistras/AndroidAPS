@@ -15,7 +15,6 @@ import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.nsclient.NSClientMvvmRepository
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
-import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.BooleanKey
@@ -44,7 +43,6 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class LoadBgWorkerTest : TestBaseWithProfile() {
 
-    @Mock lateinit var sp: SP
     @Mock lateinit var nsAndroidClient: NSAndroidClient
     @Mock lateinit var dataSyncSelectorV3: DataSyncSelectorV3
     @Mock lateinit var persistenceLayer: PersistenceLayer
@@ -86,9 +84,9 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
         dataWorkerStorage = DataWorkerStorage(context)
         receiverDelegate = ReceiverDelegate(rxBus, rh, preferences, receiverStatusStore, aapsSchedulers, fabricPrivacy)
         nsClientV3Plugin = NSClientV3Plugin(
-            aapsLogger, rh, preferences, sp, aapsSchedulers, rxBus, context, fabricPrivacy,
+            aapsLogger, rh, preferences, aapsSchedulers, rxBus, context, fabricPrivacy,
             receiverDelegate, config, dateUtil, dataSyncSelectorV3, persistenceLayer,
-            nsClientSource, storeDataForDb, decimalFormatter, l, nsClientMvvmRepository, uiInteraction, uel, activePlugin
+            nsClientSource, storeDataForDb, decimalFormatter, l, nsClientMvvmRepository, uel, activePlugin
         )
         nsClientV3Plugin.newestDataOnServer = LastModified(LastModified.Collections())
     }

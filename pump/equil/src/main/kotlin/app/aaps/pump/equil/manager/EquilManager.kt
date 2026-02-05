@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.utils.waitMillis
 import app.aaps.pump.equil.EquilConst
 import app.aaps.pump.equil.R
 import app.aaps.pump.equil.ble.EquilBLE
@@ -130,7 +131,7 @@ class EquilManager @Inject constructor(
             val command = CmdTempBasalGet(aapsLogger, preferences, this)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
             result.success = command.cmdSuccess
             result.enacted(command.time != 0)
@@ -150,7 +151,7 @@ class EquilManager @Inject constructor(
             val equilHistoryRecord = addHistory(command)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
             if (command.cmdSuccess) {
                 val currentTime = System.currentTimeMillis()
@@ -200,7 +201,7 @@ class EquilManager @Inject constructor(
             val equilHistoryRecord = addHistory(command)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
 
             result.success = command.cmdSuccess
@@ -245,7 +246,7 @@ class EquilManager @Inject constructor(
             val equilHistoryRecord = addHistory(command)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
             bolusProfile.stop = false
             val sleep = 2000
@@ -299,7 +300,7 @@ class EquilManager @Inject constructor(
             val equilHistoryRecord = addHistory(command)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
             bolusProfile.stop = command.cmdSuccess
             aapsLogger.debug(LTag.PUMPCOMM, "stopBolus===")
@@ -322,7 +323,7 @@ class EquilManager @Inject constructor(
             val historyGet = CmdHistoryGet(index, aapsLogger, preferences, dateUtil, this)
             equilBLE.readHistory(historyGet)
             synchronized(historyGet) {
-                (historyGet as Object).wait(historyGet.timeOut.toLong())
+                historyGet.waitMillis(historyGet.timeOut.toLong())
             }
             aapsLogger.debug(LTag.PUMPCOMM, "loadHistory end: ")
             return historyGet.currentIndex
@@ -389,7 +390,7 @@ class EquilManager @Inject constructor(
             val command: BaseCmd = CmdRunningModeGet(aapsLogger, preferences, this)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
             if (command.cmdSuccess) {
                 command.resolvedResult = ResolvedResult.SUCCESS
@@ -439,7 +440,7 @@ class EquilManager @Inject constructor(
             val equilHistoryRecord = addHistory(command)
             equilBLE.writeCmd(command)
             synchronized(command) {
-                (command as Object).wait(command.timeOut.toLong())
+                command.waitMillis(command.timeOut.toLong())
             }
             if (command.cmdSuccess) {
                 command.resolvedResult = ResolvedResult.SUCCESS

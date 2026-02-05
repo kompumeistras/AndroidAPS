@@ -2,6 +2,7 @@ package app.aaps.ui.compose.graphs
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -11,7 +12,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -224,7 +224,7 @@ fun BgGraphCompose(
     val targetRangeBoxComponent = rememberShapeComponent(fill = Fill(targetRangeColor))
     val targetRangeBox = remember(chartConfig.lowMark, chartConfig.highMark, targetRangeBoxComponent) {
         HorizontalBox(
-            y = { chartConfig.lowMark.toDouble()..chartConfig.highMark.toDouble() },
+            y = { chartConfig.lowMark..chartConfig.highMark },
             box = targetRangeBoxComponent
         )
     }

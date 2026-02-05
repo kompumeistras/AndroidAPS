@@ -45,12 +45,10 @@ import app.aaps.core.interfaces.rx.events.EventRunningModeChange
 import app.aaps.core.interfaces.rx.events.EventSWSyncStatus
 import app.aaps.core.interfaces.rx.events.EventTempTargetChange
 import app.aaps.core.interfaces.rx.events.EventTherapyEventChange
-import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.sync.DataSyncSelector
 import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.sync.Sync
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
@@ -113,7 +111,6 @@ class NSClientV3Plugin @Inject constructor(
     aapsLogger: AAPSLogger,
     rh: ResourceHelper,
     preferences: Preferences,
-    private val sp: SP,
     private val aapsSchedulers: AapsSchedulers,
     private val rxBus: RxBus,
     private val context: Context,
@@ -128,7 +125,6 @@ class NSClientV3Plugin @Inject constructor(
     private val decimalFormatter: DecimalFormatter,
     private val l: L,
     private val nsClientMvvmRepository: NSClientMvvmRepository,
-    private val uiInteraction: UiInteraction,
     private val uel: UserEntryLogger,
     private val activePlugin: ActivePlugin
 ) : NsClient, Sync, PluginBaseWithPreferences(
@@ -201,7 +197,7 @@ class NSClientV3Plugin @Inject constructor(
     internal var firstLoadContinueTimestamp = LastModified(LastModified.Collections()) // timestamp of last fetched data for every collection during initial load
     internal var initialLoadFinished = false
 
-    private val fullSyncSemaphore = Object()
+    private val fullSyncSemaphore = Any()
 
     /**
      * Set to true if full sync is requested from fragment.

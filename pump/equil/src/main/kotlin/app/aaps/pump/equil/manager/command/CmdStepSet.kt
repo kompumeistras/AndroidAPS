@@ -2,6 +2,7 @@ package app.aaps.pump.equil.manager.command
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.utils.notify
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.manager.AESUtil
 import app.aaps.pump.equil.manager.EquilManager
@@ -38,7 +39,7 @@ class CmdStepSet(
 //        int status = byteData[6] & 0xff;
         synchronized(this) {
             cmdSuccess = true
-            (this as Object).notify()
+            notify()
         }
     }
 
@@ -47,7 +48,7 @@ class CmdStepSet(
         runCode = equilCmdModel.code
         val content = AESUtil.decrypt(equilCmdModel, Utils.hexStringToBytes(runPwd!!))
         decodeConfirmData(Utils.hexStringToBytes(content))
-        val data: ByteArray? = getNextData()
+        val data: ByteArray = getNextData()
         val equilCmdModel2 = AESUtil.aesEncrypt(Utils.hexStringToBytes(runPwd!!), data)
         if (sendConfig) {
             return responseCmd(equilCmdModel2, port + runCode)

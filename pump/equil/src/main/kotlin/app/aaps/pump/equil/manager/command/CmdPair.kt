@@ -4,6 +4,7 @@ import android.util.Log
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.utils.notifyAll
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.keys.EquilStringKey
 import app.aaps.pump.equil.manager.AESUtil
@@ -114,7 +115,7 @@ class CmdPair(
         val equilCmdModel = decodeModel()
         val keyBytes = randomPassword ?: return null
         val content = AESUtil.decrypt(equilCmdModel, keyBytes)
-        val pwd1 = content.substring(0, 64)
+        val pwd1 = content.take(64)
         val pwd2 = content.substring(64)
         aapsLogger.debug(LTag.PUMPCOMM, "decrypted====$pwd1")
         aapsLogger.debug(LTag.PUMPCOMM, "decrypted====$pwd2")
@@ -122,7 +123,7 @@ class CmdPair(
             synchronized(this) {
                 cmdSuccess = true
                 enacted = false
-                (this as Object).notifyAll()
+                notifyAll()
             }
             return null
         }
@@ -145,7 +146,7 @@ class CmdPair(
         return null
     }
 
-    override fun getEventType(): EquilHistoryRecord.EventType? = EquilHistoryRecord.EventType.INITIALIZE_EQUIL
+    override fun getEventType(): EquilHistoryRecord.EventType = EquilHistoryRecord.EventType.INITIALIZE_EQUIL
 
     companion object {
 

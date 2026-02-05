@@ -129,11 +129,11 @@ class ProfileManagementViewModel @Inject constructor(
                 val profileNames = profiles.map { it.name }
 
                 // Calculate basal sum for each profile
-                val basalSums = profiles.mapIndexed { index, singleProfile ->
+                val basalSums = profiles.mapIndexed { _, singleProfile ->
                     toPureProfile(singleProfile)?.let { pureProfile ->
                         val sealed = ProfileSealed.Pure(pureProfile, activePlugin)
                         val isActive = singleProfile.name == activeProfileName
-                        if (isActive && activeEps != null) {
+                        if (isActive) {
                             sealed.pct = activeEps.originalPercentage
                             sealed.ts = (activeEps.originalTimeshift / 3600000).toInt()
                             sealed.percentageBasalSum()
@@ -157,7 +157,7 @@ class ProfileManagementViewModel @Inject constructor(
                 var compareData: ProfileCompareData? = null
                 val selectedProfile = if (currentIndex in profiles.indices) {
                     val isActive = profiles[currentIndex].name == activeProfileName
-                    if (isActive && activeEps != null) {
+                    if (isActive) {
                         val pct = activeEps.originalPercentage
                         val tsMs = activeEps.originalTimeshift
                         // Build comparison data when active profile has modifications
@@ -308,19 +308,6 @@ class ProfileManagementViewModel @Inject constructor(
         }
         localProfileManager.notifyProfileChanged()
         loadData()
-    }
-
-    /**
-     * Format remaining time for display
-     */
-    fun formatRemainingTime(remainingMs: Long): String {
-        val hours = T.msecs(remainingMs).hours().toInt()
-        val mins = T.msecs(remainingMs).mins().toInt() % 60
-        return if (hours > 0) {
-            "${hours}h ${mins}m"
-        } else {
-            "${mins}m"
-        }
     }
 
     // Profile viewer formatting helpers

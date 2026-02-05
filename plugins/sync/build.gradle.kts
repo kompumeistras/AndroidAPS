@@ -33,8 +33,8 @@ dependencies {
     api(libs.androidx.lifecycle.runtime.compose)
 
 
-    testApi(libs.kotlinx.coroutines.test)
-    testApi(libs.androidx.work.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.work.testing)
 
     testImplementation(project(":shared:tests"))
     testImplementation(project(":implementation"))

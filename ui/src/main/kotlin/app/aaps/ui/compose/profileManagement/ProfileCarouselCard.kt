@@ -61,13 +61,12 @@ internal fun ProfileCarouselCard(
     // Auto-update progress every 30 seconds
     LaunchedEffect(isActive, hasDuration, activeProfileSwitch?.timestamp) {
         if (isActive && hasDuration) {
-            val eps = activeProfileSwitch!!
             while (true) {
                 val now = System.currentTimeMillis()
-                val elapsed = now - eps.timestamp
-                val remaining = eps.originalDuration - elapsed
+                val elapsed = now - activeProfileSwitch.timestamp
+                val remaining = activeProfileSwitch.originalDuration - elapsed
                 progress = if (remaining > 0) {
-                    (elapsed.toFloat() / eps.originalDuration.toFloat()).coerceIn(0f, 1f)
+                    (elapsed.toFloat() / activeProfileSwitch.originalDuration.toFloat()).coerceIn(0f, 1f)
                 } else 1f
                 delay(30_000L) // Update every 30 seconds
             }
