@@ -82,6 +82,55 @@ class OverviewDataCacheImpl @Inject constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // =========================================================================
+    // State flows (must be declared before init block to avoid race conditions)
+    // =========================================================================
+
+    override var calcProgressPct: Int = 100
+
+    // Time range
+    private val _timeRangeFlow = MutableStateFlow<TimeRange?>(null)
+    override val timeRangeFlow: StateFlow<TimeRange?> = _timeRangeFlow.asStateFlow()
+
+    // BG data flows
+    private val _bgReadingsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
+    private val _bucketedDataFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
+    private val _bgInfoFlow = MutableStateFlow<BgInfoData?>(null)
+
+    override val bgReadingsFlow: StateFlow<List<BgDataPoint>> = _bgReadingsFlow.asStateFlow()
+    override val bucketedDataFlow: StateFlow<List<BgDataPoint>> = _bucketedDataFlow.asStateFlow()
+    override val bgInfoFlow: StateFlow<BgInfoData?> = _bgInfoFlow.asStateFlow()
+
+    // Overview chip flows
+    private val _tempTargetFlow = MutableStateFlow<TempTargetDisplayData?>(null)
+    private val _profileFlow = MutableStateFlow<ProfileDisplayData?>(null)
+    private val _runningModeFlow = MutableStateFlow<RunningModeDisplayData?>(null)
+
+    override val tempTargetFlow: StateFlow<TempTargetDisplayData?> = _tempTargetFlow.asStateFlow()
+    override val profileFlow: StateFlow<ProfileDisplayData?> = _profileFlow.asStateFlow()
+    override val runningModeFlow: StateFlow<RunningModeDisplayData?> = _runningModeFlow.asStateFlow()
+
+    // Secondary graph flows
+    private val _iobGraphFlow = MutableStateFlow(IobGraphData(emptyList(), emptyList()))
+    private val _absIobGraphFlow = MutableStateFlow(AbsIobGraphData(emptyList()))
+    private val _cobGraphFlow = MutableStateFlow(CobGraphData(emptyList(), emptyList()))
+    private val _activityGraphFlow = MutableStateFlow(ActivityGraphData(emptyList(), emptyList()))
+    private val _bgiGraphFlow = MutableStateFlow(BgiGraphData(emptyList(), emptyList()))
+    private val _deviationsGraphFlow = MutableStateFlow(DeviationsGraphData(emptyList()))
+    private val _ratioGraphFlow = MutableStateFlow(RatioGraphData(emptyList()))
+    private val _devSlopeGraphFlow = MutableStateFlow(DevSlopeGraphData(emptyList(), emptyList()))
+    private val _varSensGraphFlow = MutableStateFlow(VarSensGraphData(emptyList()))
+
+    override val iobGraphFlow: StateFlow<IobGraphData> = _iobGraphFlow.asStateFlow()
+    override val absIobGraphFlow: StateFlow<AbsIobGraphData> = _absIobGraphFlow.asStateFlow()
+    override val cobGraphFlow: StateFlow<CobGraphData> = _cobGraphFlow.asStateFlow()
+    override val activityGraphFlow: StateFlow<ActivityGraphData> = _activityGraphFlow.asStateFlow()
+    override val bgiGraphFlow: StateFlow<BgiGraphData> = _bgiGraphFlow.asStateFlow()
+    override val deviationsGraphFlow: StateFlow<DeviationsGraphData> = _deviationsGraphFlow.asStateFlow()
+    override val ratioGraphFlow: StateFlow<RatioGraphData> = _ratioGraphFlow.asStateFlow()
+    override val devSlopeGraphFlow: StateFlow<DevSlopeGraphData> = _devSlopeGraphFlow.asStateFlow()
+    override val varSensGraphFlow: StateFlow<VarSensGraphData> = _varSensGraphFlow.asStateFlow()
+
     init {
         // Load initial data from database
         scope.launch {
@@ -259,55 +308,6 @@ class OverviewDataCacheImpl @Inject constructor(
             duration = rmRecord.duration
         )
     }
-
-    // =========================================================================
-    // State flows
-    // =========================================================================
-
-    override var calcProgressPct: Int = 100
-
-    // Time range
-    private val _timeRangeFlow = MutableStateFlow<TimeRange?>(null)
-    override val timeRangeFlow: StateFlow<TimeRange?> = _timeRangeFlow.asStateFlow()
-
-    // BG data flows
-    private val _bgReadingsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
-    private val _bucketedDataFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
-    private val _bgInfoFlow = MutableStateFlow<BgInfoData?>(null)
-
-    override val bgReadingsFlow: StateFlow<List<BgDataPoint>> = _bgReadingsFlow.asStateFlow()
-    override val bucketedDataFlow: StateFlow<List<BgDataPoint>> = _bucketedDataFlow.asStateFlow()
-    override val bgInfoFlow: StateFlow<BgInfoData?> = _bgInfoFlow.asStateFlow()
-
-    // Overview chip flows
-    private val _tempTargetFlow = MutableStateFlow<TempTargetDisplayData?>(null)
-    private val _profileFlow = MutableStateFlow<ProfileDisplayData?>(null)
-    private val _runningModeFlow = MutableStateFlow<RunningModeDisplayData?>(null)
-
-    override val tempTargetFlow: StateFlow<TempTargetDisplayData?> = _tempTargetFlow.asStateFlow()
-    override val profileFlow: StateFlow<ProfileDisplayData?> = _profileFlow.asStateFlow()
-    override val runningModeFlow: StateFlow<RunningModeDisplayData?> = _runningModeFlow.asStateFlow()
-
-    // Secondary graph flows
-    private val _iobGraphFlow = MutableStateFlow(IobGraphData(emptyList(), emptyList()))
-    private val _absIobGraphFlow = MutableStateFlow(AbsIobGraphData(emptyList()))
-    private val _cobGraphFlow = MutableStateFlow(CobGraphData(emptyList(), emptyList()))
-    private val _activityGraphFlow = MutableStateFlow(ActivityGraphData(emptyList(), emptyList()))
-    private val _bgiGraphFlow = MutableStateFlow(BgiGraphData(emptyList(), emptyList()))
-    private val _deviationsGraphFlow = MutableStateFlow(DeviationsGraphData(emptyList()))
-    private val _ratioGraphFlow = MutableStateFlow(RatioGraphData(emptyList()))
-    private val _devSlopeGraphFlow = MutableStateFlow(DevSlopeGraphData(emptyList(), emptyList()))
-    private val _varSensGraphFlow = MutableStateFlow(VarSensGraphData(emptyList()))
-
-    override val iobGraphFlow: StateFlow<IobGraphData> = _iobGraphFlow.asStateFlow()
-    override val absIobGraphFlow: StateFlow<AbsIobGraphData> = _absIobGraphFlow.asStateFlow()
-    override val cobGraphFlow: StateFlow<CobGraphData> = _cobGraphFlow.asStateFlow()
-    override val activityGraphFlow: StateFlow<ActivityGraphData> = _activityGraphFlow.asStateFlow()
-    override val bgiGraphFlow: StateFlow<BgiGraphData> = _bgiGraphFlow.asStateFlow()
-    override val deviationsGraphFlow: StateFlow<DeviationsGraphData> = _deviationsGraphFlow.asStateFlow()
-    override val ratioGraphFlow: StateFlow<RatioGraphData> = _ratioGraphFlow.asStateFlow()
-    override val devSlopeGraphFlow: StateFlow<DevSlopeGraphData> = _devSlopeGraphFlow.asStateFlow()
-    override val varSensGraphFlow: StateFlow<VarSensGraphData> = _varSensGraphFlow.asStateFlow()
 
     // =========================================================================
     // Update methods
