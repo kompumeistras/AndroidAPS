@@ -34,7 +34,6 @@ import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.LongNonPreferenceKey
 import app.aaps.core.keys.interfaces.NonPreferenceKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.implementation.pump.PumpEnactResultObject
 import app.aaps.pump.common.data.PumpStatus
 import app.aaps.pump.common.defs.PumpDriverAction
 import app.aaps.pump.common.defs.PumpDriverState
@@ -249,10 +248,7 @@ abstract class PumpPluginAbstract protected constructor(
         return getOperationNotSupportedWithCustomText(R.string.pump_operation_not_supported_by_pump_driver)
     }
 
-    // Status to be passed to NS
-    // public JSONObject getJSONStatus(Profile profile, String profileName) {
-    // return pumpDriver.getJSONStatus(profile, profileName);
-    // }
+
     open fun deviceID(): String {
         aapsLogger.debug(LTag.PUMP, "deviceID [PumpPluginAbstract] - Not implemented.")
         return "FakeDevice"
@@ -270,70 +266,6 @@ abstract class PumpPluginAbstract protected constructor(
         return getOperationNotSupportedWithCustomText(R.string.pump_operation_not_supported_by_pump_driver)
     }
 
-    fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        if (pumpStatusData.lastConnection + 60 * 60 * 1000L < System.currentTimeMillis()) {
-            return JSONObject()
-        }
-        val now = System.currentTimeMillis()
-        val pump = JSONObject()
-        val battery = JSONObject()
-        val status = JSONObject()
-        val extended = JSONObject()
-        try {
-            battery.put("percent", pumpStatusData.batteryRemaining)
-            status.put("status", pumpStatusData.pumpRunningState.status)
-            extended.put("Version", version)
-            try {
-                extended.put("ActiveProfile", profileName)
-            } catch (_: Exception) {
-            }
-            val tb = pumpSync.expectedPumpState().temporaryBasal
-            if (tb != null) {
-                extended.put("TempBasalAbsoluteRate", tb.convertedToAbsolute(now, profile))
-                extended.put("TempBasalStart", dateUtil.dateAndTimeString(tb.timestamp))
-                extended.put("TempBasalRemaining", tb.plannedRemainingMinutes)
-            }
-            val eb = pumpSync.expectedPumpState().extendedBolus
-            if (eb != null) {
-                extended.put("ExtendedBolusAbsoluteRate", eb.rate)
-                extended.put("ExtendedBolusStart", dateUtil.dateAndTimeString(eb.timestamp))
-                extended.put("ExtendedBolusRemaining", eb.plannedRemainingMinutes)
-            }
-            status.put("timestamp", dateUtil.toISOString(dateUtil.now()))
-            pump.put("battery", battery)
-            pump.put("status", status)
-            pump.put("extended", extended)
-            pump.put("reservoir", pumpStatusData.reservoirRemainingUnits)
-            pump.put("clock", dateUtil.toISOString(dateUtil.now()))
-        } catch (e: JSONException) {
-            aapsLogger.error("Unhandled exception", e)
-        }
-        return pump
-    }
-
-    // FIXME i18n, null checks: iob, TDD
-    fun shortStatus(veryShort: Boolean): String {
-        var ret = ""
-
-        ret += if (pumpStatusData.lastConnection == 0L) {
-            "LastConn: never\n"
-        } else {
-            val agoMin = ((System.currentTimeMillis() - pumpStatusData.lastConnection) / 60.0 / 1000.0).toInt()
-            "LastConn: $agoMin min ago\n"
-        }
-
-        pumpStatusData.lastBolusTime?.let {
-            if (it.time != 0L) {
-                ret += "LastBolus: ${decimalFormatter.to2Decimal(pumpStatusData.lastBolusAmount!!)}U @${DateFormat.format("HH:mm", it)}\n"
-            }
-        }
-        pumpSync.expectedPumpState().temporaryBasal?.let { ret += "Temp: ${it.toStringFull(dateUtil, rh)}\n" }
-        pumpSync.expectedPumpState().extendedBolus?.let { ret += "Extended: ${it.toStringFull(dateUtil, rh)}\n" }
-        ret += "IOB: ${pumpStatusData.iob}U\n"
-        ret += "Reserv: ${decimalFormatter.to0Decimal(pumpStatusData.reservoirRemainingUnits)}U\n"
-        ret += "Batt: ${pumpStatusData.batteryRemaining}\n"
-        return ret
-    }
 
     @Synchronized
     override fun deliverTreatment(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult {
@@ -359,9 +291,7 @@ abstract class PumpPluginAbstract protected constructor(
             if (detailedBolusInfo.insulin == 0.0 && detailedBolusInfo.carbs == 0.0) {
                 // neither carbs nor bolus requested
                 aapsLogger.error("deliverTreatment: Invalid input")
-                PumpEnactResultObject(rh)
-                    .success(false)
-                    .enacted(false)
+                pumpEnactResultProvider.get().success(false).enacted(false)
                     .bolusDelivered(0.0)
                     .comment(app.aaps.core.ui.R.string.invalid_input)
             } else if (detailedBolusInfo.insulin > 0) {
@@ -379,7 +309,8 @@ abstract class PumpPluginAbstract protected constructor(
                 // bolusingEvent.percent = 100
                 rxBus.send(bolusingEvent)
                 aapsLogger.debug(LTag.PUMP, "deliverTreatment: Carb only treatment.")
-                PumpEnactResultObject(rh).success(true).enacted(true).bolusDelivered(0.0)
+                pumpEnactResultProvider.get().success(true).enacted(true)
+                    .bolusDelivered(0.0)
                     .comment(Rc.string.ok)
             }
         } finally {
