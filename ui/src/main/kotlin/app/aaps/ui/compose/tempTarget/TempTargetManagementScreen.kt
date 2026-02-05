@@ -221,7 +221,7 @@ fun TempTargetManagementScreen(
                         }
                     },
                     actions = {
-                        // Save button with check icon (shown when editor has unsaved changes)
+                        // Save button (shown when editor has unsaved changes)
                         if (uiState.selectedPreset != null && viewModel.hasUnsavedChanges()) {
                             IconButton(onClick = { viewModel.saveCurrentPreset() }) {
                                 Icon(
@@ -261,10 +261,13 @@ fun TempTargetManagementScreen(
                     )
 
                     // Handle scroll to page request (e.g., after adding new preset)
-                    LaunchedEffect(scrollToPage) {
+                    // Depends on cardCount so it retries when pager updates with new page count
+                    LaunchedEffect(scrollToPage, cardCount) {
                         scrollToPage?.let { page ->
-                            pagerState.animateScrollToPage(page)
-                            scrollToPage = null
+                            if (page < cardCount) {
+                                pagerState.animateScrollToPage(page)
+                                scrollToPage = null
+                            }
                         }
                     }
 
@@ -376,86 +379,82 @@ fun TempTargetManagementScreen(
                     }
                 }
 
-                // Floating Toolbar with FABs (M3 style)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                // Mini FAB for Cancel (only visible when TT is active)
+                if (uiState.activeTT != null) {
+                    SmallFloatingActionButton(
+                        onClick = { showCancelDialog = true },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = 88.dp),
+                        containerColor = MaterialTheme.colorScheme.error
                     ) {
-                        // Floating Toolbar (M3 specs: pill shape, elevation, surfaceContainerHigh)
-                        Surface(
-                            shape = RoundedCornerShape(percent = 50),
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shadowElevation = 6.dp,
-                            tonalElevation = 6.dp
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = stringResource(app.aaps.core.ui.R.string.cancel)
+                        )
+                    }
+                }
+
+                // Floating Toolbar with FAB (M3 style)
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Floating Toolbar (M3 specs: pill shape, elevation, surfaceContainerHigh)
+                    Surface(
+                        shape = RoundedCornerShape(percent = 50),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shadowElevation = 6.dp,
+                        tonalElevation = 6.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = { viewModel.addNewPreset() }) {
+                            IconButton(onClick = { viewModel.addNewPreset() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Add preset"
+                                )
+                            }
+                            // Revert button (only for fixed presets when editor values differ from defaults)
+                            val showRevert = uiState.selectedPreset?.isDeletable == false &&
+                                viewModel.isEditorDifferentFromDefaults()
+                            if (showRevert) {
+                                IconButton(onClick = { viewModel.revertToDefaults() }) {
                                     Icon(
-                                        imageVector = Icons.Filled.Add,
-                                        contentDescription = "Add preset"
-                                    )
-                                }
-                                // Revert button (only for fixed presets when editor values differ from defaults)
-                                val showRevert = uiState.selectedPreset?.isDeletable == false &&
-                                    viewModel.isEditorDifferentFromDefaults()
-                                if (showRevert) {
-                                    IconButton(onClick = { viewModel.revertToDefaults() }) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Refresh,
-                                            contentDescription = stringResource(app.aaps.core.ui.R.string.revert_to_defaults)
-                                        )
-                                    }
-                                }
-                                IconButton(
-                                    onClick = { showDeleteDialog = true },
-                                    enabled = uiState.selectedPreset?.isDeletable == true
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Delete,
-                                        contentDescription = stringResource(R.string.remove_label),
-                                        tint = if (uiState.selectedPreset?.isDeletable == true)
-                                            MaterialTheme.colorScheme.error
-                                        else
-                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                        imageVector = Icons.Filled.Refresh,
+                                        contentDescription = stringResource(app.aaps.core.ui.R.string.revert_to_defaults)
                                     )
                                 }
                             }
-                        }
-
-                        // FAB for primary action (Activate)
-                        AapsFab(
-                            onClick = { showActivateDialog = true }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.PlayArrow,
-                                contentDescription = stringResource(R.string.activate_label)
-                            )
+                            IconButton(
+                                onClick = { showDeleteDialog = true },
+                                enabled = uiState.selectedPreset?.isDeletable == true
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.remove_label),
+                                    tint = if (uiState.selectedPreset?.isDeletable == true)
+                                        MaterialTheme.colorScheme.error
+                                    else
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
+                            }
                         }
                     }
 
-                    // Mini FAB for Cancel (only visible when TT is active)
-                    if (uiState.activeTT != null) {
-                        SmallFloatingActionButton(
-                            onClick = { showCancelDialog = true },
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(bottom = 80.dp),
-                            containerColor = MaterialTheme.colorScheme.error
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = stringResource(app.aaps.core.ui.R.string.cancel)
-                            )
-                        }
+                    // FAB for primary action (Activate)
+                    AapsFab(
+                        onClick = { showActivateDialog = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PlayArrow,
+                            contentDescription = stringResource(R.string.activate_label)
+                        )
                     }
                 }
             }

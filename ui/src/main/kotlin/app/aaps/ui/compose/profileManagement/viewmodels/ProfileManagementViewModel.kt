@@ -160,12 +160,55 @@ class ProfileManagementViewModel @Inject constructor(
                     if (isActive) {
                         val pct = activeEps.originalPercentage
                         val tsMs = activeEps.originalTimeshift
-                        // Build comparison data when active profile has modifications
-                        if (pct != 100 || tsMs != 0L) {
-                            // Base: current local profile (SingleProfile) without modifications
-                            val baseProfile = toPureProfile(profiles[currentIndex])?.let { ProfileSealed.Pure(it, activePlugin) }
-                            // Effective: actual running profile from EPS
-                            val effectiveProfile = ProfileSealed.EPS(activeEps, activePlugin)
+                        val hasModifications = pct != 100 || tsMs != 0L
+
+                        // Base: current local profile (SingleProfile) without modifications
+                        val baseProfile = toPureProfile(profiles[currentIndex])?.let { ProfileSealed.Pure(it, activePlugin) }
+                        // Effective: actual running profile from EPS
+                        val effectiveProfile = ProfileSealed.EPS(activeEps, activePlugin)
+
+                        // Detect if underlying profile has changed since activation
+                        // Apply same pct/ts to local profile so we compare apples-to-apples
+                        // Cannot use isEqual() here because Pure.profileName is always ""
+                        // which causes a false mismatch with EPS.originalProfileName
+                        val baseChanged = baseProfile?.let {
+                            val compareLocal = toPureProfile(profiles[currentIndex])?.let { pure ->
+                                ProfileSealed.Pure(pure, activePlugin).apply {
+                                    this.pct = pct
+                                    this.ts = T.msecs(tsMs).hours().toInt()
+                                }
+                            }
+                            compareLocal != null && !compareLocal.isEqual(effectiveProfile, ignoreName = true)
+                        } ?: false
+
+                        if (baseChanged) {
+                            // Profile was edited after activation — show "Running" vs current
+                            if (baseProfile != null) {
+                                val profileName = profiles[currentIndex].name
+                                val runningLabel = buildString {
+                                    append(rh.gs(R.string.running))
+                                    if (hasModifications) {
+                                        val tsHours = (tsMs / 3600000).toInt()
+                                        append(" (")
+                                        append("$pct%")
+                                        if (tsHours != 0) append(", ${if (tsHours > 0) "+" else ""}${tsHours}h")
+                                        append(")")
+                                    }
+                                }
+                                compareData = buildProfileCompareData(
+                                    profile1 = effectiveProfile,
+                                    profile2 = baseProfile,
+                                    profileName1 = runningLabel,
+                                    profileName2 = profileName,
+                                    rh = rh,
+                                    dateUtil = dateUtil,
+                                    profileUtil = profileUtil,
+                                    profileFunction = profileFunction
+                                )
+                            }
+                            effectiveProfile
+                        } else if (hasModifications) {
+                            // Only pct/ts modifications — show base vs effective
                             if (baseProfile != null) {
                                 val profileName = profiles[currentIndex].name
                                 val tsHours = (tsMs / 3600000).toInt()
@@ -187,11 +230,10 @@ class ProfileManagementViewModel @Inject constructor(
                                     profileFunction = profileFunction
                                 )
                             }
-                            // selectedProfile = effective (EPS) when in compare mode
                             effectiveProfile
                         } else {
-                            // Active but no modifications — show current local profile
-                            toPureProfile(profiles[currentIndex])?.let { ProfileSealed.Pure(it, activePlugin) }
+                            // Active, no modifications, base unchanged — show current local profile
+                            baseProfile
                         }
                     } else {
                         // Not active — show current local profile

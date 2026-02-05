@@ -25,10 +25,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryTabRow
@@ -119,36 +117,25 @@ fun ProfileEditorScreen(
                 actions = {
                     if (state.isEdited) {
                         // Reset button
-                        FilledTonalIconButton(
-                            onClick = { viewModel.resetProfile() },
-                            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                            )
-                        ) {
+                        IconButton(onClick = { viewModel.resetProfile() }) {
                             Icon(
                                 Icons.Default.Refresh,
                                 contentDescription = stringResource(app.aaps.core.ui.R.string.reset)
                             )
                         }
-                        Spacer(Modifier.width(4.dp))
                         // Save button
-                        FilledTonalIconButton(
+                        IconButton(
                             onClick = { viewModel.saveProfile() },
-                            enabled = state.isValid,
-                            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.38f),
-                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            )
+                            enabled = state.isValid
                         ) {
                             Icon(
                                 Icons.Default.Check,
-                                contentDescription = stringResource(app.aaps.core.ui.R.string.save)
+                                contentDescription = stringResource(app.aaps.core.ui.R.string.save),
+                                tint = if (state.isValid) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                             )
                         }
                     }
-                    Spacer(Modifier.width(8.dp))
                 }
             )
         },

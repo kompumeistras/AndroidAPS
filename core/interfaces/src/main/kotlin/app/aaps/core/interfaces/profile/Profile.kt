@@ -43,7 +43,7 @@ interface Profile {
     /**
      * is equal to another profile?
      */
-    fun isEqual(profile: Profile): Boolean
+    fun isEqual(profile: Profile, ignoreName: Boolean = false): Boolean
 
     /**
      * Basal value according to "now"

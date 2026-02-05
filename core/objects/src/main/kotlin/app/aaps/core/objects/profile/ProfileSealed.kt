@@ -239,7 +239,7 @@ sealed class ProfileSealed(
     override val timeshift: Int
         get() = ts
 
-    override fun isEqual(profile: Profile): Boolean {
+    override fun isEqual(profile: Profile, ignoreName: Boolean): Boolean {
         for (hour in 0..23) {
             val seconds = T.hours(hour.toLong()).secs().toInt()
             if (getBasalTimeFromMidnight(seconds) != profile.getBasalTimeFromMidnight(seconds)) return false
@@ -249,6 +249,7 @@ sealed class ProfileSealed(
             if (getTargetHighMgdlTimeFromMidnight(seconds) != profile.getTargetHighMgdlTimeFromMidnight(seconds)) return false
         }
         if (dia != profile.dia) return false
+        if (ignoreName) return true
         return !((profile is EPS) && profileName != profile.value.originalProfileName) // handle profile name change too
     }
 
