@@ -18,7 +18,7 @@
     <string name="combov2_error_9">Kết thúc chế độ bơm cho mượn</string>
     <string name="combov2_error_10">Lỗi ống chứa insulin</string>
     <string name="combov2_error_11">Bộ dây truyền chưa được làm đầy</string>
-    <string name="combov2_extended_bolus_not_supported">Không hỗ trợ liều bolus mở rộng</string>
+    <string name="combov2_extended_bolus_not_supported">Không hỗ trợ liều bolus kéo dài</string>
     <string name="combov2_title">Accu-Check Combo v2</string>
     <string name="combov2_pair_with_pump_title">Ghép đôi với bơm</string>
     <string name="combov2_unpair_pump_title">Hủy ghép đôi bơm</string>
