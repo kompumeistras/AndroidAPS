@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.runningMode
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
@@ -20,7 +22,6 @@ import app.aaps.core.keys.interfaces.Preferences
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -32,6 +33,7 @@ import javax.inject.Inject
  * ViewModel for RunningModeScreen (replacement for LoopDialog).
  * Handles loop mode changes, suspend/resume, and pump disconnect/reconnect.
  */
+@Stable
 class RunningModeManagementViewModel @Inject constructor(
     private val loop: Loop,
     private val profileFunction: ProfileFunction,
@@ -43,8 +45,8 @@ class RunningModeManagementViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(RunningModeManagementUiState())
-    val uiState: StateFlow<RunningModeManagementUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<RunningModeManagementUiState>
+        field = MutableStateFlow(RunningModeManagementUiState())
 
     init {
         loadState()
@@ -62,7 +64,7 @@ class RunningModeManagementViewModel @Inject constructor(
                 val allowedModes = loop.allowedNextModes()
                 val pumpDescription: PumpDescription = activePlugin.activePump.pumpDescription
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         currentMode = currentMode,
                         currentModeText = translator.translate(currentMode),
@@ -76,7 +78,7 @@ class RunningModeManagementViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load running mode state", e)
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
@@ -138,13 +140,14 @@ class RunningModeManagementViewModel @Inject constructor(
      * Clear error state
      */
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        uiState.update { it.copy(error = null) }
     }
 }
 
 /**
  * UI state for RunningModeScreen
  */
+@Immutable
 data class RunningModeManagementUiState(
     val currentMode: RM.Mode = RM.Mode.DISABLED_LOOP,
     val currentModeText: String = "",

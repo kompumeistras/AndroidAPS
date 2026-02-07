@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.TB
@@ -26,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -39,6 +40,7 @@ import javax.inject.Inject
 /**
  * ViewModel for TempBasalScreen managing temporary basal state and business logic.
  */
+@Stable
 class TempBasalViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val profileFunction: ProfileFunction,
@@ -49,8 +51,8 @@ class TempBasalViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TempBasalUiState())
-    val uiState: StateFlow<TempBasalUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TempBasalUiState>
+        field = MutableStateFlow(TempBasalUiState())
 
     init {
         loadData()
@@ -63,9 +65,9 @@ class TempBasalViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             // Only show loading on initial load, not on refreshes
-            val currentState = _uiState.value
+            val currentState = uiState.value
             if (currentState.tempBasals.isEmpty()) {
-                _uiState.update { it.copy(isLoading = true) }
+                uiState.update { it.copy(isLoading = true) }
             }
 
             try {
@@ -97,7 +99,7 @@ class TempBasalViewModel @Inject constructor(
                     tempBasalsList.sortedByDescending { it.timestamp }
                 }
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         tempBasals = tempBasals,
                         isLoading = false,
@@ -106,7 +108,7 @@ class TempBasalViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load temp basals", e)
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         isLoading = false,
                         error = e.message ?: "Unknown error loading temp basals"
@@ -132,14 +134,14 @@ class TempBasalViewModel @Inject constructor(
      * Clear error state
      */
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        uiState.update { it.copy(error = null) }
     }
 
     /**
      * Toggle show/hide invalidated items
      */
     fun toggleInvalidated() {
-        _uiState.update { it.copy(showInvalidated = !it.showInvalidated) }
+        uiState.update { it.copy(showInvalidated = !it.showInvalidated) }
         loadData()
     }
 
@@ -147,7 +149,7 @@ class TempBasalViewModel @Inject constructor(
      * Enter selection mode with initial item selected
      */
     fun enterSelectionMode(item: TB) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = true,
                 selectedItems = setOf(item)
@@ -159,7 +161,7 @@ class TempBasalViewModel @Inject constructor(
      * Exit selection mode and clear selection
      */
     fun exitSelectionMode() {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = false,
                 selectedItems = emptySet()
@@ -171,7 +173,7 @@ class TempBasalViewModel @Inject constructor(
      * Toggle selection of an item
      */
     fun toggleSelection(item: TB) {
-        _uiState.update { state ->
+        uiState.update { state ->
             val newSelection = if (item in state.selectedItems) {
                 state.selectedItems - item
             } else {
@@ -185,7 +187,7 @@ class TempBasalViewModel @Inject constructor(
      * Prepare delete confirmation message
      */
     fun getDeleteConfirmationMessage(): String {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return ""
 
         return if (selected.size == 1) {
@@ -208,7 +210,7 @@ class TempBasalViewModel @Inject constructor(
      * Delete selected items
      */
     fun deleteSelected() {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -253,7 +255,7 @@ class TempBasalViewModel @Inject constructor(
                 loadData()
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to delete temp basals", e)
-                _uiState.update { it.copy(error = e.message ?: "Unknown error deleting temp basals") }
+                uiState.update { it.copy(error = e.message ?: "Unknown error deleting temp basals") }
             }
         }
     }
@@ -262,7 +264,7 @@ class TempBasalViewModel @Inject constructor(
      * Get toolbar configuration for current state
      */
     fun getToolbarConfig(onNavigateBack: () -> Unit, onDeleteClick: () -> Unit): ToolbarConfig {
-        val state = _uiState.value
+        val state = uiState.value
         return SelectableListToolbar(
             isRemovingMode = state.isRemovingMode,
             selectedCount = state.selectedItems.size,
@@ -283,6 +285,7 @@ class TempBasalViewModel @Inject constructor(
 /**
  * UI state for TempBasalScreen
  */
+@Immutable
 data class TempBasalUiState(
     val tempBasals: List<TB> = emptyList(),
     val isLoading: Boolean = true,

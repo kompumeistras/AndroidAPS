@@ -1,4 +1,5 @@
 package app.aaps.ui.compose.actions
+import androidx.compose.runtime.Immutable
 
 import app.aaps.core.interfaces.pump.actions.CustomAction
 
@@ -16,6 +17,7 @@ enum class StatusLevel {
 /**
  * UI state for the Actions screen
  */
+@Immutable
 data class ActionsUiState(
     // Visibility states
     val showTempTarget: Boolean = false,

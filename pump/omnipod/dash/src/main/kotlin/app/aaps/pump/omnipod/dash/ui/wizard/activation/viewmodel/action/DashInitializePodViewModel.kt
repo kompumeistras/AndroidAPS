@@ -1,6 +1,7 @@
 package app.aaps.pump.omnipod.dash.ui.wizard.activation.viewmodel.action
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.pump.PumpEnactResult
@@ -25,6 +26,7 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
 import javax.inject.Provider
 
+@Stable
 class DashInitializePodViewModel @Inject constructor(
     private val omnipodManager: OmnipodDashManager,
     pumpEnactResultProvider: Provider<PumpEnactResult>,

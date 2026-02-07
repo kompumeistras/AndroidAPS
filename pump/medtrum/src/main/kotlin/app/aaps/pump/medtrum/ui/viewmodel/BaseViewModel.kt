@@ -1,11 +1,13 @@
 package app.aaps.pump.medtrum.ui.viewmodel
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import app.aaps.pump.medtrum.ui.MedtrumBaseNavigator
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import java.lang.ref.WeakReference
 
+@Stable
 abstract class BaseViewModel<N : MedtrumBaseNavigator> : ViewModel() {
 
     private var _navigator: WeakReference<N?>? = null

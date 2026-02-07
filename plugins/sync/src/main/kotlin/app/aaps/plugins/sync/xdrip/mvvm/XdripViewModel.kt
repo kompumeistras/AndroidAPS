@@ -1,21 +1,24 @@
 package app.aaps.plugins.sync.xdrip.mvvm
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.sync.DataSyncSelectorXdrip
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Immutable
 data class XdripUiState(
     val queue: String = "",
     val logList: List<XdripLog> = emptyList()
 )
 
+@Stable
 class XdripViewModel @Inject constructor(
     private val rh: ResourceHelper,
     private val xdripMvvmRepository: XdripMvvmRepository,
@@ -23,19 +26,19 @@ class XdripViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI state
-    private val _uiState = MutableStateFlow(XdripUiState())
-    val uiState: StateFlow<XdripUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<XdripUiState>
+        field = MutableStateFlow(XdripUiState())
 
     init {
         viewModelScope.launch {
             xdripMvvmRepository.queueSize.collect { size ->
                 val queueText = if (size >= 0) size.toString() else rh.gs(app.aaps.core.ui.R.string.value_unavailable_short)
-                _uiState.update { it.copy(queue = queueText) }
+                uiState.update { it.copy(queue = queueText) }
             }
         }
         viewModelScope.launch {
             xdripMvvmRepository.logList.collect { logList ->
-                _uiState.update { it.copy(logList = logList) }
+                uiState.update { it.copy(logList = logList) }
             }
         }
     }

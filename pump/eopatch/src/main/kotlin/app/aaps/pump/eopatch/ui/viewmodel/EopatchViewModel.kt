@@ -2,6 +2,7 @@ package app.aaps.pump.eopatch.ui.viewmodel
 
 import android.content.res.Resources
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
@@ -64,6 +65,7 @@ import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+@Stable
 class EopatchViewModel @Inject constructor(
     private val rh: ResourceHelper,
     val patchManager: IPatchManager,

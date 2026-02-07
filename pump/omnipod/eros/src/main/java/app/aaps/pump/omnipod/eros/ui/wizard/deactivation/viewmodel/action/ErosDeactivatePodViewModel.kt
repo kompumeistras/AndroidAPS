@@ -1,6 +1,7 @@
 package app.aaps.pump.omnipod.eros.ui.wizard.deactivation.viewmodel.action
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.queue.Callback
@@ -14,6 +15,7 @@ import io.reactivex.rxjava3.core.Single
 import javax.inject.Inject
 import javax.inject.Provider
 
+@Stable
 class ErosDeactivatePodViewModel @Inject constructor(
     private val aapsOmnipodManager: AapsOmnipodErosManager,
     private val commandQueue: CommandQueue,

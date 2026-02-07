@@ -1,9 +1,11 @@
 package app.aaps.pump.omnipod.dash.ui.wizard.activation.viewmodel.info
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.pump.omnipod.common.ui.wizard.activation.viewmodel.info.AttachPodViewModel
 import javax.inject.Inject
 
+@Stable
 class DashAttachPodViewModel @Inject constructor() : AttachPodViewModel() {
 
     @StringRes

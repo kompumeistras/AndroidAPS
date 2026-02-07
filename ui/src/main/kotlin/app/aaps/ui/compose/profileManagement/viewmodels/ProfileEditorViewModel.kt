@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.profileManagement.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.GlucoseUnit
@@ -21,7 +23,6 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -33,6 +34,7 @@ data class TimeValue(
     val value: Double
 )
 
+@Immutable
 data class SingleProfileState(
     val name: String = "",
     val mgdl: Boolean = true,
@@ -44,6 +46,7 @@ data class SingleProfileState(
     val targetHigh: List<TimeValue> = listOf(TimeValue(0, 0.0))
 )
 
+@Immutable
 data class ProfileUiState(
     val profiles: List<String> = emptyList(),
     val currentProfileIndex: Int = 0,
@@ -69,6 +72,7 @@ data class ProfileUiState(
     val tabErrors: Map<ProfileErrorType, String> = emptyMap()
 )
 
+@Stable
 class ProfileEditorViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val rxBus: RxBus,
@@ -82,8 +86,8 @@ class ProfileEditorViewModel @Inject constructor(
     private val aapsSchedulers: AapsSchedulers
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ProfileUiState>
+        field = MutableStateFlow(ProfileUiState())
 
     private val disposable = CompositeDisposable()
 
@@ -118,7 +122,7 @@ class ProfileEditorViewModel @Inject constructor(
             .filter { it.type != ProfileErrorType.NAME || it.message != rh.gs(app.aaps.core.ui.R.string.profile_name_contains_dot) }
             .associateBy({ it.type }, { it.message })
 
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 profiles = profiles,
                 currentProfileIndex = localProfileManager.currentProfileIndex,
@@ -145,7 +149,7 @@ class ProfileEditorViewModel @Inject constructor(
     }
 
     fun selectTab(index: Int) {
-        _uiState.update { it.copy(selectedTab = index) }
+        uiState.update { it.copy(selectedTab = index) }
     }
 
     /**

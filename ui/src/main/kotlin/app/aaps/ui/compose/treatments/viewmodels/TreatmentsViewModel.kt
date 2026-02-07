@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -21,6 +22,7 @@ import javax.inject.Inject
  * ViewModel for TreatmentsScreen that holds all dependencies and provides child ViewModels.
  * This centralizes dependency management and simplifies the composable call site.
  */
+@Stable
 class TreatmentsViewModel @Inject constructor(
     val persistenceLayer: PersistenceLayer,
     val profileUtil: ProfileUtil,

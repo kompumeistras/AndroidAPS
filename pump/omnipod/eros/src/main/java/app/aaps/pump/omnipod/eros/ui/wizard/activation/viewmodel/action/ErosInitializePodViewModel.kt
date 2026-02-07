@@ -1,6 +1,7 @@
 package app.aaps.pump.omnipod.eros.ui.wizard.activation.viewmodel.action
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.rx.AapsSchedulers
@@ -13,6 +14,7 @@ import io.reactivex.rxjava3.core.Single
 import javax.inject.Inject
 import javax.inject.Provider
 
+@Stable
 class ErosInitializePodViewModel @Inject constructor(
     private val aapsOmnipodManager: AapsOmnipodErosManager,
     private val podStateManager: AapsErosPodStateManager,

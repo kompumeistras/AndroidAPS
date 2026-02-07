@@ -24,13 +24,15 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.LegendItem
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.data.ExtraStore
-import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
 import com.patrykandpatrick.vico.compose.common.vicoTheme
+
+private val LegendLabelKey = ExtraStore.Key<List<String>>()
 
 /**
  * Composable that displays basal rate profile data as a line chart using Vico charting library.
@@ -61,8 +63,6 @@ import com.patrykandpatrick.vico.compose.common.vicoTheme
  *
  * @throws IllegalArgumentException if profile2 is provided but profile2Name is null
  */
-
-private val LegendLabelKey = ExtraStore.Key<List<String>>()
 
 @Composable
 fun BasalProfileGraphCompose(
@@ -105,56 +105,30 @@ fun BasalProfileGraphCompose(
         }
     }
 
-    val lineColors = listOf(profile2Color, profile1Color)
     val legendItemLabelComponent = rememberTextComponent(style = TextStyle(color = vicoTheme.textColor))
     val legendIcon1 = rememberShapeComponent(fill = Fill(profile1Color))
     val legendIcon2 = rememberShapeComponent(fill = Fill(profile2Color))
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
-                lineProvider = if (profile2 != null) {
-                    LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.Line(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile2Color)) },
-                            pointConnector = Square
-                        ),
-                        LineCartesianLayer.Line(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
-                            areaFill = remember {
-                                LineCartesianLayer.AreaFill.single(
-                                    Fill(
-                                        Brush.verticalGradient(
-                                            listOf(
-                                                profile1Color.copy(alpha = 0.3f),
-                                                Color.Transparent
-                                            )
+                lineProvider = LineCartesianLayer.LineProvider.series(
+                    LineCartesianLayer.Line(
+                        fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
+                        areaFill = remember {
+                            LineCartesianLayer.AreaFill.single(
+                                Fill(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            profile1Color.copy(alpha = 0.3f),
+                                            Color.Transparent
                                         )
                                     )
                                 )
-                            },
-                            pointConnector = Square
-                        )
+                            )
+                        },
+                        pointConnector = Square
                     )
-                } else {
-                    LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.Line(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
-                            areaFill = remember {
-                                LineCartesianLayer.AreaFill.single(
-                                    Fill(
-                                        Brush.verticalGradient(
-                                            listOf(
-                                                profile1Color.copy(alpha = 0.3f),
-                                                Color.Transparent
-                                            )
-                                        )
-                                    )
-                                )
-                            },
-                            pointConnector = Square
-                        )
-                    )
-                }
+                )
             ),
             startAxis = VerticalAxis.rememberStart(),
             bottomAxis = HorizontalAxis.rememberBottom(),

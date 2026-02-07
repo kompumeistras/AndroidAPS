@@ -1,6 +1,8 @@
 package app.aaps.ui.compose.stats.viewmodels
 
 import android.content.Context
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.configuration.Constants
@@ -24,7 +26,6 @@ import app.aaps.ui.compose.stats.TirStatsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,6 +34,7 @@ import javax.inject.Inject
 /**
  * ViewModel for StatsScreen managing statistics data loading and state.
  */
+@Stable
 class StatsViewModel @Inject constructor(
     private val tddCalculator: TddCalculator,
     private val tirCalculator: TirCalculator,
@@ -46,8 +48,8 @@ class StatsViewModel @Inject constructor(
     val profileUtil: ProfileUtil
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(StatsUiState())
-    val uiState: StateFlow<StatsUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<StatsUiState>
+        field = MutableStateFlow(StatsUiState())
 
     init {
         loadAllStats()
@@ -62,20 +64,20 @@ class StatsViewModel @Inject constructor(
 
     private fun loadTddStats() {
         viewModelScope.launch {
-            _uiState.update { it.copy(tddLoading = true) }
+            uiState.update { it.copy(tddLoading = true) }
             val data = withContext(Dispatchers.IO) {
                 val tdds = tddCalculator.calculate(7, allowMissingDays = true)
                 val averageTdd = tddCalculator.averageTDD(tdds)
                 val todayTdd = tddCalculator.calculateToday()
                 TddStatsData(tdds = tdds, averageTdd = averageTdd, todayTdd = todayTdd)
             }
-            _uiState.update { it.copy(tddStatsData = data, tddLoading = false) }
+            uiState.update { it.copy(tddStatsData = data, tddLoading = false) }
         }
     }
 
     private fun loadTirStats() {
         viewModelScope.launch {
-            _uiState.update { it.copy(tirLoading = true) }
+            uiState.update { it.copy(tirLoading = true) }
             val data = withContext(Dispatchers.IO) {
                 val lowTirMgdl = Constants.STATS_RANGE_LOW_MMOL * Constants.MMOLL_TO_MGDL
                 val highTirMgdl = Constants.STATS_RANGE_HIGH_MMOL * Constants.MMOLL_TO_MGDL
@@ -99,44 +101,44 @@ class StatsViewModel @Inject constructor(
                     averageTit30 = tirCalculator.averageTIR(tit30)
                 )
             }
-            _uiState.update { it.copy(tirStatsData = data, tirLoading = false) }
+            uiState.update { it.copy(tirStatsData = data, tirLoading = false) }
         }
     }
 
     private fun loadDexcomTirStats() {
         viewModelScope.launch {
-            _uiState.update { it.copy(dexcomTirLoading = true) }
+            uiState.update { it.copy(dexcomTirLoading = true) }
             val data = withContext(Dispatchers.IO) {
                 dexcomTirCalculator.calculate()
             }
-            _uiState.update { it.copy(dexcomTirData = data, dexcomTirLoading = false) }
+            uiState.update { it.copy(dexcomTirData = data, dexcomTirLoading = false) }
         }
     }
 
     private fun loadActivityStats() {
         viewModelScope.launch {
-            _uiState.update { it.copy(activityLoading = true) }
+            uiState.update { it.copy(activityLoading = true) }
             val data = withContext(Dispatchers.IO) {
                 activityMonitor.getActivityStats()
             }
-            _uiState.update { it.copy(activityStatsData = data, activityLoading = false) }
+            uiState.update { it.copy(activityStatsData = data, activityLoading = false) }
         }
     }
 
     fun toggleTddExpanded() {
-        _uiState.update { it.copy(tddExpanded = !it.tddExpanded) }
+        uiState.update { it.copy(tddExpanded = !it.tddExpanded) }
     }
 
     fun toggleTirExpanded() {
-        _uiState.update { it.copy(tirExpanded = !it.tirExpanded) }
+        uiState.update { it.copy(tirExpanded = !it.tirExpanded) }
     }
 
     fun toggleDexcomTirExpanded() {
-        _uiState.update { it.copy(dexcomTirExpanded = !it.dexcomTirExpanded) }
+        uiState.update { it.copy(dexcomTirExpanded = !it.dexcomTirExpanded) }
     }
 
     fun toggleActivityExpanded() {
-        _uiState.update { it.copy(activityExpanded = !it.activityExpanded) }
+        uiState.update { it.copy(activityExpanded = !it.activityExpanded) }
     }
 
     fun recalculateTdd(context: Context) {
@@ -171,6 +173,7 @@ class StatsViewModel @Inject constructor(
 /**
  * UI state for StatsScreen
  */
+@Immutable
 data class StatsUiState(
     val tddStatsData: TddStatsData? = null,
     val tirStatsData: TirStatsData? = null,

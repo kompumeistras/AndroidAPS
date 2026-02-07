@@ -1,4 +1,5 @@
 package app.aaps.ui.compose.main
+import androidx.compose.runtime.Immutable
 
 import app.aaps.core.data.model.RM
 
@@ -17,6 +18,7 @@ enum class TempTargetChipState {
     Active
 }
 
+@Immutable
 data class MainUiState(
     val drawerCategories: List<DrawerCategory> = emptyList(),
     val selectedCategoryForSheet: DrawerCategory? = null,

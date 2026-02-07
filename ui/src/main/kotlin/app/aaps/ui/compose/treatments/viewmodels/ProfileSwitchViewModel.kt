@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.EPS
@@ -23,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
@@ -36,6 +37,7 @@ import javax.inject.Inject
 /**
  * ViewModel for ProfileSwitchScreen managing profile switch state and business logic.
  */
+@Stable
 class ProfileSwitchViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     val rh: ResourceHelper,
@@ -43,8 +45,8 @@ class ProfileSwitchViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileSwitchUiState())
-    val uiState: StateFlow<ProfileSwitchUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ProfileSwitchUiState>
+        field = MutableStateFlow(ProfileSwitchUiState())
 
     init {
         loadData()
@@ -57,9 +59,9 @@ class ProfileSwitchViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             // Only show loading on initial load, not on refreshes
-            val currentState = _uiState.value
+            val currentState = uiState.value
             if (currentState.profileSwitches.isEmpty()) {
-                _uiState.update { it.copy(isLoading = true) }
+                uiState.update { it.copy(isLoading = true) }
             }
 
             try {
@@ -82,7 +84,7 @@ class ProfileSwitchViewModel @Inject constructor(
                     eps.map { ProfileSealed.EPS(value = it, activePlugin = null) })
                     .sortedByDescending { it.timestamp }
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         profileSwitches = profileSwitches,
                         isLoading = false,
@@ -91,7 +93,7 @@ class ProfileSwitchViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load profile switches", e)
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         isLoading = false,
                         error = e.message ?: "Unknown error loading profile switches"
@@ -120,14 +122,14 @@ class ProfileSwitchViewModel @Inject constructor(
      * Clear error state
      */
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        uiState.update { it.copy(error = null) }
     }
 
     /**
      * Toggle show/hide invalidated items
      */
     fun toggleInvalidated() {
-        _uiState.update { it.copy(showInvalidated = !it.showInvalidated) }
+        uiState.update { it.copy(showInvalidated = !it.showInvalidated) }
         loadData()
     }
 
@@ -135,7 +137,7 @@ class ProfileSwitchViewModel @Inject constructor(
      * Enter selection mode with initial item selected
      */
     fun enterSelectionMode(item: ProfileSealed) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = true,
                 selectedItems = setOf(item)
@@ -147,7 +149,7 @@ class ProfileSwitchViewModel @Inject constructor(
      * Exit selection mode and clear selection
      */
     fun exitSelectionMode() {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = false,
                 selectedItems = emptySet()
@@ -159,7 +161,7 @@ class ProfileSwitchViewModel @Inject constructor(
      * Toggle selection of an item
      */
     fun toggleSelection(item: ProfileSealed) {
-        _uiState.update { state ->
+        uiState.update { state ->
             val newSelection = if (item in state.selectedItems) {
                 state.selectedItems - item
             } else {
@@ -181,7 +183,7 @@ class ProfileSwitchViewModel @Inject constructor(
      * Prepare delete confirmation message
      */
     fun getDeleteConfirmationMessage(): String {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return ""
 
         return if (selected.size == 1) {
@@ -196,7 +198,7 @@ class ProfileSwitchViewModel @Inject constructor(
      * Delete selected items (only PS can be deleted, not EPS)
      */
     fun deleteSelected() {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -220,7 +222,7 @@ class ProfileSwitchViewModel @Inject constructor(
                 loadData()
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to delete profile switches", e)
-                _uiState.update { it.copy(error = e.message ?: "Unknown error deleting profile switches") }
+                uiState.update { it.copy(error = e.message ?: "Unknown error deleting profile switches") }
             }
         }
     }
@@ -229,7 +231,7 @@ class ProfileSwitchViewModel @Inject constructor(
      * Get toolbar configuration for current state
      */
     fun getToolbarConfig(onNavigateBack: () -> Unit, onDeleteClick: () -> Unit): ToolbarConfig {
-        val state = _uiState.value
+        val state = uiState.value
         return SelectableListToolbar(
             isRemovingMode = state.isRemovingMode,
             selectedCount = state.selectedItems.size,
@@ -250,6 +252,7 @@ class ProfileSwitchViewModel @Inject constructor(
 /**
  * UI state for ProfileSwitchScreen
  */
+@Immutable
 data class ProfileSwitchUiState(
     val profileSwitches: List<ProfileSealed> = emptyList(),
     val isLoading: Boolean = true,

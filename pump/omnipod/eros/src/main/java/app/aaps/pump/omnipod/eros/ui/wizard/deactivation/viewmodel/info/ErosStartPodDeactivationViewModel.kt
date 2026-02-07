@@ -1,9 +1,11 @@
 package app.aaps.pump.omnipod.eros.ui.wizard.deactivation.viewmodel.info
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.pump.omnipod.common.ui.wizard.deactivation.viewmodel.info.StartPodDeactivationViewModel
 import javax.inject.Inject
 
+@Stable
 class ErosStartPodDeactivationViewModel @Inject constructor() : StartPodDeactivationViewModel() {
 
     @StringRes

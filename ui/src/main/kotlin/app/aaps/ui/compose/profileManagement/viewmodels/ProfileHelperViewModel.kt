@@ -1,6 +1,8 @@
 package app.aaps.ui.compose.profileManagement.viewmodels
 
 import android.content.Context
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.EPS
@@ -26,7 +28,6 @@ import app.aaps.ui.compose.stats.TddStatsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -36,6 +37,7 @@ import javax.inject.Inject
 /**
  * ViewModel for ProfileHelperScreen managing profile comparison state and business logic.
  */
+@Stable
 class ProfileHelperViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val activePlugin: ActivePlugin,
@@ -51,8 +53,8 @@ class ProfileHelperViewModel @Inject constructor(
     private val fabricPrivacy: FabricPrivacy
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileHelperUiState())
-    val uiState: StateFlow<ProfileHelperUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ProfileHelperUiState>
+        field = MutableStateFlow(ProfileHelperUiState())
 
     init {
         loadInitialData()
@@ -69,7 +71,7 @@ class ProfileHelperViewModel @Inject constructor(
                 )
             }
 
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     currentProfileName = currentProfileName,
                     availableProfiles = availableProfiles,
@@ -83,7 +85,7 @@ class ProfileHelperViewModel @Inject constructor(
 
     private fun loadTddStats() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingStats = true) }
+            uiState.update { it.copy(isLoadingStats = true) }
             try {
                 val data = withContext(Dispatchers.IO) {
                     val tdds = tddCalculator.calculate(7, allowMissingDays = true)
@@ -91,10 +93,10 @@ class ProfileHelperViewModel @Inject constructor(
                     val todayTdd = tddCalculator.calculateToday()
                     TddStatsData(tdds = tdds, averageTdd = averageTdd, todayTdd = todayTdd)
                 }
-                _uiState.update { it.copy(tddStatsData = data, isLoadingStats = false) }
+                uiState.update { it.copy(tddStatsData = data, isLoadingStats = false) }
             } catch (e: Exception) {
                 fabricPrivacy.logException(e)
-                _uiState.update { it.copy(isLoadingStats = false) }
+                uiState.update { it.copy(isLoadingStats = false) }
             }
         }
     }
@@ -213,6 +215,7 @@ class ProfileHelperViewModel @Inject constructor(
 /**
  * UI state for ProfileHelperScreen
  */
+@Immutable
 data class ProfileHelperUiState(
     val currentProfileName: String = "",
     val availableProfiles: List<CharSequence> = emptyList(),

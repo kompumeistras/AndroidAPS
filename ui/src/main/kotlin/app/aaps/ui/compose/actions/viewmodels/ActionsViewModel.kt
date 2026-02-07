@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.actions.viewmodels
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
@@ -45,13 +46,13 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+@Stable
 class ActionsViewModel @Inject constructor(
     private val rh: ResourceHelper,
     private val activePlugin: ActivePlugin,
@@ -74,8 +75,8 @@ class ActionsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val disposable = CompositeDisposable()
-    private val _uiState = MutableStateFlow(ActionsUiState())
-    val uiState: StateFlow<ActionsUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ActionsUiState>
+        field = MutableStateFlow(ActionsUiState())
 
     init {
         setupEventListeners()
@@ -185,7 +186,7 @@ class ActionsViewModel @Inject constructor(
             // Custom actions
             val customActions = pump.getCustomActions()?.filter { it.isEnabled } ?: emptyList()
 
-            _uiState.update { state ->
+            uiState.update { state ->
                 state.copy(
                     showTempTarget = profile != null && isLoopRunning,
                     showTempBasal = showTempBasal,
@@ -210,7 +211,7 @@ class ActionsViewModel @Inject constructor(
             // Calculate cannula usage in background (expensive operation)
             viewModelScope.launch {
                 val cannulaStatusWithUsage = buildCannulaStatus(isPatchPump, includeTddCalculation = true)
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(cannulaStatus = cannulaStatusWithUsage)
                 }
             }
@@ -274,8 +275,7 @@ class ActionsViewModel @Inject constructor(
         // Calculate usage since last cannula change (expensive - can be deferred)
         val usage = if (includeTddCalculation && event != null) {
             withContext(Dispatchers.IO) {
-//                tddCalculator.calculateInterval(event.timestamp, dateUtil.now(), allowMissingData = false)?.totalAmount ?: 0.0
-                0.0
+                tddCalculator.calculateInterval(event.timestamp, dateUtil.now(), allowMissingData = false)?.totalAmount ?: 0.0
             }
         } else 0.0
 

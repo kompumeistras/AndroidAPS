@@ -1,5 +1,6 @@
 package app.aaps.pump.medtrum.ui.viewmodel
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.LiveData
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -24,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 class MedtrumOverviewViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val rh: ResourceHelper,

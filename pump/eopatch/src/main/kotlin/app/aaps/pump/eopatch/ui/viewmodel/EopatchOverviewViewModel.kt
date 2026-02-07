@@ -1,5 +1,6 @@
 package app.aaps.pump.eopatch.ui.viewmodel
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
@@ -34,6 +35,7 @@ import javax.inject.Inject
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+@Stable
 class EopatchOverviewViewModel @Inject constructor(
     private val rh: ResourceHelper,
     val patchManager: IPatchManager,

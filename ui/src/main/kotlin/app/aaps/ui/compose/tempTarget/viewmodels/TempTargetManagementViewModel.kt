@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.tempTarget.viewmodels
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.configuration.Constants
@@ -20,12 +21,11 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringNonKey
 import app.aaps.core.keys.interfaces.Preferences
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -38,6 +38,7 @@ import kotlin.math.roundToInt
 /**
  * ViewModel for TempTargetManagementScreen managing TT presets and activation.
  */
+@Stable
 class TempTargetManagementViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val profileFunction: ProfileFunction,
@@ -61,12 +62,16 @@ class TempTargetManagementViewModel @Inject constructor(
         }
     }
 
-    private val _uiState = MutableStateFlow(TempTargetManagementUiState())
-    val uiState: StateFlow<TempTargetManagementUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TempTargetManagementUiState>
+        field = MutableStateFlow(TempTargetManagementUiState())
 
     // Navigation events (one-time events)
-    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
-    val navigationEvent: SharedFlow<NavigationEvent> = _navigationEvent.asSharedFlow()
+    val navigationEvent: SharedFlow<NavigationEvent>
+        field = MutableSharedFlow(
+            replay = 0,                          // Don't replay to new collectors
+            extraBufferCapacity = 1,             // Buffer one event if no collector
+            onBufferOverflow = BufferOverflow.DROP_OLDEST  // Drop old events
+        )
 
     sealed class NavigationEvent {
         data object NavigateBack : NavigationEvent()
@@ -117,7 +122,7 @@ class TempTargetManagementViewModel @Inject constructor(
                     roundForDisplay(profileUtil.fromMgdlToUnits(it, units), units)
                 } ?: roundForDisplay(profileUtil.fromMgdlToUnits(100.0, units), units)
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         activeTT = activeTT,
                         activePresetIndex = activePresetIndex,
@@ -134,7 +139,7 @@ class TempTargetManagementViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load temp target presets", e)
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         isLoading = false,
                         error = e.message ?: "Failed to load presets"
@@ -161,13 +166,13 @@ class TempTargetManagementViewModel @Inject constructor(
      * Select a preset by index and populate editor fields
      */
     fun selectPreset(index: Int) {
-        val preset = _uiState.value.presets.getOrNull(index)
+        val preset = uiState.value.presets.getOrNull(index)
         // Convert target from mg/dL (storage) to user units (display) with proper rounding
         val targetInUserUnits = preset?.targetValue?.let {
             roundForDisplay(profileUtil.fromMgdlToUnits(it, units), units)
         } ?: roundForDisplay(profileUtil.fromMgdlToUnits(100.0, units), units)
 
-        _uiState.update {
+        uiState.update {
             it.copy(
                 selectedPreset = preset,
                 editorName = preset?.name ?: "",
@@ -185,28 +190,28 @@ class TempTargetManagementViewModel @Inject constructor(
      * Update editor name
      */
     fun updateEditorName(name: String) {
-        _uiState.update { it.copy(editorName = name) }
+        uiState.update { it.copy(editorName = name) }
     }
 
     /**
      * Update editor target value (in mg/dL)
      */
     fun updateEditorTarget(target: Double) {
-        _uiState.update { it.copy(editorTarget = target) }
+        uiState.update { it.copy(editorTarget = target) }
     }
 
     /**
      * Update editor duration (in milliseconds)
      */
     fun updateEditorDuration(duration: Long) {
-        _uiState.update { it.copy(editorDuration = duration) }
+        uiState.update { it.copy(editorDuration = duration) }
     }
 
     /**
      * Update event time for activation
      */
     fun updateEventTime(time: Long) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 eventTime = time,
                 eventTimeChanged = true
@@ -218,7 +223,7 @@ class TempTargetManagementViewModel @Inject constructor(
      * Update notes for activation
      */
     fun updateNotes(notes: String) {
-        _uiState.update { it.copy(notes = notes) }
+        uiState.update { it.copy(notes = notes) }
     }
 
     /**
@@ -227,7 +232,7 @@ class TempTargetManagementViewModel @Inject constructor(
     fun saveCurrentPreset() {
         viewModelScope.launch {
             try {
-                val currentState = _uiState.value
+                val currentState = uiState.value
                 val selectedPreset = currentState.selectedPreset ?: return@launch
                 val selectedPresetId = selectedPreset.id
 
@@ -251,7 +256,7 @@ class TempTargetManagementViewModel @Inject constructor(
 
                 // Update presets list and selected preset reference
                 val reselectedPreset = updatedPresets.find { it.id == selectedPresetId }
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         presets = updatedPresets,
                         selectedPreset = reselectedPreset
@@ -300,7 +305,7 @@ class TempTargetManagementViewModel @Inject constructor(
      * Evaluated on every editor change to update revert button visibility.
      */
     fun isEditorDifferentFromDefaults(): Boolean {
-        val currentState = _uiState.value
+        val currentState = uiState.value
         val preset = currentState.selectedPreset ?: return false
         if (preset.isDeletable) return false
 
@@ -322,7 +327,7 @@ class TempTargetManagementViewModel @Inject constructor(
      * Evaluated on every editor change to update save button visibility.
      */
     fun hasUnsavedChanges(): Boolean {
-        val currentState = _uiState.value
+        val currentState = uiState.value
         val preset = currentState.selectedPreset ?: return false
 
         // Convert current editor target (in user units) to mg/dL for comparison
@@ -346,7 +351,7 @@ class TempTargetManagementViewModel @Inject constructor(
     fun revertToDefaults() {
         viewModelScope.launch {
             try {
-                val currentState = _uiState.value
+                val currentState = uiState.value
                 val selectedPreset = currentState.selectedPreset ?: return@launch
 
                 // Only allow revert for fixed presets (non-deletable)
@@ -373,7 +378,7 @@ class TempTargetManagementViewModel @Inject constructor(
                 val reselectedPreset = updatedPresets.find { it.id == selectedPreset.id }
                 val targetInUserUnits = roundForDisplay(profileUtil.fromMgdlToUnits(defaultTargetMgdl, units), units)
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         presets = updatedPresets,
                         selectedPreset = reselectedPreset,
@@ -405,7 +410,7 @@ class TempTargetManagementViewModel @Inject constructor(
                     isDeletable = true
                 )
 
-                val updatedPresets = _uiState.value.presets + newPreset
+                val updatedPresets = uiState.value.presets + newPreset
                 preferences.put(StringNonKey.TempTargetPresets, updatedPresets.toJson())
                 loadData()
 
@@ -414,9 +419,9 @@ class TempTargetManagementViewModel @Inject constructor(
                 selectPreset(presetIndex)
 
                 // Scroll to new preset (account for standalone active TT card at position 0)
-                val hasStandaloneActiveTT = _uiState.value.activeTT != null && _uiState.value.activePresetIndex == null
+                val hasStandaloneActiveTT = uiState.value.activeTT != null && uiState.value.activePresetIndex == null
                 val pageIndex = if (hasStandaloneActiveTT) presetIndex + 1 else presetIndex
-                _navigationEvent.emit(NavigationEvent.ScrollToPreset(pageIndex))
+                navigationEvent.emit(NavigationEvent.ScrollToPreset(pageIndex))
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to add preset", e)
             }
@@ -429,8 +434,8 @@ class TempTargetManagementViewModel @Inject constructor(
     fun deleteCurrentPreset() {
         viewModelScope.launch {
             try {
-                val presetId = _uiState.value.selectedPreset?.id ?: return@launch
-                val updatedPresets = _uiState.value.presets.filter { it.id != presetId }
+                val presetId = uiState.value.selectedPreset?.id ?: return@launch
+                val updatedPresets = uiState.value.presets.filter { it.id != presetId }
                 preferences.put(StringNonKey.TempTargetPresets, updatedPresets.toJson())
                 loadData()
             } catch (e: Exception) {
@@ -445,7 +450,7 @@ class TempTargetManagementViewModel @Inject constructor(
     fun activateWithEditorValues() {
         viewModelScope.launch {
             try {
-                val currentState = _uiState.value
+                val currentState = uiState.value
                 val timestamp = if (currentState.eventTimeChanged) {
                     currentState.eventTime
                 } else {
@@ -479,7 +484,7 @@ class TempTargetManagementViewModel @Inject constructor(
                 )
 
                 // Navigate back after successful activation
-                _navigationEvent.emit(NavigationEvent.NavigateBack)
+                navigationEvent.emit(NavigationEvent.NavigateBack)
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to activate temp target", e)
             }

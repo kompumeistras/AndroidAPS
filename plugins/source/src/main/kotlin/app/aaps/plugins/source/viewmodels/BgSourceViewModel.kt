@@ -1,5 +1,7 @@
 package app.aaps.plugins.source.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.GV
@@ -18,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,6 +30,7 @@ import javax.inject.Inject
 /**
  * ViewModel for BgSourceScreen managing blood glucose readings state and business logic.
  */
+@Stable
 class BgSourceViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     val rh: ResourceHelper,
@@ -37,8 +39,8 @@ class BgSourceViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(BgSourceUiState())
-    val uiState: StateFlow<BgSourceUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<BgSourceUiState>
+        field = MutableStateFlow(BgSourceUiState())
 
     /** Default time range for BG source history */
     private val defaultHistoryHours = 36L
@@ -54,9 +56,9 @@ class BgSourceViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch(Dispatchers.IO) {
             // Only show loading on initial load, not on refreshes
-            val currentState = _uiState.value
+            val currentState = uiState.value
             if (currentState.glucoseValues.isEmpty()) {
-                _uiState.update { it.copy(isLoading = true) }
+                uiState.update { it.copy(isLoading = true) }
             }
 
             try {
@@ -65,7 +67,7 @@ class BgSourceViewModel @Inject constructor(
 
                 val data = persistenceLayer.getBgReadingsDataFromTime(now - millsToThePast, false)
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         glucoseValues = data,
                         isLoading = false,
@@ -74,7 +76,7 @@ class BgSourceViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load BG data", e)
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         isLoading = false,
                         error = e.message ?: "Unknown error loading BG data"
@@ -88,7 +90,7 @@ class BgSourceViewModel @Inject constructor(
      * Load more historical data (for infinite scroll)
      */
     fun loadMoreData() {
-        _uiState.update { it.copy(historyHours = it.historyHours + 24L) }
+        uiState.update { it.copy(historyHours = it.historyHours + 24L) }
         loadData()
     }
 
@@ -107,14 +109,14 @@ class BgSourceViewModel @Inject constructor(
      * Clear error state
      */
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        uiState.update { it.copy(error = null) }
     }
 
     /**
      * Enter selection mode with initial item selected
      */
     fun enterSelectionMode(item: GV) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = true,
                 selectedItems = setOf(item)
@@ -126,7 +128,7 @@ class BgSourceViewModel @Inject constructor(
      * Exit selection mode and clear selection
      */
     fun exitSelectionMode() {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = false,
                 selectedItems = emptySet()
@@ -138,7 +140,7 @@ class BgSourceViewModel @Inject constructor(
      * Toggle selection of an item
      */
     fun toggleSelection(item: GV) {
-        _uiState.update { state ->
+        uiState.update { state ->
             val newSelection = if (item in state.selectedItems) {
                 state.selectedItems - item
             } else {
@@ -152,7 +154,7 @@ class BgSourceViewModel @Inject constructor(
      * Prepare delete confirmation message
      */
     fun getDeleteConfirmationMessage(): String {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return ""
 
         return if (selected.size == 1) {
@@ -167,7 +169,7 @@ class BgSourceViewModel @Inject constructor(
      * Delete selected items
      */
     fun deleteSelected() {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -185,7 +187,7 @@ class BgSourceViewModel @Inject constructor(
                 loadData()
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to delete BG readings", e)
-                _uiState.update { it.copy(error = e.message ?: "Unknown error deleting BG readings") }
+                uiState.update { it.copy(error = e.message ?: "Unknown error deleting BG readings") }
             }
         }
     }
@@ -194,6 +196,7 @@ class BgSourceViewModel @Inject constructor(
 /**
  * UI state for BgSourceScreen
  */
+@Immutable
 data class BgSourceUiState(
     val glucoseValues: List<GV> = emptyList(),
     val isLoading: Boolean = true,

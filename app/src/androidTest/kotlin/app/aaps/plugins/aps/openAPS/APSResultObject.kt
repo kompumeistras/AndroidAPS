@@ -90,7 +90,7 @@ open class APSResultObject(protected val injector: HasAndroidInjector) : APSResu
     override var autosensResult: AutosensResult? = null
 
     override fun predictions(): Predictions? = null
-    override fun rawData(): Any = Object()
+    override fun rawData(): Any = Any()
 
     override val carbsRequiredText: String
         get() = rh.gs(R.string.carbsreq, carbsReq, carbsReqWithin)
@@ -321,7 +321,7 @@ open class APSResultObject(protected val injector: HasAndroidInjector) : APSResu
                 val highThreshold = 1 + percentMinChangeChange
                 var change = percent / 100.0
                 if (activeTemp != null) change = percent / activeTemp.convertedToPercent(now, profile).toDouble()
-                if (change < lowThreshold || change > highThreshold) {
+                if (change !in lowThreshold..highThreshold) {
                     aapsLogger.debug(LTag.APS, "TRUE: Outside allowed range " + change * 100.0 + "%")
                     true
                 } else {
@@ -357,7 +357,7 @@ open class APSResultObject(protected val injector: HasAndroidInjector) : APSResu
                 val highThreshold = 1 + percentMinChangeChange
                 var change = rate / profile.getBasal()
                 if (activeTemp != null) change = rate / activeTemp.convertedToAbsolute(now, profile)
-                if (change < lowThreshold || change > highThreshold) {
+                if (change !in lowThreshold..highThreshold) {
                     aapsLogger.debug(LTag.APS, "TRUE: Outside allowed range " + change * 100.0 + "%")
                     true
                 } else {

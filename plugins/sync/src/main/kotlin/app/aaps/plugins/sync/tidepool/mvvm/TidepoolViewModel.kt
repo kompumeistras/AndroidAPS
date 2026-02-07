@@ -1,37 +1,40 @@
 package app.aaps.plugins.sync.tidepool.mvvm
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Immutable
 data class TidepoolUiState(
     val connectionStatus: String = "",
     val logList: List<TidepoolLog> = emptyList()
 )
 
+@Stable
 class TidepoolViewModel @Inject constructor(
     private val tidepoolMvvmRepository: TidepoolMvvmRepository,
     private val authFlowOut: AuthFlowOut
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TidepoolUiState())
-    val uiState: StateFlow<TidepoolUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TidepoolUiState>
+        field = MutableStateFlow(TidepoolUiState())
 
     init {
         viewModelScope.launch {
             tidepoolMvvmRepository.connectionStatus.collect { status ->
-                _uiState.update { it.copy(connectionStatus = status.name) }
+                uiState.update { it.copy(connectionStatus = status.name) }
             }
         }
         viewModelScope.launch {
             tidepoolMvvmRepository.logList.collect { logList ->
-                _uiState.update { it.copy(logList = logList) }
+                uiState.update { it.copy(logList = logList) }
             }
         }
     }

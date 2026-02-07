@@ -1,9 +1,11 @@
 package app.aaps.pump.omnipod.eros.ui.wizard.activation.viewmodel.info
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.pump.omnipod.common.ui.wizard.activation.viewmodel.info.AttachPodViewModel
 import javax.inject.Inject
 
+@Stable
 class ErosAttachPodViewModel @Inject constructor() : AttachPodViewModel() {
 
     @StringRes

@@ -1,6 +1,7 @@
 package app.aaps.pump.omnipod.dash.ui.wizard.activation.viewmodel.action
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -34,6 +35,7 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
 import javax.inject.Provider
 
+@Stable
 class DashInsertCannulaViewModel @Inject constructor(
     private val omnipodManager: OmnipodDashManager,
     private val profileFunction: ProfileFunction,

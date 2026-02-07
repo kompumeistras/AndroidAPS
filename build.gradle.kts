@@ -41,6 +41,7 @@ allprojects {
             freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
             freeCompilerArgs.add("-opt-in=kotlin.ExperimentalUnsignedTypes")
             freeCompilerArgs.add("-Xannotation-default-target=param-property")
+            freeCompilerArgs.add("-Xexplicit-backing-fields")
             jvmTarget.set(Versions.jvmTarget)
         }
     }
@@ -54,6 +55,13 @@ allprojects {
 
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "jacoco")
+
+    // Configure Compose compiler for all modules that use it
+    pluginManager.withPlugin("org.jetbrains.kotlin.plugin.compose") {
+        extensions.configure<org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension> {
+            enableStrongSkippingMode.set(true)
+        }
+    }
 }
 
 // Setup all reports aggregation

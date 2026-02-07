@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
@@ -19,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -32,6 +33,7 @@ import javax.inject.Inject
 /**
  * ViewModel for RunningModeScreen managing running mode state and business logic.
  */
+@Stable
 class RunningModeViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     val rh: ResourceHelper,
@@ -39,8 +41,8 @@ class RunningModeViewModel @Inject constructor(
     private val aapsLogger: AAPSLogger
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(RunningModeUiState())
-    val uiState: StateFlow<RunningModeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<RunningModeUiState>
+        field = MutableStateFlow(RunningModeUiState())
 
     init {
         loadData()
@@ -53,9 +55,9 @@ class RunningModeViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             // Only show loading on initial load, not on refreshes
-            val currentState = _uiState.value
+            val currentState = uiState.value
             if (currentState.runningModes.isEmpty()) {
-                _uiState.update { it.copy(isLoading = true) }
+                uiState.update { it.copy(isLoading = true) }
             }
 
             try {
@@ -68,7 +70,7 @@ class RunningModeViewModel @Inject constructor(
                     persistenceLayer.getRunningModesFromTime(now - millsToThePast, false)
                 }
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         runningModes = runningModes,
                         isLoading = false,
@@ -77,7 +79,7 @@ class RunningModeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load running modes", e)
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         isLoading = false,
                         error = e.message ?: "Unknown error loading running modes"
@@ -103,14 +105,14 @@ class RunningModeViewModel @Inject constructor(
      * Clear error state
      */
     fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        uiState.update { it.copy(error = null) }
     }
 
     /**
      * Toggle show/hide invalidated items
      */
     fun toggleInvalidated() {
-        _uiState.update { it.copy(showInvalidated = !it.showInvalidated) }
+        uiState.update { it.copy(showInvalidated = !it.showInvalidated) }
         loadData()
     }
 
@@ -118,7 +120,7 @@ class RunningModeViewModel @Inject constructor(
      * Enter selection mode with initial item selected
      */
     fun enterSelectionMode(item: RM) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = true,
                 selectedItems = setOf(item)
@@ -130,7 +132,7 @@ class RunningModeViewModel @Inject constructor(
      * Exit selection mode and clear selection
      */
     fun exitSelectionMode() {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isRemovingMode = false,
                 selectedItems = emptySet()
@@ -142,7 +144,7 @@ class RunningModeViewModel @Inject constructor(
      * Toggle selection of an item
      */
     fun toggleSelection(item: RM) {
-        _uiState.update { state ->
+        uiState.update { state ->
             val newSelection = if (item in state.selectedItems) {
                 state.selectedItems - item
             } else {
@@ -163,7 +165,7 @@ class RunningModeViewModel @Inject constructor(
      * Prepare delete confirmation message
      */
     fun getDeleteConfirmationMessage(): String {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return ""
 
         return if (selected.size == 1) {
@@ -178,7 +180,7 @@ class RunningModeViewModel @Inject constructor(
      * Delete selected items
      */
     fun deleteSelected() {
-        val selected = _uiState.value.selectedItems
+        val selected = uiState.value.selectedItems
         if (selected.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -201,7 +203,7 @@ class RunningModeViewModel @Inject constructor(
                 exitSelectionMode()
                 loadData()
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+                uiState.update { it.copy(error = e.message) }
             }
         }
     }
@@ -211,6 +213,7 @@ class RunningModeViewModel @Inject constructor(
 /**
  * UI state for RunningModeScreen
  */
+@Immutable
 data class RunningModeUiState(
     val runningModes: List<RM> = emptyList(),
     val isLoading: Boolean = true,

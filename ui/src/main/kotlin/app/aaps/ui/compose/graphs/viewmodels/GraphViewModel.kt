@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.graphs.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -42,11 +44,13 @@ data class ChartConfig(
 /**
  * UI state for BG info section display
  */
+@Immutable
 data class BgInfoUiState(
     val bgInfo: BgInfoData?,
     val timeAgoText: String
 )
 
+@Stable
 class GraphViewModel @Inject constructor(
     cache: OverviewDataCache,
     private val aapsLogger: AAPSLogger,

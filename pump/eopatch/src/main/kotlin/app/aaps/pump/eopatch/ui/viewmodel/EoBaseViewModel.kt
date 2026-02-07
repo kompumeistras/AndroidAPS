@@ -1,11 +1,13 @@
 package app.aaps.pump.eopatch.ui.viewmodel
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import app.aaps.pump.eopatch.ui.EoBaseNavigator
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import java.lang.ref.WeakReference
 
+@Stable
 abstract class EoBaseViewModel<N : EoBaseNavigator> : ViewModel() {
 
     private var _navigator: WeakReference<N?>? = null

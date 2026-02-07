@@ -1,4 +1,5 @@
 package app.aaps.ui.compose.tempTarget.viewmodels
+import androidx.compose.runtime.Immutable
 
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.model.TTPreset
@@ -7,6 +8,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 /**
  * UI state for TempTargetManagementScreen
  */
+@Immutable
 data class TempTargetManagementUiState(
     /** Currently active temporary target (if any) */
     val activeTT: TT? = null,

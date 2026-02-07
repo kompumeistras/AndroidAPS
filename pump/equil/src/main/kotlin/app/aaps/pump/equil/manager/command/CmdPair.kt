@@ -141,7 +141,7 @@ class CmdPair(
     override fun decodeConfirm(): EquilResponse? {
         synchronized(this) {
             cmdSuccess = true
-            (this as Object).notifyAll()
+            notifyAll()
         }
         return null
     }

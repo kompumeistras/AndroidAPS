@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.profileManagement.viewmodels
 
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.EPS
@@ -42,7 +44,6 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -55,6 +56,7 @@ import javax.inject.Inject
 /**
  * ViewModel for ProfileManagementScreen managing profile list and operations.
  */
+@Stable
 class ProfileManagementViewModel @Inject constructor(
     private val localProfileManager: LocalProfileManager,
     private val profileFunction: ProfileFunction,
@@ -73,8 +75,8 @@ class ProfileManagementViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val disposable = CompositeDisposable()
-    private val _uiState = MutableStateFlow(ProfileManagementUiState())
-    val uiState: StateFlow<ProfileManagementUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ProfileManagementUiState>
+        field = MutableStateFlow(ProfileManagementUiState())
 
     init {
         loadData()
@@ -99,9 +101,9 @@ class ProfileManagementViewModel @Inject constructor(
 
                 // Navigate to active profile on initial load or when active profile changes
                 val activeIndex = profiles.indexOfFirst { it.name == activeProfileName }
-                val previousActiveProfileName = _uiState.value.activeProfileName
+                val previousActiveProfileName = uiState.value.activeProfileName
                 val activeProfileChanged = previousActiveProfileName != null && previousActiveProfileName != activeProfileName
-                val currentIndex = if (activeIndex >= 0 && (_uiState.value.isLoading || activeProfileChanged)) {
+                val currentIndex = if (activeIndex >= 0 && (uiState.value.isLoading || activeProfileChanged)) {
                     // First load or active profile changed - scroll to active profile
                     localProfileManager.currentProfileIndex = activeIndex
                     activeIndex
@@ -183,29 +185,27 @@ class ProfileManagementViewModel @Inject constructor(
 
                         if (baseChanged) {
                             // Profile was edited after activation — show "Running" vs current
-                            if (baseProfile != null) {
-                                val profileName = profiles[currentIndex].name
-                                val runningLabel = buildString {
-                                    append(rh.gs(R.string.running))
-                                    if (hasModifications) {
-                                        val tsHours = (tsMs / 3600000).toInt()
-                                        append(" (")
-                                        append("$pct%")
-                                        if (tsHours != 0) append(", ${if (tsHours > 0) "+" else ""}${tsHours}h")
-                                        append(")")
-                                    }
+                            val profileName = profiles[currentIndex].name
+                            val runningLabel = buildString {
+                                append(rh.gs(R.string.running))
+                                if (hasModifications) {
+                                    val tsHours = (tsMs / 3600000).toInt()
+                                    append(" (")
+                                    append("$pct%")
+                                    if (tsHours != 0) append(", ${if (tsHours > 0) "+" else ""}${tsHours}h")
+                                    append(")")
                                 }
-                                compareData = buildProfileCompareData(
-                                    profile1 = effectiveProfile,
-                                    profile2 = baseProfile,
-                                    profileName1 = runningLabel,
-                                    profileName2 = profileName,
-                                    rh = rh,
-                                    dateUtil = dateUtil,
-                                    profileUtil = profileUtil,
-                                    profileFunction = profileFunction
-                                )
                             }
+                            compareData = buildProfileCompareData(
+                                profile1 = effectiveProfile,
+                                profile2 = baseProfile,
+                                profileName1 = runningLabel,
+                                profileName2 = profileName,
+                                rh = rh,
+                                dateUtil = dateUtil,
+                                profileUtil = profileUtil,
+                                profileFunction = profileFunction
+                            )
                             effectiveProfile
                         } else if (hasModifications) {
                             // Only pct/ts modifications — show base vs effective
@@ -241,7 +241,7 @@ class ProfileManagementViewModel @Inject constructor(
                     }
                 } else null
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         profileNames = profileNames,
                         currentProfileIndex = currentIndex,
@@ -258,7 +258,7 @@ class ProfileManagementViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to load profiles", e)
-                _uiState.update {
+                uiState.update {
                     it.copy(isLoading = false)
                 }
             }
@@ -493,6 +493,7 @@ class ProfileManagementViewModel @Inject constructor(
 /**
  * UI state for ProfileManagementScreen
  */
+@Immutable
 data class ProfileManagementUiState(
     val profileNames: List<String> = emptyList(),
     val currentProfileIndex: Int = 0,

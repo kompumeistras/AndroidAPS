@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.main
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
@@ -19,7 +20,6 @@ import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 class MainViewModel @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val configBuilder: ConfigBuilder,
@@ -39,8 +40,8 @@ class MainViewModel @Inject constructor(
     private val overviewDataCache: OverviewDataCache
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MainUiState())
-    val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<MainUiState>
+        field = MutableStateFlow(MainUiState())
 
     val versionName: String get() = config.VERSION_NAME
     val appIcon: Int get() = iconsProvider.getIcon()
@@ -112,7 +113,7 @@ class MainViewModel @Inject constructor(
                 }
             } else ""
 
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     // TempTarget state
                     tempTargetText = ttText,
@@ -159,7 +160,7 @@ class MainViewModel @Inject constructor(
     private fun loadDrawerCategories() {
         viewModelScope.launch {
             val categories = buildDrawerCategories()
-            _uiState.update { state ->
+            uiState.update { state ->
                 state.copy(
                     drawerCategories = categories,
                     isSimpleMode = preferences.simpleMode
@@ -300,41 +301,41 @@ class MainViewModel @Inject constructor(
 
     // Drawer state
     fun openDrawer() {
-        _uiState.update { it.copy(isDrawerOpen = true) }
+        uiState.update { it.copy(isDrawerOpen = true) }
     }
 
     fun closeDrawer() {
-        _uiState.update { it.copy(isDrawerOpen = false) }
+        uiState.update { it.copy(isDrawerOpen = false) }
     }
 
     // Category sheet state
     fun showCategorySheet(category: DrawerCategory) {
-        _uiState.update { it.copy(selectedCategoryForSheet = category) }
+        uiState.update { it.copy(selectedCategoryForSheet = category) }
     }
 
     fun dismissCategorySheet() {
-        _uiState.update { it.copy(selectedCategoryForSheet = null) }
+        uiState.update { it.copy(selectedCategoryForSheet = null) }
     }
 
     // About dialog state
     fun setShowAboutDialog(show: Boolean) {
-        _uiState.update { it.copy(showAboutDialog = show) }
+        uiState.update { it.copy(showAboutDialog = show) }
     }
 
     // Navigation state
     fun setNavDestination(destination: MainNavDestination) {
-        _uiState.update { it.copy(currentNavDestination = destination) }
+        uiState.update { it.copy(currentNavDestination = destination) }
     }
 
     // Plugin toggle
     fun togglePluginEnabled(plugin: PluginBase, type: PluginType, enabled: Boolean) {
         configBuilder.performPluginSwitch(plugin, enabled, type)
         val categories = buildDrawerCategories()
-        val currentSheet = _uiState.value.selectedCategoryForSheet
+        val currentSheet = uiState.value.selectedCategoryForSheet
         val updatedSheet = currentSheet?.let { sheet ->
             categories.find { it.type == sheet.type }
         }
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 drawerCategories = categories,
                 selectedCategoryForSheet = updatedSheet,
