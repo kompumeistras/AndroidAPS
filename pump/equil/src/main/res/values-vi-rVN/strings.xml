@@ -75,8 +75,8 @@
     <string name="equil_common_cmd_insert_cannula">Gắn Cannula</string>
     <string name="equil_common_cmd_unpair">Hủy ghép đôi Equil</string>
     <string name="equil_common_cmd_alarm">Cảnh báo</string>
-    <string name="equil_common_cmd_set_extended_bolus">Đặt liều Bolus mở rộng</string>
-    <string name="equil_common_cmd_cancel_extended_bolus">Hủy liều Bolus mở rộng</string>
+    <string name="equil_common_cmd_set_extended_bolus">Đặt liều Bolus kéo dài</string>
+    <string name="equil_common_cmd_cancel_extended_bolus">Hủy liều Bolus kéo dài</string>
     <!--    推杆回退-->
     <string name="equil_common_change_insulin">Rút cần đẩy</string>
     <string name="equil_common_set_alarm_tone">Cấu hình chỉ để phát âm thanh thông báo</string>
