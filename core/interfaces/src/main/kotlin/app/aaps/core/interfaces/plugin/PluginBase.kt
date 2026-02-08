@@ -85,7 +85,7 @@ abstract class PluginBase(
      *         Caller should cast to ComposablePluginContent from core:ui module.
      */
     fun getComposeContent(): Any? {
-        return pluginDescription.composeContentProvider?.invoke()
+        return pluginDescription.composeContentProvider?.invoke(this)
     }
 
     fun isDefault() = pluginDescription.defaultPlugin

@@ -28,7 +28,7 @@ class NSClientSourcePlugin @Inject constructor(
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.BGSOURCE)
-        .composeContent {
+        .composeContent { _ ->
             BgSourceComposeContent(
                 persistenceLayer = persistenceLayer,
                 rh = rh,

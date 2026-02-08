@@ -135,13 +135,8 @@ class NSClientV3Plugin @Inject constructor(
         .pluginName(R.string.ns_client_v3_title)
         .shortName(R.string.ns_client_v3_short_name)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
-        .description(R.string.description_ns_client_v3),
-    ownPreferences = listOf(NsclientBooleanKey::class.java, NsclientStringKey::class.java, NsclientLongKey::class.java),
-    aapsLogger, rh, preferences
-) {
-
-    init {
-        pluginDescription.composeContentProvider = {
+        .description(R.string.description_ns_client_v3)
+        .composeContent { plugin ->
             NSClientComposeContent(
                 rh = rh,
                 dateUtil = dateUtil,
@@ -151,11 +146,13 @@ class NSClientV3Plugin @Inject constructor(
                 nsClientMvvmRepository = nsClientMvvmRepository,
                 activePlugin = activePlugin,
                 preferences = preferences,
-                nsClient = { this },
+                nsClient = plugin as NsClient,
                 title = rh.gs(R.string.ns_client_v3_title)
             )
-        }
-    }
+        },
+    ownPreferences = listOf(NsclientBooleanKey::class.java, NsclientStringKey::class.java, NsclientLongKey::class.java),
+    aapsLogger, rh, preferences
+) {
 
     @Suppress("PrivatePropertyName")
     private val JOB_NAME: String = this::class.java.simpleName

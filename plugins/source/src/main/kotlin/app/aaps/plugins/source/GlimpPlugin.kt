@@ -36,7 +36,7 @@ class GlimpPlugin @Inject constructor(
 ) : AbstractBgSourcePlugin(
     pluginDescription = PluginDescription()
         .mainType(PluginType.BGSOURCE)
-        .composeContent {
+        .composeContent { _ ->
             BgSourceComposeContent(
                 persistenceLayer = persistenceLayer,
                 rh = rh,

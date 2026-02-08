@@ -46,7 +46,7 @@ class DexcomPlugin @Inject constructor(
 ) : AbstractBgSourceWithSensorInsertLogPlugin(
     pluginDescription = PluginDescription()
         .mainType(PluginType.BGSOURCE)
-        .composeContent {
+        .composeContent { _ ->
             BgSourceComposeContent(
                 persistenceLayer = persistenceLayer,
                 rh = rh,

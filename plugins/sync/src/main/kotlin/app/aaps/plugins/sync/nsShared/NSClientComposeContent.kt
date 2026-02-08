@@ -41,7 +41,7 @@ class NSClientComposeContent(
     private val nsClientMvvmRepository: NSClientMvvmRepository,
     private val activePlugin: ActivePlugin,
     private val preferences: Preferences,
-    private val nsClient: () -> NsClient?,
+    private val nsClient: NsClient,
     private val title: String
 ) : ComposablePluginContent {
 
@@ -101,8 +101,8 @@ class NSClientComposeContent(
                             }
                             aapsLogger.info(LTag.CORE, "Cleaned up databases with result: $result")
                             withContext(Dispatchers.IO) {
-                                nsClient()?.resetToFullSync()
-                                nsClient()?.resend("FULL_SYNC")
+                                nsClient.resetToFullSync()
+                                nsClient.resend("FULL_SYNC")
                             }
                         } catch (e: Exception) {
                             aapsLogger.error("Error cleaning up databases", e)
@@ -115,8 +115,8 @@ class NSClientComposeContent(
                     // Cancel means "No" to cleanup but continue with full sync
                     scope.launch {
                         withContext(Dispatchers.IO) {
-                            nsClient()?.resetToFullSync()
-                            nsClient()?.resend("FULL_SYNC")
+                            nsClient.resetToFullSync()
+                            nsClient.resend("FULL_SYNC")
                         }
                     }
                 }
@@ -144,7 +144,7 @@ class NSClientComposeContent(
                     action = if (isChecked) Action.NS_PAUSED else Action.NS_RESUME,
                     source = Sources.NSClient
                 )
-                nsClient()?.pause(isChecked)
+                nsClient.pause(isChecked)
                 viewModel.updatePaused(isChecked)
             },
             onClearLog = {
@@ -152,7 +152,7 @@ class NSClientComposeContent(
             },
             onSendNow = {
                 scope.launch(Dispatchers.IO) {
-                    nsClient()?.resend("GUI")
+                    nsClient.resend("GUI")
                 }
             },
             onFullSync = {

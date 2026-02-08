@@ -86,12 +86,8 @@ class NSClientPlugin @Inject constructor(
         .pluginName(R.string.ns_client_title)
         .shortName(R.string.ns_client_short_name)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
-        .description(R.string.description_ns_client),
-    aapsLogger, rh
-) {
-
-    init {
-        pluginDescription.composeContentProvider = {
+        .description(R.string.description_ns_client)
+        .composeContent { plugin ->
             NSClientComposeContent(
                 rh = rh,
                 dateUtil = dateUtil,
@@ -101,11 +97,12 @@ class NSClientPlugin @Inject constructor(
                 nsClientMvvmRepository = nsClientMvvmRepository,
                 activePlugin = activePlugin,
                 preferences = preferences,
-                nsClient = { this },
+                nsClient = plugin as NsClient,
                 title = rh.gs(R.string.ns_client_title)
             )
-        }
-    }
+        },
+    aapsLogger, rh
+) {
 
     private val disposable = CompositeDisposable()
     override val dataSyncSelector: DataSyncSelector get() = dataSyncSelectorV1

@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,22 +67,35 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
     // State to track if showing compose preferences (only in compose context)
     private var showingComposePreferences by mutableStateOf(false)
 
+    // Toggle between Compose and Fragment rendering (debug only)
+    private var forceFragment = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        forceFragment = savedInstanceState?.getBoolean(KEY_FORCE_FRAGMENT, false) ?: false
 
         plugin = activePlugin.getPluginsList()[intent.getIntExtra("plugin", -1)]
         val currentPlugin = plugin ?: return
 
-        if (currentPlugin.hasComposeContent()) {
-            // Plugin has Compose content - use Compose UI
-            setupComposeContent(currentPlugin)
+        setupPluginContent(currentPlugin, savedInstanceState)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_FORCE_FRAGMENT, forceFragment)
+    }
+
+    private fun setupPluginContent(plugin: PluginBase, savedInstanceState: Bundle?) {
+        val canToggle = plugin.hasComposeContent() && plugin.hasFragment() && config.isEngineeringMode()
+        if (plugin.hasComposeContent() && !forceFragment) {
+            setupComposeContent(plugin, canToggle)
         } else {
-            // Plugin uses Fragment - use legacy layout with Fragment hosting
-            setupFragmentContent(currentPlugin, savedInstanceState)
+            setupFragmentContent(plugin, savedInstanceState, canToggle)
         }
     }
 
-    private fun setupComposeContent(plugin: PluginBase) {
+    private fun setupComposeContent(plugin: PluginBase, canToggle: Boolean = false) {
         val composeContent = plugin.getComposeContent() ?: return
 
         // Hide the system ActionBar - we use Compose TopAppBar instead
@@ -96,6 +110,11 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
                 }
             },
             actions = {
+                if (canToggle) {
+                    IconButton(onClick = { toggleToFragment() }) {
+                        Icon(painterResource(id = app.aaps.core.ui.R.drawable.ic_swap_horiz), contentDescription = "Switch to Fragment")
+                    }
+                }
                 // Settings button if plugin has preferences
                 if (shouldShowPreferencesMenu(plugin)) {
                     IconButton(onClick = { openPluginPreferences(plugin) }) {
@@ -156,7 +175,7 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
         }
     }
 
-    private fun setupFragmentContent(plugin: PluginBase, savedInstanceState: Bundle?) {
+    private fun setupFragmentContent(plugin: PluginBase, savedInstanceState: Bundle?, canToggle: Boolean = false) {
         setTheme(app.aaps.core.ui.R.style.AppTheme)
         setContentView(R.layout.activity_single_fragment)
 
@@ -164,7 +183,7 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null || forceFragment) {
             supportFragmentManager.beginTransaction().replace(
                 R.id.frame_layout,
                 supportFragmentManager.fragmentFactory.instantiate(
@@ -179,6 +198,11 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
         // Add menu items for Fragment-based plugins
         val singleFragmentMenuProvider = object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                if (canToggle) {
+                    menu.add(0, MENU_TOGGLE_COMPOSE, 0, "Compose")
+                        .setIcon(app.aaps.core.ui.R.drawable.ic_swap_horiz)
+                        .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                }
                 if (!shouldShowPreferencesMenu(plugin)) return
                 menuInflater.inflate(R.menu.menu_single_fragment, menu)
             }
@@ -187,6 +211,11 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
                 when (menuItem.itemId) {
                     android.R.id.home -> {
                         onBackPressedDispatcher.onBackPressed()
+                        true
+                    }
+
+                    MENU_TOGGLE_COMPOSE -> {
+                        toggleToCompose()
                         true
                     }
 
@@ -199,6 +228,21 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
                 }
         }
         addMenuProvider(singleFragmentMenuProvider)
+    }
+
+    private fun toggleToFragment() {
+        forceFragment = true
+        recreate()
+    }
+
+    private fun toggleToCompose() {
+        forceFragment = false
+        recreate()
+    }
+
+    companion object {
+        private const val MENU_TOGGLE_COMPOSE = 9999
+        private const val KEY_FORCE_FRAGMENT = "force_fragment"
     }
 
     private fun shouldShowPreferencesMenu(plugin: PluginBase): Boolean {

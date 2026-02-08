@@ -38,7 +38,7 @@ class PatchedSinoAppPlugin @Inject constructor(
 ) : AbstractBgSourcePlugin(
     PluginDescription()
         .mainType(PluginType.BGSOURCE)
-        .composeContent {
+        .composeContent { _ ->
             BgSourceComposeContent(
                 persistenceLayer = persistenceLayer,
                 rh = rh,
