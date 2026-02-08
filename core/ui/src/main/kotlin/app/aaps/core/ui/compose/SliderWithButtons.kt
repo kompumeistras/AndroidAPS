@@ -170,8 +170,6 @@ fun SliderWithButtons(
 
     // Calculate current position [0-1]
     val currentPosition = valueToPosition(value)
-
-    // Calculer le déplacement en position pour maintenir le même effet relatif
     val currentValue = value.coerceIn(minValue, maxValue)
     val posForCurrent = valueToPosition(currentValue)
     val posForCurrentPlusStep = valueToPosition(currentValue + step)
