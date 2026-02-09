@@ -10,6 +10,7 @@
     <string name="pump_status_busy">Zaneprázdnený</string>
     <string name="pump_status_suspended">Pozastavené</string>
     <string name="pump_status_executing_command">Vykonávanie príkazu</string>
+    <!-- Commands -->
     <!-- PumpCommon - History Group -->
     <string name="history_group_basal">Bazály</string>
     <string name="history_group_configuration">Konfigurácie</string>
