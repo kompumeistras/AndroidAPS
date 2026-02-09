@@ -26,7 +26,7 @@
     <string name="objectives_notesettings">Bạn không cần xuất cài đặt nếu đã ghi chú lại chúng.</string>
     <string name="objectives_afterobjective">Hãy xuất cài đặt sau khi bạn hoàn thành một mục tiêu.</string>
     <string name="objectives_afterchange">Hãy xuất cài đặt sau khi bạn thay đổi bất kỳ cài đặt nào.</string>
-    <string name="objectives_afterinitialsetup">Hãy xuất cài đặt sau khi bạn hoàn tất thiết lập ban đầu và đã chỉnh các Tùy chọn(Preferences).</string>
+    <string name="objectives_afterinitialsetup">Hãy xuất cài đặt của bạn sau khi hoàn tất thiết lập ban đầu và đã đặt các tùy chọn.</string>
     <string name="objectives2_maintenance">Hãy xuất cài đặt của bạn ra máy cục bộ bằng menu bảo trì.</string>
     <string name="objectives2_internalstorage">Tệp cài đặt của bạn nằm trong thư mục Internal Storage/AAPS/preferences trên điện thoại.</string>
     <string name="objectives2_cloud">Hãy sao chép tệp cài đặt của bạn đến một vị trí an toàn bên ngoài điện thoại (ví dụ: dùng lưu trữ đám mây, kết nối cáp với máy tính, gửi email, v.v.)</string>
@@ -160,7 +160,7 @@
     <string name="isf_increasingvalue">Tăng giá trị ISF sẽ dẫn đến việc bơm nhiều insulin hơn để bù cho một lượng carbs nhất định.</string>
     <string name="isf_decreasingvalue">Giảm giá trị ISF sẽ dẫn đến việc bơm nhiều insulin hơn để điều chỉnh khi đường huyết cao hơn mục tiêu.</string>
     <string name="isf_noeffect">Tăng hoặc giảm ISF sẽ không ảnh hưởng đến việc bơm insulin khi đường huyết thấp hơn mục tiêu.</string>
-    <string name="isf_preferences">ISF cần được nhập trong phần Tùy chọn (Preferences) của AAPS.</string>
+    <string name="isf_preferences">Hãy nhập ISF trong Tùy chọn của AAPS.</string>
     <string name="isf_hint1">https://wiki.aaps.app/en/latest/SettingUpAaps/YourAapsProfile.html</string>
     <string name="ic_multiple">Bạn có thể sử dụng nhiều hơn một giá trị tỷ lệ I:C trong Hồ sơ của mình.</string>
     <string name="ic_isf">Nếu bạn thay đổi ISF trong Hồ sơ, bạn cũng luôn cần thay đổi tỷ lệ I:C.</string>
