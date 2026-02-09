@@ -8,7 +8,7 @@
     <string name="combov2_error">Lỗi Combo</string>
     <string name="combov2_warning_4">Gọi đường dây nóng để cập nhật</string>
     <string name="combov2_warning_10">Lỗi Bluetooth, hãy ghép đôi lại</string>
-    <string name="combov2_error_1">Hết insulin trong ống chứa</string>
+    <string name="combov2_error_1">Bình chứa insulin rỗng</string>
     <string name="combov2_error_2">Hết Pin</string>
     <string name="combov2_error_4">Tắc kim/ống dẫn insulin</string>
     <string name="combov2_error_5">Kết thúc chế độ bơm dự phòng</string>
