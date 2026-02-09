@@ -155,7 +155,7 @@
     <string name="isf_dynamic_label_warning">Thuật toán của bạn có thể tính toán ISF động. Các giá trị bên dưới chỉ được dùng như dự phòng khi thiếu dữ liệu hoặc chỉ để tham khảo</string>
     <string name="ic_dynamic_label_warning">Thuật toán của bạn có thể tính toán IC động. Các giá trị bên dưới chỉ được dùng như dự phòng khi thiếu dữ liệu hoặc chỉ để tham khảo</string>
     <!-- Actions -->
-    <string name="actions">Thao tác</string>
+    <string name="actions">Các thao tác</string>
     <string name="description_actions">Một số nút để truy cập nhanh các tính năng thường dùng</string>
     <string name="actions_shortname">ACT</string>
     <string name="tempbasal_button">Liều nền tạm thời</string>
