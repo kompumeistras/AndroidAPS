@@ -2,7 +2,7 @@
 <resources>
     <!-- Omnipod - Pod Management -->
     <string name="omnipod_common_pod_management_title">Quản lý Pod</string>
-    <string name="omnipod_common_pod_management_heading_actions">Thao tác</string>
+    <string name="omnipod_common_pod_management_heading_actions">Các thao tác</string>
     <string name="omnipod_common_pod_management_heading_tools">Công cụ</string>
     <string name="omnipod_common_pod_management_button_activate_pod">Kích hoạt Pod</string>
     <string name="omnipod_common_pod_management_button_deactivate_pod">Hủy kích hoạt Pod</string>
