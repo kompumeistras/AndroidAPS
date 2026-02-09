@@ -92,7 +92,7 @@
     <string name="use_dynamic_sensitivity_summary">Điều chỉnh thuật toán để dùng độ nhạy insulin động thay cho giá trị hồ sơ</string>
     <!--    Verify if needed in safety-->
     <string name="limiting_iob">Giới hạn IOB ở mức %1$.1f U do %2$s</string>
-    <string name="maxvalueinpreferences">Giá trị tối đa trong phần Cài đặt</string>
+    <string name="maxvalueinpreferences">giá trị tối đa trong phần Tùy chọn</string>
     <string name="hardlimit">giới hạn cứng</string>
     <!--    Autotune   -->
     <string name="insulin_peak">Đỉnh (Peak)</string>
