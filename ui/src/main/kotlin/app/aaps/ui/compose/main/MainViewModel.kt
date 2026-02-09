@@ -103,7 +103,7 @@ class MainViewModel @Inject constructor(
             // Duration >= 30 days is effectively permanent (e.g. loop disabled uses Int.MAX_VALUE minutes)
             val rmIsFinite = rmData != null && rmData.duration > 0 && rmData.duration < T.days(30).msecs()
             val rmProgress = if (rmIsFinite) {
-                val elapsed = now - rmData!!.timestamp
+                val elapsed = now - rmData.timestamp
                 (elapsed.toFloat() / rmData.duration.toFloat()).coerceIn(0f, 1f)
             } else 0f
 

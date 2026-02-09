@@ -2,7 +2,6 @@ import kotlin.math.min
 
 plugins {
     alias(libs.plugins.android.library)
-    id("kotlin-android")
     kotlin("plugin.allopen")
     id("android-module-dependencies")
     id("all-open-dependencies")
@@ -20,7 +19,6 @@ android {
 dependencies {
 
     api(libs.net.danlew.android.joda)
-    api(libs.kotlinx.serialization.core)
     api(libs.kotlinx.serialization.json)
 
     //Firebase
