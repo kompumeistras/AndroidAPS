@@ -234,7 +234,7 @@
     <string name="status_loop_state">Trạng thái vòng lặp</string>
     <string name="label_loop_state_title">AAPS(Trạng thái vòng lặp)</string>
     <string name="action_loop_state_selected">Đã yêu cầu trạng thái vòng lặp</string>
-    <string name="wizard_total_insulin">Tổng insulin</string>
+    <string name="wizard_total_insulin">Tổng Insulin</string>
     <string name="wizard_calculation">Tính toán</string>
     <string name="wizard_carbs_format">%1$d g carbs</string>
     <string name="wizard_settings_format">IC: %1$s | ISF: %2$s</string>
