@@ -10,6 +10,7 @@
     <string name="pump_status_busy">Zajęty</string>
     <string name="pump_status_suspended">Wstrzymany</string>
     <string name="pump_status_executing_command">Wykonywanie polecenia</string>
+    <!-- Commands -->
     <!-- PumpCommon - History Group -->
     <string name="history_group_basal">Dawki Bazowe</string>
     <string name="history_group_configuration">Ustawienia</string>
