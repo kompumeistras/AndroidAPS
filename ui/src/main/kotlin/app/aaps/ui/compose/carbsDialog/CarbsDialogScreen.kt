@@ -247,8 +247,8 @@ fun CarbsDialogScreen(
                 step = 5.0,
                 controlPoints = listOf(
                     0.0 to -7.0 * 24 * 60,
-                    0.25 to 0.0,
-                    0.75 to 2.0 * 60,
+                    0.33 to -2.0 * 60,
+                    0.67 to 2.0 * 60,
                     1.0 to 12.0 * 60
                 ),
                 showValue = true,
