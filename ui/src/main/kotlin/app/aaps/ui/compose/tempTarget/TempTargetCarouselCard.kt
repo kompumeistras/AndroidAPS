@@ -62,6 +62,7 @@ fun TempTargetCarouselCard(
     isSelected: Boolean,
     units: GlucoseUnit,
     profileUtil: ProfileUtil,
+    onExpired: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isActiveCard = activeTT != null
@@ -78,9 +79,13 @@ fun TempTargetCarouselCard(
                 val now = System.currentTimeMillis()
                 val elapsed = now - activeTT.timestamp
                 val remaining = activeTT.duration - elapsed
-                progress = if (remaining > 0) {
-                    (elapsed.toFloat() / activeTT.duration.toFloat()).coerceIn(0f, 1f)
-                } else 1f
+                if (remaining > 0) {
+                    progress = (elapsed.toFloat() / activeTT.duration.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    progress = 1f
+                    onExpired()
+                    return@LaunchedEffect
+                }
                 delay(30_000L) // Update every 30 seconds
             }
         } else {

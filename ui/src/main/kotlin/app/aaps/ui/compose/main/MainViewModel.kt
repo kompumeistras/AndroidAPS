@@ -71,13 +71,20 @@ class MainViewModel @Inject constructor(
             overviewDataCache.runningModeFlow,
             progressTicker
         ) { ttData, profileData, rmData, now ->
+            // Detect expired TT: cache still says ACTIVE but time has passed
+            val ttExpired = ttData != null && ttData.state == TempTargetState.ACTIVE && ttData.duration > 0
+                && now >= ttData.timestamp + ttData.duration
+            if (ttExpired) {
+                overviewDataCache.refreshTempTarget()
+            }
+
             // Compute TT progress and display text from raw timing data
-            val ttProgress = if (ttData != null && ttData.duration > 0) {
+            val ttProgress = if (ttData != null && ttData.duration > 0 && !ttExpired) {
                 val elapsed = now - ttData.timestamp
                 (elapsed.toFloat() / ttData.duration.toFloat()).coerceIn(0f, 1f)
             } else 0f
 
-            val ttText = if (ttData != null) {
+            val ttText = if (ttData != null && !ttExpired) {
                 if (ttData.state == TempTargetState.ACTIVE && ttData.duration > 0) {
                     "${ttData.targetRangeText} ${dateUtil.untilString(ttData.timestamp + ttData.duration, rh)}"
                 } else {
@@ -120,9 +127,10 @@ class MainViewModel @Inject constructor(
                 it.copy(
                     // TempTarget state
                     tempTargetText = ttText,
-                    tempTargetState = ttData?.state?.toChipState() ?: TempTargetChipState.None,
+                    tempTargetState = if (ttExpired) TempTargetChipState.None
+                    else ttData?.state?.toChipState() ?: TempTargetChipState.None,
                     tempTargetProgress = ttProgress,
-                    tempTargetReason = ttData?.reason,
+                    tempTargetReason = if (ttExpired) null else ttData?.reason,
                     // Profile state
                     isProfileLoaded = profileData?.isLoaded ?: false,
                     profileName = profileText,

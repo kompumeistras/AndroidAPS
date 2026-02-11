@@ -44,7 +44,10 @@ data class ElementColors(
     val userEntry: Color,
     val loop: Color,  // Additional UserEntry for loop
     val pump: Color,  // Additional UserEntry for pump
-    val aaps: Color   // Additional UserEntry for AAPS
+    val aaps: Color,  // Additional UserEntry for AAPS
+    val cgmXdrip: Color,
+    val cgmDex: Color,
+    val calibration: Color
 )
 
 /**
@@ -62,8 +65,11 @@ internal val LightElementColors = ElementColors(
     runningMode = Color(0xFFFFB400),     // hardcoded in drawable
     userEntry = Color(0xFF66BB6A),       // userOption
     loop = Color(0xFF00C03E),            // Additional UserEntry for loop
-    pump = Color(0xFF939393),            // Additional UserEntry for loop
-    aaps = Color(0xFF666666)             // Additional UserEntry for loop
+    pump = Color(0xFF939393),            // Additional UserEntry for pump
+    aaps = Color(0xFF666666),            // Additional UserEntry for AAPS
+    cgmXdrip = Color(0xFFE93057),        // colorCalibrationButton
+    cgmDex = Color(0xFF777777),          // byodaGray
+    calibration = Color(0xFFE93057)      // colorCalibrationButton
 )
 
 /**
@@ -81,8 +87,11 @@ internal val DarkElementColors = ElementColors(
     runningMode = Color(0xFFFFB400),     // hardcoded in drawable (same in both modes)
     userEntry = Color(0xFF6AE86D),       // userOption (night)
     loop = Color(0xFF00C03E),            // Additional UserEntry for loop
-    pump = Color(0xFF939393),            // Additional UserEntry for loop
-    aaps = Color(0xFFBBBBBB)             // Additional UserEntry for loop
+    pump = Color(0xFF939393),            // Additional UserEntry for pump
+    aaps = Color(0xFFBBBBBB),            // Additional UserEntry for AAPS
+    cgmXdrip = Color(0xFFE93057),        // colorCalibrationButton (same both modes)
+    cgmDex = Color(0xFF999999),          // byodaGray (night)
+    calibration = Color(0xFFE93057)      // colorCalibrationButton (same both modes)
 )
 
 /**

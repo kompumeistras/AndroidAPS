@@ -239,19 +239,6 @@ class OverviewPlugin @Inject constructor(
         items = listOf(
             BooleanKey.OverviewKeepScreenOn,
 
-            // Buttons settings subscreen
-            PreferenceSubScreenDef(
-                key = "overview_buttons_settings",
-                titleResId = R.string.overview_buttons_selection,
-                items = listOf(
-                    DoubleKey.OverviewInsulinButtonIncrement1,
-                    DoubleKey.OverviewInsulinButtonIncrement2,
-                    DoubleKey.OverviewInsulinButtonIncrement3,
-                    BooleanKey.OverviewShowCgmButton,
-                    BooleanKey.OverviewShowCalibrationButton
-                )
-            ),
-
             OverviewIntentKey.QuickWizardSettings.withActivity(uiInteraction.quickWizardListActivity),
 
             // Temp targets subscreen
@@ -388,7 +375,7 @@ class OverviewPlugin @Inject constructor(
                         title = app.aaps.core.keys.R.string.pref_title_carbs_button_increment_3
                     )
                 )
-                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OverviewShowCgmButton, summary = app.aaps.core.keys.R.string.pref_summary_show_cgm_button, title = R.string.cgm))
+                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OverviewShowCgmButton, summary = app.aaps.core.keys.R.string.pref_summary_show_cgm_button, title = app.aaps.core.ui.R.string.cgm))
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OverviewShowCalibrationButton, summary = app.aaps.core.keys.R.string.pref_summary_show_calibration_button, title = app.aaps.core.ui.R.string.calibration))
             })
             addPreference(

@@ -110,6 +110,10 @@ class OverviewDataCacheImpl @Inject constructor(
     override val profileFlow: StateFlow<ProfileDisplayData?> = _profileFlow.asStateFlow()
     override val runningModeFlow: StateFlow<RunningModeDisplayData?> = _runningModeFlow.asStateFlow()
 
+    override fun refreshTempTarget() {
+        scope.launch { updateTempTargetFromDatabase() }
+    }
+
     // Secondary graph flows
     private val _iobGraphFlow = MutableStateFlow(IobGraphData(emptyList(), emptyList()))
     private val _absIobGraphFlow = MutableStateFlow(AbsIobGraphData(emptyList()))

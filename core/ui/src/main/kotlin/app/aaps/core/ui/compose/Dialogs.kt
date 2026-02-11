@@ -75,6 +75,7 @@ fun OkDialog(
  * @param message The message to display (supports HTML)
  * @param secondMessage Optional secondary message in accent color
  * @param icon Optional drawable resource for an icon
+ * @param iconContent Optional composable icon content (takes precedence over [icon])
  * @param onConfirm Called when OK is clicked
  * @param onDismiss Called when Cancel is clicked or dialog is dismissed
  */
@@ -84,12 +85,13 @@ fun OkCancelDialog(
     message: String,
     secondMessage: String? = null,
     @DrawableRes icon: Int? = null,
+    iconContent: @Composable (() -> Unit)? = null,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = icon?.let {
+        icon = iconContent ?: icon?.let {
             {
                 Icon(
                     painter = painterResource(id = icon),

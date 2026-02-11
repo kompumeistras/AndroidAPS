@@ -37,9 +37,12 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.Byoda
 import app.aaps.core.ui.compose.icons.Calculator
+import app.aaps.core.ui.compose.icons.Calibration
 import app.aaps.core.ui.compose.icons.Carbs
 import app.aaps.core.ui.compose.icons.Treatment
+import app.aaps.core.ui.compose.icons.XDrip
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
@@ -49,6 +52,8 @@ private val treatmentButtonSettingsDef = PreferenceSubScreenDef(
     key = "treatment_button_settings",
     titleResId = CoreUiR.string.settings,
     items = listOf(
+        BooleanKey.OverviewShowCgmButton,
+        BooleanKey.OverviewShowCalibrationButton,
         BooleanKey.OverviewShowTreatmentButton,
         BooleanKey.OverviewShowInsulinButton,
         BooleanKey.OverviewShowCarbsButton,
@@ -62,7 +67,12 @@ fun TreatmentBottomSheet(
     onDismiss: () -> Unit,
     onCarbsClick: () -> Unit,
     onInsulinClick: (() -> Unit)? = null,
+    onCgmClick: (() -> Unit)? = null,
+    onCalibrationClick: (() -> Unit)? = null,
     onCalculatorClick: (() -> Unit)? = null,
+    showCgmButton: Boolean = false,
+    showCalibrationButton: Boolean = false,
+    isDexcomSource: Boolean = false,
     simpleMode: Boolean = false,
     preferences: Preferences? = null,
     config: Config? = null
@@ -84,9 +94,18 @@ fun TreatmentBottomSheet(
         } else {
             TreatmentSelectionContent(
                 onDismiss = onDismiss,
+                onCgmClick = onCgmClick,
+                onCalibrationClick = onCalibrationClick,
                 onCarbsClick = onCarbsClick,
                 onInsulinClick = onInsulinClick,
                 onCalculatorClick = onCalculatorClick,
+                showCgm = showCgmButton && preferences?.get(BooleanKey.OverviewShowCgmButton) ?: false,
+                showCalibration = showCalibrationButton && preferences?.get(BooleanKey.OverviewShowCalibrationButton) ?: false,
+                showTreatment = preferences?.get(BooleanKey.OverviewShowTreatmentButton) ?: true,
+                showInsulin = preferences?.get(BooleanKey.OverviewShowInsulinButton) ?: true,
+                showCarbs = preferences?.get(BooleanKey.OverviewShowCarbsButton) ?: true,
+                showCalculator = preferences?.get(BooleanKey.OverviewShowWizardButton) ?: true,
+                isDexcomSource = isDexcomSource,
                 showSettingsIcon = !simpleMode && preferences != null && config != null,
                 onSettingsClick = { showSettings = true }
             )
@@ -97,9 +116,18 @@ fun TreatmentBottomSheet(
 @Composable
 private fun TreatmentSelectionContent(
     onDismiss: () -> Unit,
+    onCgmClick: (() -> Unit)?,
+    onCalibrationClick: (() -> Unit)?,
     onCarbsClick: () -> Unit,
     onInsulinClick: (() -> Unit)?,
     onCalculatorClick: (() -> Unit)?,
+    showCgm: Boolean,
+    showCalibration: Boolean,
+    showTreatment: Boolean,
+    showInsulin: Boolean,
+    showCarbs: Boolean,
+    showCalculator: Boolean,
+    isDexcomSource: Boolean,
     showSettingsIcon: Boolean,
     onSettingsClick: () -> Unit
 ) {
@@ -133,125 +161,190 @@ private fun TreatmentSelectionContent(
 
         val disabledAlpha = 0.38f
 
+        // CGM
+        if (showCgm) {
+            val cgmEnabled = onCgmClick != null
+            val cgmIcon = if (isDexcomSource) Byoda else XDrip
+            val cgmColor = if (isDexcomSource) AapsTheme.elementColors.cgmDex else AapsTheme.elementColors.cgmXdrip
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.cgm),
+                        color = if (cgmEnabled) cgmColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+                    )
+                },
+                leadingContent = {
+                    TonalIcon(
+                        imageVector = cgmIcon,
+                        color = if (cgmEnabled) cgmColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
+                        enabled = cgmEnabled
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = if (cgmEnabled) Modifier.clickable {
+                    onDismiss()
+                    onCgmClick!!()
+                } else Modifier
+            )
+        }
+
+        // Calibration
+        if (showCalibration) {
+            val calibrationEnabled = onCalibrationClick != null
+            val calibrationColor = AapsTheme.elementColors.calibration
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.calibration),
+                        color = if (calibrationEnabled) calibrationColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+                    )
+                },
+                leadingContent = {
+                    TonalIcon(
+                        imageVector = Calibration,
+                        color = if (calibrationEnabled) calibrationColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
+                        enabled = calibrationEnabled
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = if (calibrationEnabled) Modifier.clickable {
+                    onDismiss()
+                    onCalibrationClick!!()
+                } else Modifier
+            )
+        }
+
         // Treatment (not migrated yet)
-        val treatmentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
-        ListItem(
-            headlineContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.overview_treatment_label),
-                    color = treatmentColor
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.treatment_desc),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
-                )
-            },
-            leadingContent = {
-                TonalIcon(
-                    imageVector = Icons.Default.Add,
-                    color = treatmentColor,
-                    enabled = false
-                )
-            },
-            colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
-        )
+        if (showTreatment) {
+            val treatmentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.overview_treatment_label),
+                        color = treatmentColor
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.treatment_desc),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
+                    )
+                },
+                leadingContent = {
+                    TonalIcon(
+                        imageVector = Icons.Default.Add,
+                        color = treatmentColor,
+                        enabled = false
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
+            )
+        }
 
-        // Insulin (disabled for now)
-        val insulinEnabled = onInsulinClick != null
-        val insulinColor = AapsTheme.elementColors.insulin
-        ListItem(
-            headlineContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.overview_insulin_label),
-                    color = if (insulinEnabled) insulinColor
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.treatment_insulin_desc),
-                    color = if (insulinEnabled) MaterialTheme.colorScheme.onSurfaceVariant
-                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
-                )
-            },
-            leadingContent = {
-                TonalIcon(
-                    imageVector = Treatment,
-                    color = if (insulinEnabled) insulinColor
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
-                    enabled = insulinEnabled
-                )
-            },
-            colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = if (insulinEnabled) Modifier.clickable {
-                onDismiss()
-                onInsulinClick!!()
-            } else Modifier
-        )
+        // Insulin
+        if (showInsulin) {
+            val insulinEnabled = onInsulinClick != null
+            val insulinColor = AapsTheme.elementColors.insulin
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.overview_insulin_label),
+                        color = if (insulinEnabled) insulinColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.treatment_insulin_desc),
+                        color = if (insulinEnabled) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
+                    )
+                },
+                leadingContent = {
+                    TonalIcon(
+                        imageVector = Treatment,
+                        color = if (insulinEnabled) insulinColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
+                        enabled = insulinEnabled
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = if (insulinEnabled) Modifier.clickable {
+                    onDismiss()
+                    onInsulinClick!!()
+                } else Modifier
+            )
+        }
 
-        // Carbs (active)
-        val carbsColor = AapsTheme.elementColors.carbs
-        ListItem(
-            headlineContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.carbs),
-                    color = carbsColor
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.treatment_carbs_desc),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            leadingContent = {
-                TonalIcon(
-                    imageVector = Carbs,
-                    color = carbsColor,
-                    enabled = true
-                )
-            },
-            colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier.clickable {
-                onDismiss()
-                onCarbsClick()
-            }
-        )
+        // Carbs
+        if (showCarbs) {
+            val carbsColor = AapsTheme.elementColors.carbs
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.carbs),
+                        color = carbsColor
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.treatment_carbs_desc),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                leadingContent = {
+                    TonalIcon(
+                        imageVector = Carbs,
+                        color = carbsColor,
+                        enabled = true
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.clickable {
+                    onDismiss()
+                    onCarbsClick()
+                }
+            )
+        }
 
-        // Calculator (disabled for now)
-        val calculatorEnabled = onCalculatorClick != null
-        val calculatorColor = AapsTheme.generalColors.calculator
-        ListItem(
-            headlineContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.boluswizard),
-                    color = if (calculatorEnabled) calculatorColor
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = stringResource(CoreUiR.string.treatment_calculator_desc),
-                    color = if (calculatorEnabled) MaterialTheme.colorScheme.onSurfaceVariant
-                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
-                )
-            },
-            leadingContent = {
-                TonalIcon(
-                    imageVector = Calculator,
-                    color = if (calculatorEnabled) calculatorColor
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
-                    enabled = calculatorEnabled
-                )
-            },
-            colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = if (calculatorEnabled) Modifier.clickable {
-                onDismiss()
-                onCalculatorClick!!()
-            } else Modifier
-        )
+        // Calculator (not migrated yet)
+        if (showCalculator) {
+            val calculatorEnabled = onCalculatorClick != null
+            val calculatorColor = AapsTheme.generalColors.calculator
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.boluswizard),
+                        color = if (calculatorEnabled) calculatorColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        text = stringResource(CoreUiR.string.treatment_calculator_desc),
+                        color = if (calculatorEnabled) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
+                    )
+                },
+                leadingContent = {
+                    TonalIcon(
+                        imageVector = Calculator,
+                        color = if (calculatorEnabled) calculatorColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
+                        enabled = calculatorEnabled
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = if (calculatorEnabled) Modifier.clickable {
+                    onDismiss()
+                    onCalculatorClick!!()
+                } else Modifier
+            )
+        }
     }
 }
 

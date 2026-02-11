@@ -1,5 +1,6 @@
 package app.aaps
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
@@ -21,6 +22,7 @@ import app.aaps.compose.navigation.AppRoute
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
+import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -29,6 +31,8 @@ import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.protection.ProtectionResult
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
+import app.aaps.core.interfaces.source.DexcomBoyda
+import app.aaps.core.interfaces.source.XDripSource
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
@@ -48,6 +52,8 @@ import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
 import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
 import app.aaps.ui.compose.carbsDialog.CarbsDialogViewModel
+import app.aaps.ui.compose.insulinDialog.InsulinDialogScreen
+import app.aaps.ui.compose.insulinDialog.InsulinDialogViewModel
 import app.aaps.ui.compose.careDialog.CareDialogScreen
 import app.aaps.ui.compose.careDialog.CareDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillDialogScreen
@@ -93,6 +99,9 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var skinProvider: SkinProvider
     @Inject lateinit var profileUtil: ProfileUtil
     @Inject lateinit var visibilityContext: PreferenceVisibilityContext
+    @Inject lateinit var xDripSource: XDripSource
+    @Inject lateinit var dexcomBoyda: DexcomBoyda
+    @Inject lateinit var iobCobCalculator: IobCobCalculator
 
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
@@ -108,6 +117,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var careDialogViewModel: CareDialogViewModel
     @Inject lateinit var fillDialogViewModel: FillDialogViewModel
     @Inject lateinit var carbsDialogViewModel: CarbsDialogViewModel
+    @Inject lateinit var insulinDialogViewModel: InsulinDialogViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -287,6 +297,23 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     }
                                 }
                             },
+                            onInsulinClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.InsulinDialog.route)
+                                    }
+                                }
+                            },
+                            onCgmClick = {
+                                if (xDripSource.isEnabled()) openCgmApp("com.eveningoutpost.dexdrip")
+                                else if (dexcomBoyda.isEnabled()) dexcomBoyda.dexcomPackages().forEach { openCgmApp(it) }
+                            },
+                            onCalibrationClick = if (xDripSource.isEnabled()) {
+                                { uiInteraction.runCalibrationDialog(supportFragmentManager) }
+                            } else null,
+                            showCgmButton = xDripSource.isEnabled() || dexcomBoyda.isEnabled(),
+                            showCalibrationButton = xDripSource.isEnabled() && iobCobCalculator.ads.actualBg() != null,
+                            isDexcomSource = dexcomBoyda.isEnabled(),
                             onActionsError = { comment, title ->
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
                             },
@@ -375,6 +402,16 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     composable(route = AppRoute.CarbsDialog.route) {
                         CarbsDialogScreen(
                             viewModel = carbsDialogViewModel,
+                            onNavigateBack = { navController.popBackStack() },
+                            onShowDeliveryError = { comment ->
+                                uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
+                            }
+                        )
+                    }
+
+                    composable(route = AppRoute.InsulinDialog.route) {
+                        InsulinDialogScreen(
+                            viewModel = insulinDialogViewModel,
                             onNavigateBack = { navController.popBackStack() },
                             onShowDeliveryError = { comment ->
                                 uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
@@ -574,6 +611,16 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                 finish()
                 configBuilder.exitApp("Menu", Sources.Aaps, false)
             }
+        }
+    }
+
+    private fun openCgmApp(packageName: String) {
+        try {
+            val intent = packageManager.getLaunchIntentForPackage(packageName) ?: throw ActivityNotFoundException()
+            intent.addCategory(Intent.CATEGORY_LAUNCHER)
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            aapsLogger.debug("Error opening CGM app: $packageName")
         }
     }
 

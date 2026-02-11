@@ -192,7 +192,6 @@
     <string name="uploader">Uploader</string>
     <string name="data_status">BG data status</string>
     <string name="quickwizard_settings">QuickWizard settings</string>
-    <string name="cgm">CGM</string>
     <string name="default_temptargets">Default Temp-Targets</string>
     <string name="fill_bolus_title">Fill/Prime standard insulin amounts</string>
     <string name="prefs_range_title">Range for visualization</string>

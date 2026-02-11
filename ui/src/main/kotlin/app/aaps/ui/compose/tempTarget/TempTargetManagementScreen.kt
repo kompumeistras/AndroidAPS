@@ -327,6 +327,7 @@ fun TempTargetManagementScreen(
                                 isSelected = pagerState.currentPage == page,
                                 units = viewModel.units,
                                 profileUtil = viewModel.profileUtil,
+                                onExpired = { viewModel.refreshData() },
                                 modifier = Modifier
                                     .graphicsLayer {
                                         val pageOffset = (

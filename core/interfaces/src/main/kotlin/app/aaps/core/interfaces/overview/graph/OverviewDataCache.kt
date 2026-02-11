@@ -43,6 +43,7 @@ interface OverviewDataCache {
     val tempTargetFlow: StateFlow<TempTargetDisplayData?>
     val profileFlow: StateFlow<ProfileDisplayData?>
     val runningModeFlow: StateFlow<RunningModeDisplayData?>
+    fun refreshTempTarget()
 
     // =========================================================================
     // Secondary graph flows (Phase 5) - one per graph

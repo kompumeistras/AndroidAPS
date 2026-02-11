@@ -127,6 +127,7 @@
     <string name="wrong_pump_data">Data is coming from different pump. Change pump driver to reset pump state.</string>
     <string name="bg_label">BG</string>
     <string name="calibration">Calibration</string>
+    <string name="cgm">CGM</string>
     <string name="alarminxmin">Run alarm in %1$d min</string>
     <string name="treatmentdeliveryerror">Bolus reported an error. Manually check real delivered insulin and carb amount</string>
     <string name="bolus_reminder">Remind for bolus when BG recovers</string>

@@ -39,4 +39,5 @@ sealed class AppRoute(val route: String) {
     }
 
     data object CarbsDialog : AppRoute("carbs_dialog")
+    data object InsulinDialog : AppRoute("insulin_dialog")
 }

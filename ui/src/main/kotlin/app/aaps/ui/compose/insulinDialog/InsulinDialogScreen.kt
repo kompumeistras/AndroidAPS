@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.carbsDialog
+package app.aaps.ui.compose.insulinDialog
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,7 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.keys.IntKey
+import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
@@ -55,6 +54,7 @@ import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.TimePickerModal
 import app.aaps.core.ui.compose.clearFocusOnTap
+import app.aaps.core.ui.compose.icons.Treatment
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
@@ -65,14 +65,12 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import java.text.DecimalFormat
 import kotlin.time.Instant
-import app.aaps.core.interfaces.R as InterfacesR
 import app.aaps.core.keys.R as KeysR
 import app.aaps.core.ui.R as CoreUiR
-import app.aaps.core.ui.compose.icons.Carbs as CarbsIcon
 
 @Composable
-fun CarbsDialogScreen(
-    viewModel: CarbsDialogViewModel,
+fun InsulinDialogScreen(
+    viewModel: InsulinDialogViewModel,
     onNavigateBack: () -> Unit,
     onShowDeliveryError: (String) -> Unit
 ) {
@@ -88,11 +86,11 @@ fun CarbsDialogScreen(
     LaunchedEffect(Unit) {
         viewModel.sideEffect.collect { effect ->
             when (effect) {
-                is CarbsDialogViewModel.SideEffect.ShowDeliveryError -> {
+                is InsulinDialogViewModel.SideEffect.ShowDeliveryError -> {
                     onShowDeliveryError(effect.comment)
                 }
 
-                is CarbsDialogViewModel.SideEffect.ShowNoActionDialog -> {
+                is InsulinDialogViewModel.SideEffect.ShowNoActionDialog -> {
                     // handled via showNoAction local state
                 }
             }
@@ -114,13 +112,13 @@ fun CarbsDialogScreen(
         } else {
             val summaryLines = viewModel.buildConfirmationSummary()
             OkCancelDialog(
-                title = stringResource(CoreUiR.string.carbs),
+                title = stringResource(CoreUiR.string.bolus),
                 message = summaryLines.joinToString("<br/>"),
                 iconContent = {
                     Icon(
-                        imageVector = CarbsIcon,
+                        imageVector = Treatment,
                         contentDescription = null,
-                        tint = AapsTheme.elementColors.carbs,
+                        tint = AapsTheme.elementColors.insulin,
                         modifier = Modifier.size(48.dp)
                     )
                 },
@@ -136,13 +134,13 @@ fun CarbsDialogScreen(
     // No action dialog
     if (showNoAction) {
         OkCancelDialog(
-            title = stringResource(CoreUiR.string.carbs),
+            title = stringResource(CoreUiR.string.bolus),
             message = stringResource(CoreUiR.string.no_action_selected),
             iconContent = {
                 Icon(
-                    imageVector = CarbsIcon,
+                    imageVector = Treatment,
                     contentDescription = null,
-                    tint = AapsTheme.elementColors.carbs,
+                    tint = AapsTheme.elementColors.insulin,
                     modifier = Modifier.size(48.dp)
                 )
             },
@@ -184,14 +182,14 @@ fun CarbsDialogScreen(
         )
     }
 
-    // Carbs button settings bottom sheet
+    // Insulin button settings bottom sheet
     if (showButtonSettings) {
-        CarbsButtonSettingsSheet(
+        InsulinButtonSettingsSheet(
             preferences = viewModel.preferences,
             config = viewModel.config,
             onDismiss = {
                 showButtonSettings = false
-                viewModel.refreshCarbsButtons()
+                viewModel.refreshInsulinButtons()
             }
         )
     }
@@ -202,13 +200,13 @@ fun CarbsDialogScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = CarbsIcon,
+                            imageVector = Treatment,
                             contentDescription = null,
-                            tint = AapsTheme.elementColors.carbs,
+                            tint = AapsTheme.elementColors.insulin,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.padding(start = 8.dp))
-                        Text(stringResource(CoreUiR.string.carbs))
+                        Text(stringResource(CoreUiR.string.overview_insulin_label))
                     }
                 },
                 navigationIcon = {
@@ -240,140 +238,103 @@ fun CarbsDialogScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // --- Temp Target Section ---
-            TempTargetCheckboxes(
-                hypoChecked = uiState.hypoTtChecked,
-                eatingSoonChecked = uiState.eatingSoonTtChecked,
-                activityChecked = uiState.activityTtChecked,
-                onHypoChange = viewModel::updateHypoTt,
-                onEatingSoonChange = viewModel::updateEatingSoonTt,
-                onActivityChange = viewModel::updateActivityTt
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-            // --- Carbs Section ---
-            SectionHeader(stringResource(CoreUiR.string.carbs))
-            SliderWithButtons(
-                value = uiState.carbs.toDouble(),
-                onValueChange = { viewModel.updateCarbs(it.toInt()) },
-                valueRange = (-uiState.maxCarbs).toDouble()..uiState.maxCarbs.toDouble(),
-                step = 1.0,
-                showValue = true,
-                valueFormat = DecimalFormat("0"),
-                unitLabel = stringResource(CoreUiR.string.shortgramm),
-                dialogLabel = stringResource(CoreUiR.string.carbs),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Quick add buttons
-            QuickAddButtons(
-                increment1 = uiState.carbsButtonIncrement1,
-                increment2 = uiState.carbsButtonIncrement2,
-                increment3 = uiState.carbsButtonIncrement3,
-                onAddCarbs = viewModel::addCarbs,
-                onSettingsClick = if (uiState.simpleMode) null else {{ showButtonSettings = true }}
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-            // --- Time Offset Section ---
-            SectionHeader(stringResource(CoreUiR.string.time))
-            SliderWithButtons(
-                value = uiState.timeOffsetMinutes.toDouble(),
-                onValueChange = { viewModel.updateTimeOffset(it.toInt()) },
-                valueRange = (-7.0 * 24 * 60)..(12.0 * 60),
-                step = 5.0,
-                controlPoints = listOf(
-                    0.0 to -7.0 * 24 * 60,
-                    0.33 to -2.0 * 60,
-                    0.67 to 2.0 * 60,
-                    1.0 to 12.0 * 60
-                ),
-                showValue = true,
-                valueFormat = DecimalFormat("0"),
-                unitLabelResId = KeysR.string.units_min,
-                dialogLabel = stringResource(CoreUiR.string.time),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Alarm checkbox
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = uiState.alarmEnabled) {
-                        viewModel.updateAlarm(!uiState.alarmChecked)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = uiState.alarmChecked && uiState.alarmEnabled,
-                    onCheckedChange = null,
-                    enabled = uiState.alarmEnabled
-                )
-                val alarmAlpha = if (uiState.alarmEnabled) 1f else 0.38f
-                Icon(
-                    imageVector = Icons.Outlined.Notifications,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alarmAlpha),
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = stringResource(app.aaps.ui.R.string.a11y_carb_reminder),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (uiState.alarmEnabled) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                )
-            }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-            // --- Duration Section ---
-            SectionHeader(stringResource(CoreUiR.string.duration_label))
-            SliderWithButtons(
-                value = uiState.durationHours.toDouble(),
-                onValueChange = { viewModel.updateDuration(it.toInt()) },
-                valueRange = 0.0..uiState.maxCarbsDurationHours.toDouble(),
-                step = 1.0,
-                showValue = true,
-                valueFormat = DecimalFormat("0"),
-                unitLabel = stringResource(InterfacesR.string.shorthour),
-                dialogLabel = stringResource(CoreUiR.string.duration_label),
-                modifier = Modifier.fillMaxWidth()
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-            // --- Bolus Reminder Section (conditional) ---
-            if (uiState.showBolusReminder) {
+            // --- Checkboxes Section ---
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                // Eating Soon TT checkbox
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { viewModel.updateBolusReminder(!uiState.bolusReminderChecked) },
+                        .clickable { viewModel.updateEatingSoonTt(!uiState.eatingSoonTtChecked) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
-                        checked = uiState.bolusReminderChecked,
-                        onCheckedChange = null
-                    )
+                    Checkbox(checked = uiState.eatingSoonTtChecked, onCheckedChange = null)
                     Text(
-                        text = stringResource(CoreUiR.string.bolus_reminder),
+                        text = stringResource(app.aaps.ui.R.string.start_eating_soon_tt),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
+
+                // Record Only checkbox
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = uiState.recordOnlyEnabled) {
+                            viewModel.updateRecordOnly(!uiState.recordOnlyChecked)
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = uiState.recordOnlyChecked,
+                        onCheckedChange = null,
+                        enabled = uiState.recordOnlyEnabled
+                    )
+                    Text(
+                        text = stringResource(CoreUiR.string.bolus_recorded_only),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (uiState.forcedRecordOnly) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // --- Insulin Section ---
+            SectionHeader(stringResource(CoreUiR.string.overview_insulin_label))
+            SliderWithButtons(
+                value = uiState.insulin,
+                onValueChange = { viewModel.updateInsulin(it) },
+                valueRange = 0.0..uiState.maxInsulin,
+                step = uiState.bolusStep,
+                showValue = true,
+                valueFormat = viewModel.decimalFormatter.pumpSupportedBolusFormat(uiState.bolusStep),
+                unitLabel = stringResource(CoreUiR.string.insulin_unit_shortname),
+                dialogLabel = stringResource(CoreUiR.string.overview_insulin_label),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Quick add buttons
+            InsulinQuickAddButtons(
+                increment1 = uiState.insulinButtonIncrement1,
+                increment2 = uiState.insulinButtonIncrement2,
+                increment3 = uiState.insulinButtonIncrement3,
+                bolusStep = uiState.bolusStep,
+                decimalFormatter = viewModel.decimalFormatter,
+                onAddInsulin = viewModel::addInsulin,
+                onSettingsClick = if (uiState.simpleMode) null else {{ showButtonSettings = true }}
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // --- Time Offset Section (visible only when recordOnly) ---
+            if (uiState.timeLayoutVisible) {
+                SectionHeader(stringResource(CoreUiR.string.time))
+                SliderWithButtons(
+                    value = uiState.timeOffsetMinutes.toDouble(),
+                    onValueChange = { viewModel.updateTimeOffset(it.toInt()) },
+                    valueRange = -12.0 * 60..12.0 * 60,
+                    step = 5.0,
+                    showValue = true,
+                    valueFormat = DecimalFormat("0"),
+                    unitLabelResId = KeysR.string.units_min,
+                    dialogLabel = stringResource(CoreUiR.string.time),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // --- DateTime Section ---
+                SectionHeader(stringResource(CoreUiR.string.date))
+                DateTimeSection(
+                    eventTime = uiState.eventTime,
+                    eventTimeChanged = uiState.eventTimeChanged,
+                    dateUtil = viewModel.dateUtil,
+                    onDateClick = { showDatePicker = true },
+                    onTimeClick = { showTimePicker = true }
+                )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
 
-            // --- DateTime Section ---
-            SectionHeader(stringResource(CoreUiR.string.date))
-            DateTimeSection(
-                eventTime = uiState.eventTime,
-                eventTimeChanged = uiState.eventTimeChanged,
-                dateUtil = viewModel.dateUtil,
-                onDateClick = { showDatePicker = true },
-                onTimeClick = { showTimePicker = true }
-            )
-
             // --- Notes Section ---
             if (uiState.showNotesFromPreferences) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 OutlinedTextField(
                     value = uiState.notes,
                     onValueChange = viewModel::updateNotes,
@@ -401,68 +362,16 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun TempTargetCheckboxes(
-    hypoChecked: Boolean,
-    eatingSoonChecked: Boolean,
-    activityChecked: Boolean,
-    onHypoChange: (Boolean) -> Unit,
-    onEatingSoonChange: (Boolean) -> Unit,
-    onActivityChange: (Boolean) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onHypoChange(!hypoChecked) },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(checked = hypoChecked, onCheckedChange = null)
-            Text(
-                text = stringResource(app.aaps.ui.R.string.start_hypo_tt),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onEatingSoonChange(!eatingSoonChecked) },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(checked = eatingSoonChecked, onCheckedChange = null)
-            Text(
-                text = stringResource(app.aaps.ui.R.string.start_eating_soon_tt),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onActivityChange(!activityChecked) },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(checked = activityChecked, onCheckedChange = null)
-            Text(
-                text = stringResource(app.aaps.ui.R.string.start_activity_tt),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun QuickAddButtons(
-    increment1: Int,
-    increment2: Int,
-    increment3: Int,
-    onAddCarbs: (Int) -> Unit,
+private fun InsulinQuickAddButtons(
+    increment1: Double,
+    increment2: Double,
+    increment3: Double,
+    bolusStep: Double,
+    decimalFormatter: app.aaps.core.interfaces.utils.DecimalFormatter,
+    onAddInsulin: (Double) -> Unit,
     onSettingsClick: (() -> Unit)?
 ) {
-    val increments = listOf(increment1, increment2, increment3).filter { it > 0 }
+    val increments = listOf(increment1, increment2, increment3).filter { it != 0.0 }
     if (increments.isEmpty() && onSettingsClick == null) return
 
     Row(
@@ -471,8 +380,10 @@ private fun QuickAddButtons(
         verticalAlignment = Alignment.CenterVertically
     ) {
         increments.forEach { amount ->
-            FilledTonalButton(onClick = { onAddCarbs(amount) }) {
-                Text("+$amount")
+            val formatted = decimalFormatter.toPumpSupportedBolus(amount, bolusStep)
+            val label = if (amount > 0) "+$formatted" else formatted
+            FilledTonalButton(onClick = { onAddInsulin(amount) }) {
+                Text(label)
             }
         }
         if (onSettingsClick != null) {
@@ -491,19 +402,19 @@ private fun QuickAddButtons(
     }
 }
 
-private val carbsButtonSettingsDef = PreferenceSubScreenDef(
-    key = "carbs_button_settings",
+private val insulinButtonSettingsDef = PreferenceSubScreenDef(
+    key = "insulin_button_settings",
     titleResId = CoreUiR.string.settings,
     items = listOf(
-        IntKey.OverviewCarbsButtonIncrement1,
-        IntKey.OverviewCarbsButtonIncrement2,
-        IntKey.OverviewCarbsButtonIncrement3
+        DoubleKey.OverviewInsulinButtonIncrement1,
+        DoubleKey.OverviewInsulinButtonIncrement2,
+        DoubleKey.OverviewInsulinButtonIncrement3
     )
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CarbsButtonSettingsSheet(
+private fun InsulinButtonSettingsSheet(
     preferences: Preferences,
     config: Config,
     onDismiss: () -> Unit
@@ -517,14 +428,14 @@ private fun CarbsButtonSettingsSheet(
     ) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             Text(
-                text = stringResource(carbsButtonSettingsDef.titleResId),
+                text = stringResource(insulinButtonSettingsDef.titleResId),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
             )
             ProvidePreferenceTheme {
                 AdaptivePreferenceList(
-                    items = carbsButtonSettingsDef.items,
+                    items = insulinButtonSettingsDef.items,
                     preferences = preferences,
                     config = config
                 )
