@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.graphs
 
+import app.aaps.core.data.iob.InMemoryGlucoseValue
 import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.GlucoseUnit
@@ -33,11 +34,13 @@ import app.aaps.core.interfaces.overview.graph.TimeRange
 import app.aaps.core.interfaces.overview.graph.VarSensGraphData
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
-import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.TrendCalculator
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.objects.extensions.fromGv
 import app.aaps.core.objects.profile.ProfileSealed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,13 +74,13 @@ class OverviewDataCacheImpl @Inject constructor(
     private val profileFunction: ProfileFunction,
     private val preferences: Preferences,
     private val dateUtil: DateUtil,
-    private val rh: ResourceHelper,
     private val trendCalculator: TrendCalculator,
     private val iobCobCalculator: IobCobCalculator,
     private val glucoseStatusProvider: GlucoseStatusProvider,
     private val loop: Loop,
     private val config: Config,
-    private val processedDeviceStatusData: ProcessedDeviceStatusData
+    private val processedDeviceStatusData: ProcessedDeviceStatusData,
+    private val rxBus: RxBus
 ) : OverviewDataCache {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -181,6 +184,14 @@ class OverviewDataCacheImpl @Inject constructor(
                 updateRunningModeFromDatabase()
             }
         }
+
+        // Refresh trend arrow after bucketed data is created (bucketed data is ready after this event)
+        scope.launch {
+            rxBus.toFlow(EventBucketedDataCreated::class.java).collect {
+                aapsLogger.debug(LTag.UI, "Bucketed data created, refreshing BgInfo for trend arrow")
+                updateBgInfoFromDatabase()
+            }
+        }
     }
 
     // =========================================================================
@@ -188,15 +199,18 @@ class OverviewDataCacheImpl @Inject constructor(
     // =========================================================================
 
     private suspend fun updateBgInfoFromDatabase() {
-        val lastGv = persistenceLayer.getLastGlucoseValue()
+        // Use bucketed (smoothed) data like legacy, with raw DB fallback
+        val lastBg = iobCobCalculator.ads.bucketedData?.firstOrNull()
+        val lastGv = lastBg ?: persistenceLayer.getLastGlucoseValue()?.let { InMemoryGlucoseValue.fromGv(it) }
         if (lastGv == null) {
             _bgInfoFlow.value = null
             return
         }
 
+        val bgMgdl = lastGv.recalculated
         val highMark = preferences.get(UnitDoubleKey.OverviewHighMark)
         val lowMark = preferences.get(UnitDoubleKey.OverviewLowMark)
-        val valueInUnits = profileUtil.fromMgdlToUnits(lastGv.value)
+        val valueInUnits = profileUtil.fromMgdlToUnits(bgMgdl)
 
         val bgRange = when {
             valueInUnits > highMark -> BgRange.HIGH
@@ -211,7 +225,7 @@ class OverviewDataCacheImpl @Inject constructor(
 
         _bgInfoFlow.value = BgInfoData(
             bgValue = valueInUnits,
-            bgText = profileUtil.fromMgdlToStringInUnits(lastGv.value),
+            bgText = profileUtil.fromMgdlToStringInUnits(bgMgdl),
             bgRange = bgRange,
             isOutdated = isOutdated,
             timestamp = lastGv.timestamp,

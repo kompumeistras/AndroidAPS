@@ -241,20 +241,6 @@ class OverviewPlugin @Inject constructor(
 
             OverviewIntentKey.QuickWizardSettings.withActivity(uiInteraction.quickWizardListActivity),
 
-            // Temp targets subscreen
-            PreferenceSubScreenDef(
-                key = "default_temp_targets_settings",
-                titleResId = R.string.default_temptargets,
-                items = listOf(
-                    IntKey.OverviewEatingSoonDuration,
-                    UnitDoubleKey.OverviewEatingSoonTarget,
-                    IntKey.OverviewActivityDuration,
-                    UnitDoubleKey.OverviewActivityTarget,
-                    IntKey.OverviewHypoDuration,
-                    UnitDoubleKey.OverviewHypoTarget
-                )
-            ),
-
             // Range settings subscreen
             PreferenceSubScreenDef(
                 key = "range_settings",

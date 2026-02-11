@@ -18,7 +18,6 @@ import app.aaps.core.interfaces.pump.actions.CustomActionType
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventCustomActionsChanged
 import app.aaps.core.interfaces.rx.events.EventExtendedBolusChange
@@ -29,7 +28,6 @@ import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
-import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.IntPreferenceKey
@@ -40,11 +38,11 @@ import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.StatusLevel
 import app.aaps.ui.compose.actions.ActionsUiState
 import app.aaps.ui.compose.actions.StatusItem
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,14 +63,11 @@ class ActionsViewModel @Inject constructor(
     private val uel: UserEntryLogger,
     private val uiInteraction: UiInteraction,
     private val rxBus: RxBus,
-    private val aapsSchedulers: AapsSchedulers,
-    private val fabricPrivacy: FabricPrivacy,
     private val preferences: Preferences,
     private val tddCalculator: TddCalculator,
     private val decimalFormatter: DecimalFormatter
 ) : ViewModel() {
 
-    private val disposable = CompositeDisposable()
     val uiState: StateFlow<ActionsUiState>
         field = MutableStateFlow(ActionsUiState())
 
@@ -82,32 +77,17 @@ class ActionsViewModel @Inject constructor(
         preferences.put(BooleanNonKey.ObjectivesActionsUsed, true)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        disposable.clear()
-    }
-
     private fun setupEventListeners() {
-        disposable += rxBus
-            .toObservable(EventInitializationChanged::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ refreshState() }, fabricPrivacy::logException)
-        disposable += rxBus
-            .toObservable(EventExtendedBolusChange::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ refreshState() }, fabricPrivacy::logException)
-        disposable += rxBus
-            .toObservable(EventTempBasalChange::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ refreshState() }, fabricPrivacy::logException)
-        disposable += rxBus
-            .toObservable(EventCustomActionsChanged::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ refreshState() }, fabricPrivacy::logException)
-        disposable += rxBus
-            .toObservable(EventTherapyEventChange::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ refreshState() }, fabricPrivacy::logException)
+        rxBus.toFlow(EventInitializationChanged::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventExtendedBolusChange::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventTempBasalChange::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventCustomActionsChanged::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventTherapyEventChange::class.java)
+            .onEach { refreshState() }.launchIn(viewModelScope)
     }
 
     fun refreshState() {

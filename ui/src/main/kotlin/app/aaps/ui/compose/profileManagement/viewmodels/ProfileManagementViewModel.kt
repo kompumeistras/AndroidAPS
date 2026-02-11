@@ -25,7 +25,6 @@ import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.profile.ProfileValidationError
 import app.aaps.core.interfaces.profile.PureProfile
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventLocalProfileChanged
 import app.aaps.core.interfaces.rx.events.EventProfileStoreChanged
@@ -40,8 +39,6 @@ import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.ui.R
 import app.aaps.ui.compose.profileManagement.ProfileCompareData
 import app.aaps.ui.compose.profileManagement.buildProfileCompareData
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -61,7 +58,6 @@ class ProfileManagementViewModel @Inject constructor(
     private val localProfileManager: LocalProfileManager,
     private val profileFunction: ProfileFunction,
     private val rxBus: RxBus,
-    private val aapsSchedulers: AapsSchedulers,
     val rh: ResourceHelper,
     val dateUtil: DateUtil,
     private val aapsLogger: AAPSLogger,
@@ -74,18 +70,12 @@ class ProfileManagementViewModel @Inject constructor(
     private val preferences: Preferences
 ) : ViewModel() {
 
-    private val disposable = CompositeDisposable()
     val uiState: StateFlow<ProfileManagementUiState>
         field = MutableStateFlow(ProfileManagementUiState())
 
     init {
         loadData()
         observeProfileChanges()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.clear()
     }
 
     /**
@@ -286,20 +276,12 @@ class ProfileManagementViewModel @Inject constructor(
      * Subscribe to profile change events
      */
     private fun observeProfileChanges() {
-        disposable += rxBus
-            .toObservable(EventLocalProfileChanged::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ loadData() }, { aapsLogger.error(LTag.UI, "Error observing profile changes", it) })
-
-        disposable += rxBus
-            .toObservable(EventProfileStoreChanged::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ loadData() }, { aapsLogger.error(LTag.UI, "Error observing profile store changes", it) })
-
-        // Observe effective profile switch changes via PersistenceLayer flow
+        rxBus.toFlow(EventLocalProfileChanged::class.java)
+            .onEach { loadData() }.launchIn(viewModelScope)
+        rxBus.toFlow(EventProfileStoreChanged::class.java)
+            .onEach { loadData() }.launchIn(viewModelScope)
         persistenceLayer.observeChanges<EPS>()
-            .onEach { loadData() }
-            .launchIn(viewModelScope)
+            .onEach { loadData() }.launchIn(viewModelScope)
     }
 
     /**

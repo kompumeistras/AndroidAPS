@@ -13,16 +13,15 @@ import app.aaps.core.interfaces.profile.ProfileErrorType
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventLocalProfileChanged
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.objects.profile.ProfileSealed
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -82,14 +81,11 @@ class ProfileEditorViewModel @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val hardLimits: HardLimits,
     private val dateUtil: DateUtil,
-    private val protectionCheck: ProtectionCheck,
-    private val aapsSchedulers: AapsSchedulers
+    private val protectionCheck: ProtectionCheck
 ) : ViewModel() {
 
     val uiState: StateFlow<ProfileUiState>
         field = MutableStateFlow(ProfileUiState())
-
-    private val disposable = CompositeDisposable()
 
     init {
         loadState()
@@ -97,13 +93,11 @@ class ProfileEditorViewModel @Inject constructor(
     }
 
     private fun subscribeToEvents() {
-        disposable += rxBus
-            .toObservable(EventLocalProfileChanged::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({
-                           aapsLogger.debug(LTag.PROFILE, "EventLocalProfileChanged received")
-                           loadState()
-                       }, { aapsLogger.error("Error in EventLocalProfileChanged subscription", it) })
+        rxBus.toFlow(EventLocalProfileChanged::class.java)
+            .onEach {
+                aapsLogger.debug(LTag.PROFILE, "EventLocalProfileChanged received")
+                loadState()
+            }.launchIn(viewModelScope)
     }
 
     fun loadState() {
@@ -337,11 +331,6 @@ class ProfileEditorViewModel @Inject constructor(
     fun getEditedProfile() = localProfileManager.getEditedProfile()
 
     fun getActiveInsulin() = activePlugin.activeInsulin
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.clear()
-    }
 
     private fun LocalProfileManager.SingleProfile.toState(): SingleProfileState {
         return SingleProfileState(
