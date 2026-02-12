@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.keys.BooleanKey
@@ -67,6 +68,7 @@ fun TreatmentBottomSheet(
     onDismiss: () -> Unit,
     onCarbsClick: () -> Unit,
     onInsulinClick: (() -> Unit)? = null,
+    onTreatmentClick: (() -> Unit)? = null,
     onCgmClick: (() -> Unit)? = null,
     onCalibrationClick: (() -> Unit)? = null,
     onCalculatorClick: (() -> Unit)? = null,
@@ -98,6 +100,7 @@ fun TreatmentBottomSheet(
                 onCalibrationClick = onCalibrationClick,
                 onCarbsClick = onCarbsClick,
                 onInsulinClick = onInsulinClick,
+                onTreatmentClick = onTreatmentClick,
                 onCalculatorClick = onCalculatorClick,
                 showCgm = showCgmButton && preferences?.get(BooleanKey.OverviewShowCgmButton) ?: false,
                 showCalibration = showCalibrationButton && preferences?.get(BooleanKey.OverviewShowCalibrationButton) ?: false,
@@ -120,6 +123,7 @@ private fun TreatmentSelectionContent(
     onCalibrationClick: (() -> Unit)?,
     onCarbsClick: () -> Unit,
     onInsulinClick: (() -> Unit)?,
+    onTreatmentClick: (() -> Unit)?,
     onCalculatorClick: (() -> Unit)?,
     showCgm: Boolean,
     showCalibration: Boolean,
@@ -218,30 +222,38 @@ private fun TreatmentSelectionContent(
             )
         }
 
-        // Treatment (not migrated yet)
+        // Treatment
         if (showTreatment) {
-            val treatmentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+            val treatmentEnabled = onTreatmentClick != null
+            val treatmentColor = MaterialTheme.colorScheme.primary
             ListItem(
                 headlineContent = {
                     Text(
                         text = stringResource(CoreUiR.string.overview_treatment_label),
-                        color = treatmentColor
+                        color = if (treatmentEnabled) treatmentColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
                     )
                 },
                 supportingContent = {
                     Text(
                         text = stringResource(CoreUiR.string.treatment_desc),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
+                        color = if (treatmentEnabled) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
                     )
                 },
                 leadingContent = {
                     TonalIcon(
                         imageVector = Icons.Default.Add,
-                        color = treatmentColor,
-                        enabled = false
+                        color = if (treatmentEnabled) treatmentColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
+                        enabled = treatmentEnabled
                     )
                 },
-                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = if (treatmentEnabled) Modifier.clickable {
+                    onDismiss()
+                    onTreatmentClick!!()
+                } else Modifier
             )
         }
 
@@ -405,6 +417,31 @@ private fun TonalIcon(
             contentDescription = null,
             tint = color,
             modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TreatmentBottomSheetPreview() {
+    MaterialTheme {
+        TreatmentSelectionContent(
+            onDismiss = {},
+            onCgmClick = {},
+            onCalibrationClick = {},
+            onCarbsClick = {},
+            onInsulinClick = {},
+            onTreatmentClick = {},
+            onCalculatorClick = null,
+            showCgm = true,
+            showCalibration = true,
+            showTreatment = true,
+            showInsulin = true,
+            showCarbs = true,
+            showCalculator = true,
+            isDexcomSource = false,
+            showSettingsIcon = true,
+            onSettingsClick = {}
         )
     }
 }

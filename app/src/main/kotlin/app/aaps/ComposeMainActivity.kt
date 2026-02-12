@@ -54,6 +54,8 @@ import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
 import app.aaps.ui.compose.carbsDialog.CarbsDialogViewModel
 import app.aaps.ui.compose.insulinDialog.InsulinDialogScreen
 import app.aaps.ui.compose.insulinDialog.InsulinDialogViewModel
+import app.aaps.ui.compose.treatmentDialog.TreatmentDialogScreen
+import app.aaps.ui.compose.treatmentDialog.TreatmentDialogViewModel
 import app.aaps.ui.compose.careDialog.CareDialogScreen
 import app.aaps.ui.compose.careDialog.CareDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillDialogScreen
@@ -118,6 +120,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var fillDialogViewModel: FillDialogViewModel
     @Inject lateinit var carbsDialogViewModel: CarbsDialogViewModel
     @Inject lateinit var insulinDialogViewModel: InsulinDialogViewModel
+    @Inject lateinit var treatmentDialogViewModel: TreatmentDialogViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -304,6 +307,13 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     }
                                 }
                             },
+                            onTreatmentClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.TreatmentDialog.route)
+                                    }
+                                }
+                            },
                             onCgmClick = {
                                 if (xDripSource.isEnabled()) openCgmApp("com.eveningoutpost.dexdrip")
                                 else if (dexcomBoyda.isEnabled()) dexcomBoyda.dexcomPackages().forEach { openCgmApp(it) }
@@ -412,6 +422,16 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     composable(route = AppRoute.InsulinDialog.route) {
                         InsulinDialogScreen(
                             viewModel = insulinDialogViewModel,
+                            onNavigateBack = { navController.popBackStack() },
+                            onShowDeliveryError = { comment ->
+                                uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
+                            }
+                        )
+                    }
+
+                    composable(route = AppRoute.TreatmentDialog.route) {
+                        TreatmentDialogScreen(
+                            viewModel = treatmentDialogViewModel,
                             onNavigateBack = { navController.popBackStack() },
                             onShowDeliveryError = { comment ->
                                 uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)

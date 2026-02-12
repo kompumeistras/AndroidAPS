@@ -1,0 +1,245 @@
+package app.aaps.ui.compose.treatmentDialog
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aaps.core.ui.compose.AapsTopAppBar
+import app.aaps.core.ui.compose.OkCancelDialog
+import app.aaps.core.ui.compose.SliderWithButtons
+import java.text.DecimalFormat
+import app.aaps.core.ui.R as CoreUiR
+
+@Composable
+fun TreatmentDialogScreen(
+    viewModel: TreatmentDialogViewModel,
+    onNavigateBack: () -> Unit,
+    onShowDeliveryError: (String) -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Initialize ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.init()
+    }
+
+    // Observe side effects
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is TreatmentDialogViewModel.SideEffect.ShowDeliveryError -> {
+                    onShowDeliveryError(effect.comment)
+                }
+
+                is TreatmentDialogViewModel.SideEffect.ShowNoActionDialog -> {
+                    // handled via showNoAction local state
+                }
+            }
+        }
+    }
+
+    // Dialog states
+    var showConfirmation by remember { mutableStateOf(false) }
+    var showNoAction by remember { mutableStateOf(false) }
+
+    // Confirmation dialog
+    if (showConfirmation) {
+        if (!viewModel.hasAction()) {
+            showConfirmation = false
+            showNoAction = true
+        } else {
+            val summaryLines = viewModel.buildConfirmationSummary()
+            OkCancelDialog(
+                title = stringResource(CoreUiR.string.overview_treatment_label),
+                message = summaryLines.joinToString("<br/>"),
+                iconContent = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                },
+                onConfirm = {
+                    viewModel.confirmAndSave()
+                    onNavigateBack()
+                },
+                onDismiss = { showConfirmation = false }
+            )
+        }
+    }
+
+    // No action dialog
+    if (showNoAction) {
+        OkCancelDialog(
+            title = stringResource(CoreUiR.string.overview_treatment_label),
+            message = stringResource(CoreUiR.string.no_action_selected),
+            iconContent = {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            onConfirm = { showNoAction = false },
+            onDismiss = { showNoAction = false }
+        )
+    }
+
+    TreatmentDialogContent(
+        uiState = uiState,
+        bolusFormat = viewModel.decimalFormatter.pumpSupportedBolusFormat(uiState.bolusStep),
+        onInsulinChange = { viewModel.updateInsulin(it) },
+        onCarbsChange = { viewModel.updateCarbs(it.toInt()) },
+        onNavigateBack = onNavigateBack,
+        onConfirmClick = { showConfirmation = true }
+    )
+}
+
+@Composable
+private fun TreatmentDialogContent(
+    uiState: TreatmentDialogUiState,
+    bolusFormat: DecimalFormat,
+    onInsulinChange: (Double) -> Unit,
+    onCarbsChange: (Double) -> Unit,
+    onNavigateBack: () -> Unit,
+    onConfirmClick: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            AapsTopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(start = 8.dp))
+                        Text(stringResource(CoreUiR.string.overview_treatment_label))
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(CoreUiR.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onConfirmClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = stringResource(CoreUiR.string.ok),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // --- Insulin Section ---
+            SectionHeader(stringResource(CoreUiR.string.overview_insulin_label))
+            SliderWithButtons(
+                value = uiState.insulin,
+                onValueChange = onInsulinChange,
+                valueRange = 0.0..uiState.maxInsulin,
+                step = uiState.bolusStep,
+                showValue = true,
+                valueFormat = bolusFormat,
+                unitLabel = stringResource(CoreUiR.string.insulin_unit_shortname),
+                dialogLabel = stringResource(CoreUiR.string.overview_insulin_label),
+                modifier = Modifier.fillMaxWidth()
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // --- Carbs Section ---
+            SectionHeader(stringResource(CoreUiR.string.carbs))
+            SliderWithButtons(
+                value = uiState.carbs.toDouble(),
+                onValueChange = onCarbsChange,
+                valueRange = 0.0..uiState.maxCarbs.toDouble(),
+                step = 1.0,
+                showValue = true,
+                valueFormat = DecimalFormat("0"),
+                unitLabel = stringResource(CoreUiR.string.shortgramm),
+                dialogLabel = stringResource(CoreUiR.string.carbs),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TreatmentDialogScreenPreview() {
+    MaterialTheme {
+        TreatmentDialogContent(
+            uiState = TreatmentDialogUiState(
+                insulin = 1.5,
+                carbs = 20,
+                maxInsulin = 10.0,
+                maxCarbs = 100,
+                bolusStep = 0.1
+            ),
+            bolusFormat = DecimalFormat("0.0"),
+            onInsulinChange = {},
+            onCarbsChange = {},
+            onNavigateBack = {},
+            onConfirmClick = {}
+        )
+    }
+}
