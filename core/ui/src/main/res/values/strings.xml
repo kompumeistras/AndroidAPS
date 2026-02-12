@@ -284,6 +284,11 @@
     <string name="treatment_insulin_desc">Deliver bolus manually</string>
     <string name="treatment_carbs_desc">Record carbs without insulin</string>
     <string name="treatment_calculator_desc">Calculate bolus</string>
+    <string name="manage_profile_desc">Manage and activate profiles</string>
+    <string name="manage_temp_target_desc">Manage and set temporary targets</string>
+    <string name="manage_temp_basal_desc">Start temporary basal</string>
+    <string name="manage_extended_bolus_desc">Start extended bolus delivery</string>
+    <string name="manage_site_rotation_desc">Track and rotate infusion sites</string>
     <string name="glucosetype_finger">Finger</string>
     <string name="glucosetype_sensor">Sensor</string>
     <string name="manual">Manual</string>

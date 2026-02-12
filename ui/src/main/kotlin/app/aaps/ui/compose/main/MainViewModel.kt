@@ -429,11 +429,6 @@ class MainViewModel @Inject constructor(
         uiState.update { it.copy(showAboutDialog = show) }
     }
 
-    // Navigation state
-    fun setNavDestination(destination: MainNavDestination) {
-        uiState.update { it.copy(currentNavDestination = destination) }
-    }
-
     // Plugin toggle
     fun togglePluginEnabled(plugin: PluginBase, type: PluginType, enabled: Boolean) {
         configBuilder.performPluginSwitch(plugin, enabled, type)

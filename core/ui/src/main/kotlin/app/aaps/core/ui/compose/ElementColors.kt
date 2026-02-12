@@ -48,7 +48,10 @@ data class ElementColors(
     val cgmXdrip: Color,
     val cgmDex: Color,
     val calibration: Color,
-    val quickWizard: Color
+    val quickWizard: Color,
+    val bgCheck: Color,
+    val exercise: Color,
+    val announcement: Color
 )
 
 /**
@@ -71,11 +74,14 @@ internal val LightElementColors = ElementColors(
     cgmXdrip = Color(0xFFE93057),        // colorCalibrationButton
     cgmDex = Color(0xFF777777),          // byodaGray
     calibration = Color(0xFFE93057),     // colorCalibrationButton
-    quickWizard = Color(0xFFE19701)      // colorQuickWizardButton
+    quickWizard = Color(0xFFE19701),     // colorQuickWizardButton
+    bgCheck = Color(0xFFE93057),         // calibrationButtonColor
+    exercise = Color(0xFF42A5F5),        // exercise
+    announcement = Color(0xFFCF8BFE)     // announcement
 )
 
 /**
- * Light mode color scheme for basic elements.
+ * Dark mode color scheme for basic elements.
  * Colors match the dark theme values from colors.xml (night folder).
  */
 internal val DarkElementColors = ElementColors(
@@ -94,7 +100,10 @@ internal val DarkElementColors = ElementColors(
     cgmXdrip = Color(0xFFE93057),        // colorCalibrationButton (same both modes)
     cgmDex = Color(0xFF999999),          // byodaGray (night)
     calibration = Color(0xFFE93057),     // colorCalibrationButton (same both modes)
-    quickWizard = Color(0xFFFFAE01)      // colorQuickWizardButton (night)
+    quickWizard = Color(0xFFFFAE01),     // colorQuickWizardButton (night)
+    bgCheck = Color(0xFFE93057),         // calibrationButtonColor (same both modes)
+    exercise = Color(0xFF42A5F5),        // exercise (same both modes)
+    announcement = Color(0xFFCF8BFE)     // announcement (same both modes)
 )
 
 /**

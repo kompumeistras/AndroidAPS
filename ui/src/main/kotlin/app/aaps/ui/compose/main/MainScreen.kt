@@ -10,6 +10,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,7 +21,6 @@ import androidx.compose.ui.res.painterResource
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsFab
-import app.aaps.ui.compose.actions.ActionsScreen
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
@@ -47,7 +47,6 @@ fun MainScreen(
     onPluginEnableToggle: (PluginBase, PluginType, Boolean) -> Unit,
     onPluginPreferencesClick: (PluginBase) -> Unit,
     onDrawerClosed: () -> Unit,
-    onNavDestinationSelected: (MainNavDestination) -> Unit,
     onSwitchToClassicUi: () -> Unit,
     onAboutDialogDismiss: () -> Unit,
     // Overview status callbacks
@@ -88,6 +87,7 @@ fun MainScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var showTreatmentSheet by remember { mutableStateOf(false) }
+    var showManageSheet by remember { mutableStateOf(false) }
 
     // Sync drawer state with ui state
     LaunchedEffect(uiState.isDrawerOpen) {
@@ -155,8 +155,10 @@ fun MainScreen(
             },
             bottomBar = {
                 MainNavigationBar(
-                    currentDestination = uiState.currentNavDestination,
-                    onDestinationSelected = onNavDestinationSelected,
+                    onManageClick = {
+                        actionsViewModel.refreshState()
+                        showManageSheet = true
+                    },
                     onTreatmentClick = { showTreatmentSheet = true },
                     quickWizardCount = uiState.quickWizardItems.size
                 )
@@ -165,53 +167,28 @@ fun MainScreen(
                 SwitchUiFab(onClick = onSwitchToClassicUi)
             }
         ) { paddingValues ->
-            // Main content area
-            when (uiState.currentNavDestination) {
-                MainNavDestination.Overview -> {
-                    OverviewScreen(
-                        profileName = uiState.profileName,
-                        isProfileModified = uiState.isProfileModified,
-                        profileProgress = uiState.profileProgress,
-                        tempTargetText = uiState.tempTargetText,
-                        tempTargetState = uiState.tempTargetState,
-                        tempTargetProgress = uiState.tempTargetProgress,
-                        tempTargetReason = uiState.tempTargetReason,
-                        runningMode = uiState.runningMode,
-                        runningModeText = uiState.runningModeText,
-                        runningModeProgress = uiState.runningModeProgress,
-                        graphViewModel = graphViewModel,
-                        actionsViewModel = actionsViewModel,
-                        onProfileManagementClick = onProfileManagementClick,
-                        onTempTargetClick = onTempTargetClick,
-                        onRunningModeClick = onRunningModeClick,
-                        onSensorInsertClick = onSensorInsertClick,
-                        onFillClick = onFillClick,
-                        onInsulinChangeClick = onInsulinChangeClick,
-                        onBatteryChangeClick = onBatteryChangeClick,
-                        paddingValues = paddingValues
-                    )
-                }
-
-                MainNavDestination.Manage   -> {
-                    ActionsScreen(
-                        viewModel = actionsViewModel,
-                        onProfileManagementClick = onProfileManagementClick,
-                        onTempTargetClick = onTempTargetClick,
-                        onTempBasalClick = onTempBasalClick,
-                        onExtendedBolusClick = onExtendedBolusClick,
-                        onHistoryBrowserClick = onHistoryBrowserClick,
-                        onTddStatsClick = onTddStatsClick,
-                        onBgCheckClick = onBgCheckClick,
-                        onNoteClick = onNoteClick,
-                        onExerciseClick = onExerciseClick,
-                        onQuestionClick = onQuestionClick,
-                        onAnnouncementClick = onAnnouncementClick,
-                        onSiteRotationClick = onSiteRotationClick,
-                        onError = onActionsError,
-                        modifier = Modifier.padding(paddingValues)
-                    )
-                }
-            }
+            OverviewScreen(
+                profileName = uiState.profileName,
+                isProfileModified = uiState.isProfileModified,
+                profileProgress = uiState.profileProgress,
+                tempTargetText = uiState.tempTargetText,
+                tempTargetState = uiState.tempTargetState,
+                tempTargetProgress = uiState.tempTargetProgress,
+                tempTargetReason = uiState.tempTargetReason,
+                runningMode = uiState.runningMode,
+                runningModeText = uiState.runningModeText,
+                runningModeProgress = uiState.runningModeProgress,
+                graphViewModel = graphViewModel,
+                actionsViewModel = actionsViewModel,
+                onProfileManagementClick = onProfileManagementClick,
+                onTempTargetClick = onTempTargetClick,
+                onRunningModeClick = onRunningModeClick,
+                onSensorInsertClick = onSensorInsertClick,
+                onFillClick = onFillClick,
+                onInsulinChangeClick = onInsulinChangeClick,
+                onBatteryChangeClick = onBatteryChangeClick,
+                paddingValues = paddingValues
+            )
         }
     }
 
@@ -252,6 +229,49 @@ fun MainScreen(
             simpleMode = uiState.isSimpleMode,
             preferences = preferences,
             config = config
+        )
+    }
+
+    // Manage bottom sheet
+    if (showManageSheet) {
+        val actionsState by actionsViewModel.uiState.collectAsState()
+        ManageBottomSheet(
+            onDismiss = { showManageSheet = false },
+            showTempTarget = actionsState.showTempTarget,
+            showTempBasal = actionsState.showTempBasal,
+            showCancelTempBasal = actionsState.showCancelTempBasal,
+            showExtendedBolus = actionsState.showExtendedBolus,
+            showCancelExtendedBolus = actionsState.showCancelExtendedBolus,
+            showTddStats = actionsState.showTddStats,
+            cancelTempBasalText = actionsState.cancelTempBasalText,
+            cancelExtendedBolusText = actionsState.cancelExtendedBolusText,
+            customActions = actionsState.customActions,
+            onProfileManagementClick = onProfileManagementClick,
+            onTempTargetClick = onTempTargetClick,
+            onTempBasalClick = onTempBasalClick,
+            onCancelTempBasalClick = {
+                actionsViewModel.cancelTempBasal { success, comment ->
+                    if (!success) {
+                        onActionsError(comment, "Temp basal delivery error")
+                    }
+                }
+            },
+            onExtendedBolusClick = onExtendedBolusClick,
+            onCancelExtendedBolusClick = {
+                actionsViewModel.cancelExtendedBolus { success, comment ->
+                    if (!success) {
+                        onActionsError(comment, "Extended bolus delivery error")
+                    }
+                }
+            },
+            onBgCheckClick = onBgCheckClick,
+            onNoteClick = onNoteClick,
+            onExerciseClick = onExerciseClick,
+            onQuestionClick = onQuestionClick,
+            onAnnouncementClick = onAnnouncementClick,
+            onSiteRotationClick = onSiteRotationClick,
+            onTddStatsClick = onTddStatsClick,
+            onCustomActionClick = { actionsViewModel.executeCustomAction(it.customActionType) }
         )
     }
 

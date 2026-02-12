@@ -26,7 +26,6 @@ data class MainUiState(
     val isDrawerOpen: Boolean = false,
     val isSimpleMode: Boolean = true,
     val isProfileLoaded: Boolean = false,
-    val currentNavDestination: MainNavDestination = MainNavDestination.Overview,
     val showAboutDialog: Boolean = false,
     // Profile state for top bar chip
     val profileName: String = "",

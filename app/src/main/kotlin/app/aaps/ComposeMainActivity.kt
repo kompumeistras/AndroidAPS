@@ -63,7 +63,6 @@ import app.aaps.ui.compose.fillDialog.FillDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillPreselect
 import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import app.aaps.ui.compose.main.MainMenuItem
-import app.aaps.ui.compose.main.MainNavDestination
 import app.aaps.ui.compose.main.MainScreen
 import app.aaps.ui.compose.main.MainViewModel
 import app.aaps.ui.compose.preferences.AllPreferencesScreen
@@ -206,12 +205,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                 }
                             },
                             onDrawerClosed = { mainViewModel.closeDrawer() },
-                            onNavDestinationSelected = { destination ->
-                                mainViewModel.setNavDestination(destination)
-                                if (destination == MainNavDestination.Manage) {
-                                    actionsViewModel.refreshState()
-                                }
-                            },
                             onSwitchToClassicUi = { switchToClassicUi() },
                             onAboutDialogDismiss = { mainViewModel.setShowAboutDialog(false) },
                             // Overview status callbacks

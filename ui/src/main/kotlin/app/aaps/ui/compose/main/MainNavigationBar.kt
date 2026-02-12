@@ -17,24 +17,9 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.icons.Treatment
 import app.aaps.core.ui.R as CoreUiR
 
-sealed class MainNavDestination(val id: String, val iconRes: Int, val labelRes: Int) {
-    data object Overview : MainNavDestination(
-        id = "overview",
-        iconRes = CoreUiR.drawable.ic_home,
-        labelRes = CoreUiR.string.overview
-    )
-
-    data object Manage : MainNavDestination(
-        id = "manage",
-        iconRes = app.aaps.core.objects.R.drawable.ic_action,
-        labelRes = CoreUiR.string.manage
-    )
-}
-
 @Composable
 fun MainNavigationBar(
-    currentDestination: MainNavDestination,
-    onDestinationSelected: (MainNavDestination) -> Unit,
+    onManageClick: () -> Unit,
     onTreatmentClick: () -> Unit,
     quickWizardCount: Int = 0,
     modifier: Modifier = Modifier
@@ -52,17 +37,17 @@ fun MainNavigationBar(
         contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = modifier
     ) {
-        // Overview tab
+        // Overview tab (always selected)
         NavigationBarItem(
-            selected = currentDestination == MainNavDestination.Overview,
-            onClick = { onDestinationSelected(MainNavDestination.Overview) },
+            selected = true,
+            onClick = { },
             icon = {
                 Icon(
-                    painter = painterResource(id = MainNavDestination.Overview.iconRes),
-                    contentDescription = stringResource(MainNavDestination.Overview.labelRes)
+                    painter = painterResource(id = CoreUiR.drawable.ic_home),
+                    contentDescription = stringResource(CoreUiR.string.overview)
                 )
             },
-            label = { Text(text = stringResource(MainNavDestination.Overview.labelRes)) },
+            label = { Text(text = stringResource(CoreUiR.string.overview)) },
             colors = navColors
         )
 
@@ -89,17 +74,17 @@ fun MainNavigationBar(
             colors = navColors
         )
 
-        // Manage tab
+        // Manage action button (opens bottom sheet)
         NavigationBarItem(
-            selected = currentDestination == MainNavDestination.Manage,
-            onClick = { onDestinationSelected(MainNavDestination.Manage) },
+            selected = false,
+            onClick = onManageClick,
             icon = {
                 Icon(
-                    painter = painterResource(id = MainNavDestination.Manage.iconRes),
-                    contentDescription = stringResource(MainNavDestination.Manage.labelRes)
+                    painter = painterResource(id = app.aaps.core.objects.R.drawable.ic_action),
+                    contentDescription = stringResource(CoreUiR.string.manage)
                 )
             },
-            label = { Text(text = stringResource(MainNavDestination.Manage.labelRes)) },
+            label = { Text(text = stringResource(CoreUiR.string.manage)) },
             colors = navColors
         )
     }
