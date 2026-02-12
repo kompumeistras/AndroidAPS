@@ -47,7 +47,8 @@ data class ElementColors(
     val aaps: Color,  // Additional UserEntry for AAPS
     val cgmXdrip: Color,
     val cgmDex: Color,
-    val calibration: Color
+    val calibration: Color,
+    val quickWizard: Color
 )
 
 /**
@@ -69,7 +70,8 @@ internal val LightElementColors = ElementColors(
     aaps = Color(0xFF666666),            // Additional UserEntry for AAPS
     cgmXdrip = Color(0xFFE93057),        // colorCalibrationButton
     cgmDex = Color(0xFF777777),          // byodaGray
-    calibration = Color(0xFFE93057)      // colorCalibrationButton
+    calibration = Color(0xFFE93057),     // colorCalibrationButton
+    quickWizard = Color(0xFFE19701)      // colorQuickWizardButton
 )
 
 /**
@@ -91,7 +93,8 @@ internal val DarkElementColors = ElementColors(
     aaps = Color(0xFFBBBBBB),            // Additional UserEntry for AAPS
     cgmXdrip = Color(0xFFE93057),        // colorCalibrationButton (same both modes)
     cgmDex = Color(0xFF999999),          // byodaGray (night)
-    calibration = Color(0xFFE93057)      // colorCalibrationButton (same both modes)
+    calibration = Color(0xFFE93057),     // colorCalibrationButton (same both modes)
+    quickWizard = Color(0xFFFFAE01)      // colorQuickWizardButton (night)
 )
 
 /**

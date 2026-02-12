@@ -1,6 +1,8 @@
 package app.aaps.ui.compose.main
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -34,6 +36,7 @@ fun MainNavigationBar(
     currentDestination: MainNavDestination,
     onDestinationSelected: (MainNavDestination) -> Unit,
     onTreatmentClick: () -> Unit,
+    quickWizardCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val navColors = NavigationBarItemDefaults.colors(
@@ -68,11 +71,19 @@ fun MainNavigationBar(
             selected = false,
             onClick = onTreatmentClick,
             icon = {
-                Icon(
-                    imageVector = Treatment,
-                    contentDescription = stringResource(CoreUiR.string.treatments),
-                    modifier = Modifier.size(24.dp)
-                )
+                BadgedBox(
+                    badge = {
+                        if (quickWizardCount > 0) {
+                            Badge { Text(text = quickWizardCount.toString()) }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Treatment,
+                        contentDescription = stringResource(CoreUiR.string.treatments),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             },
             label = { Text(text = stringResource(CoreUiR.string.treatments)) },
             colors = navColors

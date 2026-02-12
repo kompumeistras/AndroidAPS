@@ -63,7 +63,7 @@ class QuickWizardEntry @Inject constructor(
         const val DEVICE_WATCH = 2
         const val DEFAULT = 0
         const val CUSTOM = 1
-        const val COOLDOWN_MILLIS = 3_600_000L // 1 hour
+        const val COOLDOWN_MILLIS = 1_800_000L // 1/2 hour
     }
 
     init {

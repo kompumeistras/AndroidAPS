@@ -73,6 +73,8 @@ fun MainScreen(
     onTreatmentClick: () -> Unit,
     onCgmClick: (() -> Unit)?,
     onCalibrationClick: (() -> Unit)?,
+    quickWizardItems: List<QuickWizardItem> = emptyList(),
+    onQuickWizardClick: ((String) -> Unit)? = null,
     showCgmButton: Boolean,
     showCalibrationButton: Boolean,
     isDexcomSource: Boolean,
@@ -155,7 +157,8 @@ fun MainScreen(
                 MainNavigationBar(
                     currentDestination = uiState.currentNavDestination,
                     onDestinationSelected = onNavDestinationSelected,
-                    onTreatmentClick = { showTreatmentSheet = true }
+                    onTreatmentClick = { showTreatmentSheet = true },
+                    quickWizardCount = uiState.quickWizardItems.size
                 )
             },
             floatingActionButton = {
@@ -241,6 +244,8 @@ fun MainScreen(
             onTreatmentClick = onTreatmentClick,
             onCgmClick = onCgmClick,
             onCalibrationClick = onCalibrationClick,
+            quickWizardItems = quickWizardItems,
+            onQuickWizardClick = onQuickWizardClick,
             showCgmButton = showCgmButton,
             showCalibrationButton = showCalibrationButton,
             isDexcomSource = isDexcomSource,

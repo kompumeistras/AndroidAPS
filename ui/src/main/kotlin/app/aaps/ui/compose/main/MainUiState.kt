@@ -40,5 +40,16 @@ data class MainUiState(
     // Running mode state for chip
     val runningMode: RM.Mode = RM.Mode.DISABLED_LOOP,
     val runningModeText: String = "",
-    val runningModeProgress: Float = 0f // 0-1 progress for temporary modes
+    val runningModeProgress: Float = 0f, // 0-1 progress for temporary modes
+    // QuickWizard entries for treatment bottom sheet
+    val quickWizardItems: List<QuickWizardItem> = emptyList()
+)
+
+@Immutable
+data class QuickWizardItem(
+    val guid: String,
+    val buttonText: String,
+    val detail: String? = null,
+    val isEnabled: Boolean = false,
+    val disabledReason: String? = null
 )

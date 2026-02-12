@@ -314,6 +314,14 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     }
                                 }
                             },
+                            quickWizardItems = state.quickWizardItems,
+                            onQuickWizardClick = { guid ->
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        mainViewModel.executeQuickWizard(this@ComposeMainActivity, guid)
+                                    }
+                                }
+                            },
                             onCgmClick = {
                                 if (xDripSource.isEnabled()) openCgmApp("com.eveningoutpost.dexdrip")
                                 else if (dexcomBoyda.isEnabled()) dexcomBoyda.dexcomPackages().forEach { openCgmApp(it) }

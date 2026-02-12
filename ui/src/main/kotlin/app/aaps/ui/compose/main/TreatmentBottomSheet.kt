@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +51,7 @@ import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
 import app.aaps.core.ui.R as CoreUiR
+import app.aaps.core.objects.R as ObjectsR
 
 private val treatmentButtonSettingsDef = PreferenceSubScreenDef(
     key = "treatment_button_settings",
@@ -72,6 +76,8 @@ fun TreatmentBottomSheet(
     onCgmClick: (() -> Unit)? = null,
     onCalibrationClick: (() -> Unit)? = null,
     onCalculatorClick: (() -> Unit)? = null,
+    quickWizardItems: List<QuickWizardItem> = emptyList(),
+    onQuickWizardClick: ((String) -> Unit)? = null,
     showCgmButton: Boolean = false,
     showCalibrationButton: Boolean = false,
     isDexcomSource: Boolean = false,
@@ -102,6 +108,8 @@ fun TreatmentBottomSheet(
                 onInsulinClick = onInsulinClick,
                 onTreatmentClick = onTreatmentClick,
                 onCalculatorClick = onCalculatorClick,
+                quickWizardItems = quickWizardItems,
+                onQuickWizardClick = onQuickWizardClick,
                 showCgm = showCgmButton && preferences?.get(BooleanKey.OverviewShowCgmButton) ?: false,
                 showCalibration = showCalibrationButton && preferences?.get(BooleanKey.OverviewShowCalibrationButton) ?: false,
                 showTreatment = preferences?.get(BooleanKey.OverviewShowTreatmentButton) ?: true,
@@ -125,6 +133,8 @@ private fun TreatmentSelectionContent(
     onInsulinClick: (() -> Unit)?,
     onTreatmentClick: (() -> Unit)?,
     onCalculatorClick: (() -> Unit)?,
+    quickWizardItems: List<QuickWizardItem>,
+    onQuickWizardClick: ((String) -> Unit)?,
     showCgm: Boolean,
     showCalibration: Boolean,
     showTreatment: Boolean,
@@ -164,6 +174,52 @@ private fun TreatmentSelectionContent(
         }
 
         val disabledAlpha = 0.38f
+
+        // QuickWizard entries
+        val quickWizardColor = AapsTheme.elementColors.quickWizard
+        quickWizardItems.forEach { item ->
+            val itemEnabled = item.isEnabled && onQuickWizardClick != null
+            val supportingText = if (itemEnabled) item.detail
+                else item.disabledReason?.let { reason ->
+                    if (item.detail != null) "${item.detail} — $reason" else reason
+                } ?: item.detail
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = item.buttonText,
+                        color = if (itemEnabled) quickWizardColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha)
+                    )
+                },
+                supportingContent = supportingText?.let {
+                    {
+                        Text(
+                            text = it,
+                            color = if (itemEnabled) MaterialTheme.colorScheme.onSurfaceVariant
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = disabledAlpha)
+                        )
+                    }
+                },
+                leadingContent = {
+                    TonalIcon(
+                        painter = painterResource(ObjectsR.drawable.ic_quick_wizard),
+                        color = if (itemEnabled) quickWizardColor
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
+                        enabled = itemEnabled
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = if (itemEnabled) Modifier.clickable {
+                    onDismiss()
+                    onQuickWizardClick!!(item.guid)
+                } else Modifier
+            )
+        }
+
+        // Divider between QuickWizard and other buttons
+        if (quickWizardItems.isNotEmpty()) {
+            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+        }
 
         // CGM
         if (showCgm) {
@@ -421,6 +477,32 @@ private fun TonalIcon(
     }
 }
 
+@Composable
+private fun TonalIcon(
+    painter: Painter,
+    color: Color,
+    enabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(40.dp)
+            .background(
+                color = if (enabled) color.copy(alpha = 0.12f)
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                shape = CircleShape
+            )
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun TreatmentBottomSheetPreview() {
@@ -433,6 +515,11 @@ private fun TreatmentBottomSheetPreview() {
             onInsulinClick = {},
             onTreatmentClick = {},
             onCalculatorClick = null,
+            quickWizardItems = listOf(
+                QuickWizardItem(guid = "1", buttonText = "Meal", detail = "36g / 2.5U", isEnabled = true),
+                QuickWizardItem(guid = "2", buttonText = "Snack", detail = "12g / 0.8U", disabledReason = "No insulin required")
+            ),
+            onQuickWizardClick = {},
             showCgm = true,
             showCalibration = true,
             showTreatment = true,
