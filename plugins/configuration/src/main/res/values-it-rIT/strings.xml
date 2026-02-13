@@ -232,6 +232,8 @@
     <string name="clear_cloud_settings_message">Questo passerà alla memoria locale cancellerà l\'autenticazione. Continuare?</string>
     <string name="uploading_to_cloud">Caricamento nel cloud...</string>
     <string name="cloud_directory_path">Directory cloud: %1$s</string>
+    <string name="warning_wrong_directory_selected">Directory Selezionata Errata</string>
+    <string name="warning_wrong_directory_message">Hai selezionato la sottodirectory \"%1$s\" invece della directory AAPS principale. Seleziona la directory AAPS principale. L\'applicazione creerà e gestirà automaticamente le sottodirectory.</string>
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <string name="google_drive_token_refresh_failed">Impossibile aggiornare il token di accesso a Google Drive</string>
     <string name="google_drive_token_refresh_error">Impossibile aggiornare il token di accesso a Google Drive: %1$s</string>
