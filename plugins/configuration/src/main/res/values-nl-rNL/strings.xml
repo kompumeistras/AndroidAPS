@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Niet interactief instellingen exporteren</string>
     <string name="unattended_settings_export_summary">Met het activeren van deze optie wordt uw wachtwoord veilig opgeslagen op uw telefoon</string>
     <string name="identification">Identificatie (e-mail, FB, Discord e. d.)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Verzoek</string>
     <string name="apsmode_title">APS Mode</string>
     <string name="error_asking_for_permissions">Fout bij het vragen van toestemming</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Onbekende export indeling</string>
     <string name="reset_aps_results">Reset APS resultaten</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Fout bij toegang tot het bestandssysteem. Selecteer de juiste AAPS map.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
