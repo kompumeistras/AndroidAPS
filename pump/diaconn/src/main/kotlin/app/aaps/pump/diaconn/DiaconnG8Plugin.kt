@@ -126,8 +126,11 @@ class DiaconnG8Plugin @Inject constructor(
         disposable += rxBus
             .toObservable(EventDiaconnG8DeviceChange::class.java)
             .observeOn(aapsSchedulers.io)
-            .subscribe({ changePump() }) { fabricPrivacy.logException(it) }
-        changePump() // load device name
+            .subscribe({
+                           pumpSync.connectNewPump()
+                           changePump()
+                       }) { fabricPrivacy.logException(it) }
+        changePump() // load device name on app start
     }
 
     override fun onStop() {
@@ -150,10 +153,27 @@ class DiaconnG8Plugin @Inject constructor(
     }
 
     fun changePump() {
-        mDeviceAddress = preferences.get(DiaconnStringNonKey.Address)
-        mDeviceName = preferences.get(DiaconnStringNonKey.Name)
+        val newAddress = preferences.get(DiaconnStringNonKey.Address)
+        val newName = preferences.get(DiaconnStringNonKey.Name)
+
+        // Check if device actually changed by comparing addresses
+        val isDeviceChanged = mDeviceAddress.isNotEmpty() && mDeviceAddress != newAddress
+
+        // Firmware 3.58+: force disconnect since disconnect() is skipped for permanent connection
+        if (isDeviceChanged && diaconnG8Pump.isPumpVersionGe3_58) {
+            diaconnG8Service?.disconnect("Pump changed")
+        }
+
+        mDeviceAddress = newAddress
+        mDeviceName = newName
         diaconnG8Pump.reset()
-        commandQueue.readStatus(rh.gs(app.aaps.core.ui.R.string.device_changed), null)
+
+        // Use different message for app start vs actual device change
+        val reason = if (isDeviceChanged)
+            rh.gs(app.aaps.core.ui.R.string.device_changed)
+        else
+            rh.gs(R.string.gettingpumpsettings)
+        commandQueue.readStatus(reason, null)
     }
 
     override fun connect(reason: String) {
@@ -170,6 +190,11 @@ class DiaconnG8Plugin @Inject constructor(
 
     override fun disconnect(reason: String) {
         aapsLogger.debug(LTag.PUMP, "Diaconn G8 disconnect from: $reason")
+        // Firmware 3.58+: permanent BLE connection, skip actual disconnect
+        if (diaconnG8Pump.isPumpVersionGe3_58) {
+            aapsLogger.debug(LTag.PUMP, "Skipping disconnect for firmware 3.58+ (permanent connection)")
+            return
+        }
         diaconnG8Service?.disconnect(reason)
     }
 
@@ -511,6 +536,18 @@ class DiaconnG8Plugin @Inject constructor(
 
     override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {
         if (requiredKey != null) return
+
+        // Migrate old Int preference to String for ListPreference compatibility
+        val sp = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+        try {
+            val oldValue = sp.getInt(DiaconnIntKey.BolusSpeed.key, -1)
+            if (oldValue != -1) {
+                sp.edit().remove(DiaconnIntKey.BolusSpeed.key).putString(DiaconnIntKey.BolusSpeed.key, oldValue.toString()).apply()
+                aapsLogger.info(LTag.PUMP, "Migrated BolusSpeed from Int($oldValue) to String")
+            }
+        } catch (e: ClassCastException) {
+            // Already a String, no migration needed
+        }
 
         val speedEntries = arrayOf<CharSequence>("1 U/min", "2 U/min", "3 U/min", "4 U/min", "5 U/min", "6 U/min", "7 U/min", "8 U/min")
         val speedValues = arrayOf<CharSequence>("1", "2", "3", "4", "5", "6", "7", "8")
