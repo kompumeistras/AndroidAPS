@@ -537,10 +537,6 @@ class DiaconnG8Plugin @Inject constructor(
     override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {
         if (requiredKey != null) return
 
-        // Migrate old Int preference to String for ListPreference compatibility
-        val oldValue = preferences.get(DiaconnIntKey.BolusSpeed)
-        preferences.put(DiaconnIntKey.BolusSpeed, oldValue)
-
         val speedEntries = arrayOf<CharSequence>("1 U/min", "2 U/min", "3 U/min", "4 U/min", "5 U/min", "6 U/min", "7 U/min", "8 U/min")
         val speedValues = arrayOf<CharSequence>("1", "2", "3", "4", "5", "6", "7", "8")
 
