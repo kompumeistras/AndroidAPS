@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Automatický export nastavení</string>
     <string name="unattended_settings_export_summary">Povolení této volby bezpečně uloží vaše heslo do telefonu</string>
     <string name="identification">Identifikace (e-mail, jméno na FB nebo Discord atd.)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Požadavek</string>
     <string name="apsmode_title">Typ smyčky</string>
     <string name="error_asking_for_permissions">Chyba žádosti o oprávnění</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Neznámý formát souboru</string>
     <string name="reset_aps_results">Resetovat výsledky APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Chyba při přístupu k souborům. Vyberte adresář AAPS.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
