@@ -538,16 +538,8 @@ class DiaconnG8Plugin @Inject constructor(
         if (requiredKey != null) return
 
         // Migrate old Int preference to String for ListPreference compatibility
-        val sp = android.preference.PreferenceManager.getDefaultSharedPreferences(context)
-        try {
-            val oldValue = sp.getInt(DiaconnIntKey.BolusSpeed.key, -1)
-            if (oldValue != -1) {
-                sp.edit().remove(DiaconnIntKey.BolusSpeed.key).putString(DiaconnIntKey.BolusSpeed.key, oldValue.toString()).apply()
-                aapsLogger.info(LTag.PUMP, "Migrated BolusSpeed from Int($oldValue) to String")
-            }
-        } catch (e: ClassCastException) {
-            // Already a String, no migration needed
-        }
+        val oldValue = preferences.get(DiaconnIntKey.BolusSpeed)
+        preferences.put(DiaconnIntKey.BolusSpeed, oldValue)
 
         val speedEntries = arrayOf<CharSequence>("1 U/min", "2 U/min", "3 U/min", "4 U/min", "5 U/min", "6 U/min", "7 U/min", "8 U/min")
         val speedValues = arrayOf<CharSequence>("1", "2", "3", "4", "5", "6", "7", "8")
