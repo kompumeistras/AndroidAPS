@@ -162,6 +162,7 @@
     <string name="metadata_format_other">פורמט ייצוא לא ידוע</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">שגיאה בגישה למערכת הקבצים. אנא בחרו את תיקיית AAPS כראוי.</string>
     <!-- Google Drive Storage -->
+    <string name="export_options">אפשרויות ייצוא</string>
     <!-- Import source selection dialog -->
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <!-- Provider-agnostic cloud storage strings -->
