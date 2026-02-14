@@ -54,6 +54,8 @@
     <string name="cloud_connection_failed">Không thể kết nối tới lưu trữ đám mây</string>
     <string name="loading_from_cloud">Đang tải cài đặt từ lưu trữ đám mây, vui lòng chờ…</string>
     <string name="cloud_folder_error">Không thể tải các thư mục lưu trữ đám mây</string>
+    <string name="csv_uploaded_to_cloud">Đã tải CSV mục nhập người dùng lên đám mây thành công</string>
+    <string name="cloud_reauthorize_message">Không thể kết nối tới lưu trữ đám mây. Xác thực lại chứ?</string>
     <string name="request">Yêu cầu</string>
     <string name="apsmode_title">Chế độ APS</string>
     <string name="error_asking_for_permissions">Lỗi khi yêu cầu cấp quyền</string>
@@ -173,7 +175,50 @@
     <string name="reset_aps_results">Đặt lại kết quả APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Lỗi truy cập hệ thống tệp. Hãy chọn đúng thư mục AAPS.</string>
     <!-- Google Drive Storage -->
+    <string name="storage_local">Lưu trữ Cục bộ</string>
+    <string name="storage_google_drive">Google Drive</string>
+    <string name="select_storage_type">Chọn Kiểu lưu trữ</string>
+    <string name="backup_to_google_drive">Sao lưu vào Google Drive</string>
+    <string name="google_drive_connection_error">Lỗi kết nối Google Drive</string>
+    <string name="reauthorize">Xác thực lại</string>
+    <string name="cloud_auth_success">Xác thực lưu trữ đám mây thành công</string>
+    <string name="cloud_auth_failed">Không thể kết nối tới lưu trữ đám mây</string>
+    <string name="cloud_auth_error">Lỗi xác thực lưu trữ đám mây: %1$s</string>
+    <string name="enable_cloud_export_title">Bật xuất dữ liệu lên đám mây</string>
+    <string name="enable_cloud_export_message">Bạn có muốn bật xuất lên đám mây không? Thao tác này sẽ kích hoạt tùy chọn “All Cloud” trong Cài đặt xuất.</string>
+    <string name="can_change_in_export_settings">Bạn có thể thay đổi việc này sau trong Xuất Cài đặt</string>
+    <string name="setup_cloud_directory_first">Vui lòng thiết lập Thư mục đám mây trước để sử dụng Xuất Cài đặt</string>
+    <string name="local_directory">Thư mục CỤC BỘ</string>
+    <string name="cloud_directory">Thư mục đám mây</string>
+    <string name="export_options">Xuất các tuỳ chọn</string>
+    <string name="log_export_option">Nhật ký</string>
+    <string name="user_settings_export_option">Cài đặt người sử dụng</string>
+    <string name="user_entries_csv_export_option">Xuất dữ liệu sang Excel (csv)</string>
+    <string name="email_option">Email</string>
+    <string name="local_storage_option">Lưu trữ Cục bộ</string>
+    <string name="cloud_storage_option">Lưu trữ đám mây</string>
+    <string name="export_all_cloud">Toàn bộ lên đám mây</string>
+    <string name="send_logs_to_cloud">Xuất nhật ký lên đám mây</string>
+    <string name="export_csv_to_cloud">Xuất dữ liệu người dùng lên đám mây (csv)</string>
+    <string name="export_csv_to_local">Xuất mục dữ liệu vào cục bộ (csv)</string>
+    <string name="export_settings_local">Xuất cài đặt (Cục bộ)</string>
+    <string name="export_settings_cloud">Xuất cài đặt (Đám mây)</string>
+    <string name="export_settings_both">Xuất cài đặt (Cục bộ + Đám mây)</string>
+    <string name="import_settings_local">Nhập cài đặt (Cục bộ)</string>
+    <string name="import_settings_cloud">Nhập cài đặt (Đám mây)</string>
+    <string name="import_settings_both">Nhập cài đặt (Cục bộ + Đám mây)</string>
     <!-- Import source selection dialog -->
+    <string name="select_import_source">Chọn nguồn nhập dữ liệu</string>
+    <string name="import_from_local">Nhập từ lưu trữ Cục bộ</string>
+    <string name="import_from_cloud">Nhập từ lưu trữ Đám mây</string>
+    <string name="import_source_local_description">Nhập cài đặt từ thiết bị lưu trữ</string>
+    <string name="import_source_cloud_description">Nhập cài đặt từ lưu trữ đám mây</string>
+    <string name="cloud_import_file_count">Đang hiển thị %1$d của %2$d tệp</string>
+    <string name="cloud_import_file_count_all">Đang hiển thị tất cả %1$d tệp</string>
+    <string name="load_more">Tải thêm</string>
+    <string name="load_more_with_count">Tải thêm %1$d (đã tải %2$d)</string>
+    <string name="loading">Đang tải…</string>
+    <string name="loading_progress">Đang tải %1$d của %2$d…</string>
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <!-- Provider-agnostic cloud storage strings -->
     <!-- Authorization status strings -->
