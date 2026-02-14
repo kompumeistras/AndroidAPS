@@ -242,7 +242,9 @@
     <string name="clear_cloud_settings_message">This will switch to local storage and clear authorization. Continue?</string>
     <string name="uploading_to_cloud">Uploading to cloud...</string>
     <string name="cloud_directory_path">Cloud directory: %1$s</string>
-    
+    <string name="warning_wrong_directory_selected">Wrong Directory Selected</string>
+    <string name="warning_wrong_directory_message">You have selected the \"%1$s\" subdirectory instead of the root AAPS directory. Please select the parent AAPS directory. The app will automatically create and manage subdirectories.</string>
+
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <string name="google_drive_token_refresh_failed">Unable to refresh Google Drive access token</string>
     <string name="google_drive_token_refresh_error">Unable to refresh Google Drive access token: %1$s</string>

@@ -347,7 +347,7 @@ class CloudDirectoryDialog @Inject constructor(
         val hasCredentials = provider?.hasValidCredentials() == true
         val hasConnectionError = cloudStorageManager.hasConnectionError()
         
-        if (hasCredentials && provider != null) {
+        if (hasCredentials) {
             // Show authorization status section
             authStatusSection.visibility = View.VISIBLE
             
