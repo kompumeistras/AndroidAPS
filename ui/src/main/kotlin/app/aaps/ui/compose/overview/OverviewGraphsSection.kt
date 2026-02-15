@@ -85,7 +85,7 @@ fun OverviewGraphsSection(
     // Observe BG graph scroll/zoom and sync to IOB/COB graphs
     LaunchedEffect(bgScrollState, bgZoomState, iobScrollState, iobZoomState, cobScrollState, cobZoomState) {
         snapshotFlow { bgScrollState.value to bgZoomState.value }
-            .debounce(50) // Wait for gesture to settle
+            .debounce(30) // Wait for gesture to settle
             .collect { (scroll, zoom) ->
                 // Sync zoom first, then scroll (order matters for proper positioning)
                 iobZoomState.zoom(Zoom.fixed(zoom))

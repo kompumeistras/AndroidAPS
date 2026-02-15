@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.aaps.core.graph.vico.Square
 import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.ui.compose.AapsTheme
@@ -24,11 +26,13 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.Position
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
@@ -36,16 +40,14 @@ import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 /**
  * IOB (Insulin On Board) Graph using Vico.
  *
- * Series (ALWAYS 6, fixed order):
- *   0: IOB data (or invisible dummy)
- *   1: Small SMB triangles (or invisible dummy)
- *   2: Medium SMB triangles (or invisible dummy)
- *   3: Large SMB triangles (or invisible dummy)
- *   4: Normal bolus markers (or invisible dummy)
- *   5: Normalizer (invisible, ensures identical maxPointSize — see GraphUtils.kt)
- *
- * Uses fixed series count with invisible dummies for empty slots to ensure
- * Vico's LineProvider.series() always maps lines to series by index correctly.
+ * Dynamic series (order matches lines list built in composition):
+ *   - IOB data (conditional)
+ *   - Small SMB triangles (conditional)
+ *   - Medium SMB triangles (conditional)
+ *   - Large SMB triangles (conditional)
+ *   - Normal bolus markers (conditional)
+ *   - Extended bolus lines (one series per extended bolus, conditional)
+ *   - Normalizer (always last — ensures identical maxPointSize, see GraphUtils.kt)
  */
 @Composable
 fun IobGraphCompose(
@@ -71,6 +73,7 @@ fun IobGraphCompose(
     // Colors from theme
     val iobColor = AapsTheme.generalColors.activeInsulinText
     val smbColor = AapsTheme.elementColors.insulin
+    val extBolusColor = AapsTheme.elementColors.extendedBolus
 
     val minX = 0.0
     val maxX = remember(minTimestamp, maxTimestamp) {
@@ -81,15 +84,19 @@ fun IobGraphCompose(
         minTimestamp to maxTimestamp
     }
 
-    // Dummy series for empty slots — 2 invisible points at y=0
-    val dummyX = listOf(minX, minX + 1.0)
-    val dummyY = listOf(0.0, 0.0)
-
     // Cache last non-empty treatment data to survive reset() cycles
     val lastTreatmentData = remember { mutableStateOf(treatmentGraphData) }
-    if (treatmentGraphData.boluses.isNotEmpty()) {
+    if (treatmentGraphData.boluses.isNotEmpty() || treatmentGraphData.extendedBoluses.isNotEmpty()) {
         lastTreatmentData.value = treatmentGraphData
     }
+
+    // Track which series are present (for dynamic line matching)
+    val hasIobDataState = remember { mutableStateOf(false) }
+    val hasSmallSmbsState = remember { mutableStateOf(false) }
+    val hasMediumSmbsState = remember { mutableStateOf(false) }
+    val hasLargeSmbsState = remember { mutableStateOf(false) }
+    val hasNormalBolusesState = remember { mutableStateOf(false) }
+    val extBolusCountState = remember { mutableIntStateOf(0) }
 
     LaunchedEffect(iobGraphData, treatmentGraphData, stableTimeRange) {
         // Skip model building when derivedTimeRange is null (fallback 24h range).
@@ -102,6 +109,7 @@ fun IobGraphCompose(
         val allBoluses = activeTreatmentData.boluses
         val smbs = allBoluses.filter { it.bolusType == BolusType.SMB }
         val normalBoluses = allBoluses.filter { it.bolusType == BolusType.NORMAL }
+        val extendedBoluses = activeTreatmentData.extendedBoluses
 
         // Split SMBs into 3 size categories
         var smallSmbs: List<Pair<Double, Double>> = emptyList()
@@ -135,51 +143,87 @@ fun IobGraphCompose(
             }
         }
 
+        // Build extended bolus series data: each EB = list of 2 points (startX, endX) at y=amount
+        val extBolusSeriesData = extendedBoluses.mapNotNull { eb ->
+            val startX = timestampToX(eb.timestamp, minTimestamp)
+            val endX = timestampToX(eb.timestamp + eb.duration, minTimestamp)
+            // Keep if any part overlaps the visible range
+            if (endX < minX || startX > maxX) return@mapNotNull null
+            val clampedStart = startX.coerceIn(minX, maxX)
+            val clampedEnd = endX.coerceIn(minX, maxX)
+            if (clampedStart == clampedEnd) return@mapNotNull null
+            Triple(clampedStart, clampedEnd, eb.amount)
+        }
+
+        var hasIob = false
+        var hasSmall = false
+        var hasMedium = false
+        var hasLarge = false
+        var hasBoluses = false
+
         modelProducer.runTransaction {
             lineSeries {
-                // Series 0: IOB data (or dummy)
+                // IOB data
                 val iobFiltered = if (iobPoints.isNotEmpty()) {
                     val pts = iobPoints.map { timestampToX(it.timestamp, minTimestamp) to it.value }
                     filterToRange(pts, minX, maxX)
                 } else emptyList()
                 if (iobFiltered.isNotEmpty()) {
                     series(x = iobFiltered.map { it.first }, y = iobFiltered.map { it.second })
-                } else {
-                    series(x = dummyX, y = dummyY)
+                    hasIob = true
                 }
 
-                // Series 1-3: SMBs by size (small, medium, large) — or dummy
-                for (smbList in listOf(smallSmbs, mediumSmbs, largeSmbs)) {
-                    val filtered = filterToRange(smbList, minX, maxX)
-                    if (filtered.isNotEmpty()) {
-                        series(x = filtered.map { it.first }, y = filtered.map { it.second })
-                    } else {
-                        series(x = dummyX, y = dummyY)
-                    }
+                // SMBs by size (small, medium, large)
+                val smallFiltered = filterToRange(smallSmbs, minX, maxX)
+                if (smallFiltered.isNotEmpty()) {
+                    series(x = smallFiltered.map { it.first }, y = smallFiltered.map { it.second })
+                    hasSmall = true
+                }
+                val mediumFiltered = filterToRange(mediumSmbs, minX, maxX)
+                if (mediumFiltered.isNotEmpty()) {
+                    series(x = mediumFiltered.map { it.first }, y = mediumFiltered.map { it.second })
+                    hasMedium = true
+                }
+                val largeFiltered = filterToRange(largeSmbs, minX, maxX)
+                if (largeFiltered.isNotEmpty()) {
+                    series(x = largeFiltered.map { it.first }, y = largeFiltered.map { it.second })
+                    hasLarge = true
                 }
 
-                // Series 4: Normal boluses (or dummy)
+                // Normal boluses
                 val bolusFiltered = if (normalBoluses.isNotEmpty()) {
                     val pts = normalBoluses.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
                     filterToRange(pts, minX, maxX)
                 } else emptyList()
                 if (bolusFiltered.isNotEmpty()) {
                     series(x = bolusFiltered.map { it.first }, y = bolusFiltered.map { it.second })
-                } else {
-                    series(x = dummyX, y = dummyY)
+                    hasBoluses = true
                 }
 
-                // Series 5: Normalizer — ensures identical maxPointSize across all charts (see GraphUtils.kt)
+                // Extended boluses — one 2-point series per extended bolus
+                for ((start, end, amount) in extBolusSeriesData) {
+                    series(x = listOf(start, end), y = listOf(amount, amount))
+                }
+
+                // Normalizer — ensures identical maxPointSize across all charts (see GraphUtils.kt)
                 series(x = NORMALIZER_X, y = NORMALIZER_Y)
             }
         }
+
+        // Update state after transaction
+        hasIobDataState.value = hasIob
+        hasSmallSmbsState.value = hasSmall
+        hasMediumSmbsState.value = hasMedium
+        hasLargeSmbsState.value = hasLarge
+        hasNormalBolusesState.value = hasBoluses
+        extBolusCountState.intValue = extBolusSeriesData.size
     }
 
     // Time formatter and axis configuration
     val timeFormatter = rememberTimeFormatter(minTimestamp)
     val bottomAxisItemPlacer = rememberBottomAxisItemPlacer(minTimestamp)
 
-    // Line styles — FIXED order matching series indices
+    // Line styles
     val iobLine = remember(iobColor) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
@@ -227,7 +271,13 @@ fun IobGraphCompose(
         )
     }
 
-    val bolusLine = remember(smbColor) {
+    val bolusLabelComponent = remember(smbColor) {
+        TextComponent(textStyle = TextStyle(color = smbColor, fontSize = 16.sp))
+    }
+    val bolusValueFormatter = remember {
+        CartesianValueFormatter { _, value, _ -> formatBolusLabel(value) }
+    }
+    val bolusLine = remember(smbColor, bolusLabelComponent, bolusValueFormatter) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
             areaFill = null,
@@ -236,18 +286,54 @@ fun IobGraphCompose(
                     component = ShapeComponent(fill = Fill(smbColor), shape = InvertedTriangleShape),
                     size = 22.dp
                 )
-            )
+            ),
+            dataLabel = bolusLabelComponent,
+            dataLabelPosition = Position.Vertical.Top,
+            dataLabelValueFormatter = bolusValueFormatter
+        )
+    }
+
+    // Extended bolus line style — visible purple line with label
+    val extBolusLabelComponent = remember(extBolusColor) {
+        TextComponent(textStyle = TextStyle(color = extBolusColor, fontSize = 16.sp))
+    }
+    val extBolusValueFormatter = remember {
+        CartesianValueFormatter { _, value, _ -> formatBolusLabel(value) }
+    }
+    val extBolusLine = remember(extBolusColor, extBolusLabelComponent, extBolusValueFormatter) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(extBolusColor)),
+            areaFill = null,
+            dataLabel = extBolusLabelComponent,
+            dataLabelPosition = Position.Vertical.Top,
+            dataLabelValueFormatter = extBolusValueFormatter
         )
     }
 
     // Normalizer line — invisible 22dp-point line that equalizes maxPointSize across all charts.
-    // Without this, charts with different point sizes get different xSpacing and unscalableStartPadding,
-    // breaking pixel-based scroll/zoom sync. See GraphUtils.kt for details.
     val normalizerLine = remember { createNormalizerLine() }
 
-    // FIXED 6 lines — always matches 6 series
-    val lines = remember(iobLine, smallSmbLine, mediumSmbLine, largeSmbLine, bolusLine, normalizerLine) {
-        listOf(iobLine, smallSmbLine, mediumSmbLine, largeSmbLine, bolusLine, normalizerLine)
+    // Build lines list dynamically — MUST match series order from LaunchedEffect
+    val hasIobData by hasIobDataState
+    val hasSmallSmbs by hasSmallSmbsState
+    val hasMediumSmbs by hasMediumSmbsState
+    val hasLargeSmbs by hasLargeSmbsState
+    val hasNormalBoluses by hasNormalBolusesState
+    val extBolusCount by extBolusCountState
+    val lines = remember(
+        hasIobData, hasSmallSmbs, hasMediumSmbs, hasLargeSmbs,
+        hasNormalBoluses, extBolusCount,
+        iobLine, smallSmbLine, mediumSmbLine, largeSmbLine, bolusLine, extBolusLine, normalizerLine
+    ) {
+        buildList {
+            if (hasIobData) add(iobLine)
+            if (hasSmallSmbs) add(smallSmbLine)
+            if (hasMediumSmbs) add(mediumSmbLine)
+            if (hasLargeSmbs) add(largeSmbLine)
+            if (hasNormalBoluses) add(bolusLine)
+            repeat(extBolusCount) { add(extBolusLine) }
+            add(normalizerLine)  // Always last
+        }
     }
 
     CartesianChartHost(
@@ -274,8 +360,15 @@ fun IobGraphCompose(
         modelProducer = modelProducer,
         modifier = modifier
             .fillMaxWidth()
-            .height(75.dp),
+            .height(100.dp),
         scrollState = scrollState,
         zoomState = zoomState
     )
+}
+
+/** Formats bolus amount: 1.0→"1", 1.2→"1.2", 0.8→".8" (drop leading zero) */
+private fun formatBolusLabel(value: Double): String {
+    if (value == 0.0) return ""
+    val formatted = "%.2f".format(value).trimEnd('0').trimEnd('.').trimEnd(',')
+    return if (formatted.startsWith("0.")) formatted.substring(1) else formatted
 }

@@ -171,11 +171,11 @@ val NORMALIZER_Y = listOf(0.0, 0.0)
  * with the point facing up, making it visually distinct from circle dots.
  */
 val TriangleShape: Shape = GenericShape { size, _ ->
-    // Triangle drawn in upper half of bounding box so that when Vico centers
-    // the shape on the data point, the base sits exactly on the y-coordinate.
-    moveTo(size.width / 2f, 0f)              // Top center (apex)
-    lineTo(size.width, size.height / 2f)     // Middle right (base)
-    lineTo(0f, size.height / 2f)             // Middle left (base)
+    val baseHalf = size.width * 0.3f         // Narrow base for sharper triangle
+    val cx = size.width / 2f
+    moveTo(cx, 0f)                           // Top center (apex)
+    lineTo(cx + baseHalf, size.height / 2f)  // Right base
+    lineTo(cx - baseHalf, size.height / 2f)  // Left base
     close()
 }
 
@@ -186,10 +186,10 @@ val TriangleShape: Shape = GenericShape { size, _ ->
  * y-coordinate with the apex pointing down.
  */
 val InvertedTriangleShape: Shape = GenericShape { size, _ ->
-    // Triangle drawn in upper half of bounding box so that when Vico centers
-    // the shape on the data point, the apex touches the y-coordinate pointing down.
-    moveTo(0f, 0f)                           // Top left (base)
-    lineTo(size.width, 0f)                   // Top right (base)
-    lineTo(size.width / 2f, size.height / 2f)  // Middle center (apex)
+    val baseHalf = size.width * 0.3f         // Narrow base for sharper triangle
+    val cx = size.width / 2f
+    moveTo(cx - baseHalf, 0f)               // Top left (base)
+    lineTo(cx + baseHalf, 0f)               // Top right (base)
+    lineTo(cx, size.height / 2f)            // Bottom center (apex)
     close()
 }

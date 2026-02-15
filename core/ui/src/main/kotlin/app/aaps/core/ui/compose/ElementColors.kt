@@ -51,7 +51,8 @@ data class ElementColors(
     val quickWizard: Color,
     val bgCheck: Color,
     val exercise: Color,
-    val announcement: Color
+    val announcement: Color,
+    val cob: Color
 )
 
 /**
@@ -77,7 +78,8 @@ internal val LightElementColors = ElementColors(
     quickWizard = Color(0xFFE19701),     // colorQuickWizardButton
     bgCheck = Color(0xFFE93057),         // calibrationButtonColor
     exercise = Color(0xFF42A5F5),        // exercise
-    announcement = Color(0xFFCF8BFE)     // announcement
+    announcement = Color(0xFFCF8BFE),    // announcement
+    cob = Color(0xFFFF5722)       // deep orange — distinct from COB line (#FB8C00)
 )
 
 /**
@@ -103,7 +105,8 @@ internal val DarkElementColors = ElementColors(
     quickWizard = Color(0xFFFFAE01),     // colorQuickWizardButton (night)
     bgCheck = Color(0xFFE93057),         // calibrationButtonColor (same both modes)
     exercise = Color(0xFF42A5F5),        // exercise (same both modes)
-    announcement = Color(0xFFCF8BFE)     // announcement (same both modes)
+    announcement = Color(0xFFCF8BFE),    // announcement (same both modes)
+    cob = Color(0xFFFFAB91)       // soft salmon — distinct from COB line (#FFB74D)
 )
 
 /**

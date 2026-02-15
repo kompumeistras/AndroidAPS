@@ -15,8 +15,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.aaps.core.graph.vico.AdaptiveStep
 import app.aaps.core.ui.compose.AapsTheme
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.common.Position
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
@@ -68,6 +71,7 @@ fun CobGraphCompose(
 ) {
     // Collect flows independently
     val cobGraphData by viewModel.cobGraphFlow.collectAsState()
+    val treatmentGraphData by viewModel.treatmentGraphFlow.collectAsState()
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
@@ -89,9 +93,16 @@ fun CobGraphCompose(
         timestampToX(maxTimestamp, minTimestamp)
     }
 
+    // Cache last non-empty treatment data to survive reset() cycles
+    val lastTreatmentData = remember { mutableStateOf(treatmentGraphData) }
+    if (treatmentGraphData.carbs.isNotEmpty()) {
+        lastTreatmentData.value = treatmentGraphData
+    }
+
     // Track which series are currently included (for matching LineProvider)
     val hasCobDataState = remember { mutableStateOf(false) }
     val hasFailoverDataState = remember { mutableStateOf(false) }
+    val hasCarbsDataState = remember { mutableStateOf(false) }
 
     // LaunchedEffect for COB series - only runs when cobGraphData or time range changes significantly
     // Use remember to cache and only update when time range changes by more than 1 minute
@@ -99,14 +110,17 @@ fun CobGraphCompose(
         minTimestamp to maxTimestamp
     }
 
-    LaunchedEffect(cobGraphData, stableTimeRange) {
+    LaunchedEffect(cobGraphData, treatmentGraphData, stableTimeRange) {
         val cobPoints = cobGraphData.cob
         val failoverPoints = cobGraphData.failOverPoints
+        val activeTreatmentData = lastTreatmentData.value
+        val carbsList = activeTreatmentData.carbs
 
-        if (cobPoints.isEmpty() && failoverPoints.isEmpty()) return@LaunchedEffect
+        if (cobPoints.isEmpty() && failoverPoints.isEmpty() && carbsList.isEmpty()) return@LaunchedEffect
 
         var hasCobData = false
         var hasFailoverData = false
+        var hasCarbsData = false
 
         modelProducer.runTransaction {
             lineSeries {
@@ -140,6 +154,16 @@ fun CobGraphCompose(
                     }
                 }
 
+                // Carbs markers series
+                if (carbsList.isNotEmpty()) {
+                    val pts = carbsList.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
+                    val filtered = filterToRange(pts, minX, maxX)
+                    if (filtered.isNotEmpty()) {
+                        series(x = filtered.map { it.first }, y = filtered.map { it.second })
+                        hasCarbsData = true
+                    }
+                }
+
                 // Normalizer series — ensures identical maxPointSize across all charts (see GraphUtils.kt)
                 series(x = NORMALIZER_X, y = NORMALIZER_Y)
             }
@@ -148,6 +172,7 @@ fun CobGraphCompose(
         // Update state after transaction completes
         hasCobDataState.value = hasCobData
         hasFailoverDataState.value = hasFailoverData
+        hasCarbsDataState.value = hasCarbsData
     }
 
     // Time formatter and axis configuration
@@ -189,6 +214,30 @@ fun CobGraphCompose(
         )
     }
 
+    // Carbs marker line style - inverted triangle with data label
+    val carbsColor = AapsTheme.elementColors.carbs
+    val carbsLabelComponent = remember(carbsColor) {
+        TextComponent(textStyle = TextStyle(color = carbsColor, fontSize = 14.sp))
+    }
+    val carbsValueFormatter = remember {
+        CartesianValueFormatter { _, value, _ -> formatCarbsLabel(value) }
+    }
+    val carbsLine = remember(carbsColor, carbsLabelComponent, carbsValueFormatter) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(carbsColor), shape = InvertedTriangleShape),
+                    size = 22.dp
+                )
+            ),
+            dataLabel = carbsLabelComponent,
+            dataLabelPosition = Position.Vertical.Top,
+            dataLabelValueFormatter = carbsValueFormatter
+        )
+    }
+
     // Normalizer line — invisible 22dp-point line that equalizes maxPointSize across all charts.
     // Without this, charts with different point sizes get different xSpacing and unscalableStartPadding,
     // breaking pixel-based scroll/zoom sync. See GraphUtils.kt for details.
@@ -197,10 +246,12 @@ fun CobGraphCompose(
     // Build lines list dynamically - MUST match series order exactly
     val hasCobData by hasCobDataState
     val hasFailoverData by hasFailoverDataState
-    val lines = remember(hasCobData, hasFailoverData, cobLine, failoverDotsLine, normalizerLine) {
+    val hasCarbsData by hasCarbsDataState
+    val lines = remember(hasCobData, hasFailoverData, hasCarbsData, cobLine, failoverDotsLine, carbsLine, normalizerLine) {
         buildList {
             if (hasCobData) add(cobLine)
             if (hasFailoverData) add(failoverDotsLine)
+            if (hasCarbsData) add(carbsLine)
             add(normalizerLine)  // Always last — normalizes layout
         }
     }
@@ -229,8 +280,15 @@ fun CobGraphCompose(
         modelProducer = modelProducer,
         modifier = modifier
             .fillMaxWidth()
-            .height(75.dp),
+            .height(100.dp),
         scrollState = scrollState,
         zoomState = zoomState
     )
+}
+
+/** Formats carbs amount: 45.0→"45", 7.5→"7.5", 0.0→"" */
+private fun formatCarbsLabel(value: Double): String {
+    if (value == 0.0) return ""
+    val formatted = "%.1f".format(value).trimEnd('0').trimEnd('.').trimEnd(',')
+    return formatted
 }

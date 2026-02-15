@@ -253,7 +253,7 @@ fun BgGraphCompose(
         modelProducer = modelProducer,
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .height(100.dp),
         scrollState = scrollState,
         zoomState = zoomState
     )
