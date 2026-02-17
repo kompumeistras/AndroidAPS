@@ -99,24 +99,38 @@ fun CobGraphCompose(
         lastTreatmentData.value = treatmentGraphData
     }
 
-    // Track which series are currently included (for matching LineProvider)
-    val hasCobDataState = remember { mutableStateOf(false) }
-    val hasFailoverDataState = remember { mutableStateOf(false) }
-    val hasCarbsDataState = remember { mutableStateOf(false) }
-
-    // LaunchedEffect for COB series - only runs when cobGraphData or time range changes significantly
     // Use remember to cache and only update when time range changes by more than 1 minute
     val stableTimeRange = remember(minTimestamp / 60000, maxTimestamp / 60000) {
         minTimestamp to maxTimestamp
     }
 
-    LaunchedEffect(cobGraphData, treatmentGraphData, stableTimeRange) {
-        val cobPoints = cobGraphData.cob
-        val failoverPoints = cobGraphData.failOverPoints
-        val activeTreatmentData = lastTreatmentData.value
-        val carbsList = activeTreatmentData.carbs
+    // Cache processed COB data — only recomputes when COB data or time range changes
+    val processedCob = remember(cobGraphData, stableTimeRange) {
+        val cobFiltered = run {
+            val pts = cobGraphData.cob.map { timestampToX(it.timestamp, minTimestamp) to it.value }
+            filterToRange(pts, minX, maxX)
+        }
+        val failoverFiltered = run {
+            val pts = cobGraphData.failOverPoints.map { timestampToX(it.timestamp, minTimestamp) to it.cobValue }
+            filterToRange(pts, minX, maxX)
+        }
+        cobFiltered to failoverFiltered
+    }
 
-        if (cobPoints.isEmpty() && failoverPoints.isEmpty() && carbsList.isEmpty()) return@LaunchedEffect
+    // Cache processed carbs data — only recomputes when treatments or time range change
+    val processedCarbs = remember(lastTreatmentData.value, stableTimeRange) {
+        val pts = lastTreatmentData.value.carbs.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
+        filterToRange(pts, minX, maxX)
+    }
+
+    // Track which series are currently included (for matching LineProvider)
+    val hasCobDataState = remember { mutableStateOf(false) }
+    val hasFailoverDataState = remember { mutableStateOf(false) }
+    val hasCarbsDataState = remember { mutableStateOf(false) }
+
+    LaunchedEffect(processedCob, processedCarbs) {
+        val (cobFiltered, failoverFiltered) = processedCob
+        if (cobFiltered.isEmpty() && failoverFiltered.isEmpty() && processedCarbs.isEmpty()) return@LaunchedEffect
 
         var hasCobData = false
         var hasFailoverData = false
@@ -124,52 +138,22 @@ fun CobGraphCompose(
 
         modelProducer.runTransaction {
             lineSeries {
-                // COB data series (only if data exists after filtering)
-                if (cobPoints.isNotEmpty()) {
-                    val dataPoints = cobPoints
-                        .map { timestampToX(it.timestamp, minTimestamp) to it.value }
-                    val filteredPoints = filterToRange(dataPoints, minX, maxX)
-
-                    if (filteredPoints.isNotEmpty()) {
-                        series(
-                            x = filteredPoints.map { it.first },
-                            y = filteredPoints.map { it.second }
-                        )
-                        hasCobData = true
-                    }
+                if (cobFiltered.isNotEmpty()) {
+                    series(x = cobFiltered.map { it.first }, y = cobFiltered.map { it.second })
+                    hasCobData = true
                 }
-
-                // Failover points series (for testing - shows as dots)
-                if (failoverPoints.isNotEmpty()) {
-                    val dataPoints = failoverPoints
-                        .map { timestampToX(it.timestamp, minTimestamp) to it.cobValue }
-                    val filteredPoints = filterToRange(dataPoints, minX, maxX)
-
-                    if (filteredPoints.isNotEmpty()) {
-                        series(
-                            x = filteredPoints.map { it.first },
-                            y = filteredPoints.map { it.second }
-                        )
-                        hasFailoverData = true
-                    }
+                if (failoverFiltered.isNotEmpty()) {
+                    series(x = failoverFiltered.map { it.first }, y = failoverFiltered.map { it.second })
+                    hasFailoverData = true
                 }
-
-                // Carbs markers series
-                if (carbsList.isNotEmpty()) {
-                    val pts = carbsList.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
-                    val filtered = filterToRange(pts, minX, maxX)
-                    if (filtered.isNotEmpty()) {
-                        series(x = filtered.map { it.first }, y = filtered.map { it.second })
-                        hasCarbsData = true
-                    }
+                if (processedCarbs.isNotEmpty()) {
+                    series(x = processedCarbs.map { it.first }, y = processedCarbs.map { it.second })
+                    hasCarbsData = true
                 }
-
-                // Normalizer series — ensures identical maxPointSize across all charts (see GraphUtils.kt)
                 series(x = NORMALIZER_X, y = NORMALIZER_Y)
             }
         }
 
-        // Update state after transaction completes
         hasCobDataState.value = hasCobData
         hasFailoverDataState.value = hasFailoverData
         hasCarbsDataState.value = hasCarbsData
