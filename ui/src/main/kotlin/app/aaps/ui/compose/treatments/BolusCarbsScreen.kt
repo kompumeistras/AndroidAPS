@@ -55,7 +55,7 @@ import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.Ns
 import app.aaps.core.ui.compose.icons.IcPumpCartridge
 import app.aaps.core.ui.compose.icons.Pump
-import app.aaps.core.ui.compose.icons.Smb
+import app.aaps.core.ui.compose.icons.IcSmb
 import app.aaps.ui.compose.components.ContentContainer
 import app.aaps.ui.compose.components.ErrorSnackbar
 import app.aaps.ui.compose.treatments.viewmodels.BolusCarbsViewModel
@@ -324,7 +324,7 @@ private fun MealLinkItem(
                         when (bolus.type) {
                             BS.Type.SMB     -> {
                                 Icon(
-                                    imageVector = Smb,
+                                    imageVector = IcSmb,
                                     contentDescription = stringResource(app.aaps.core.ui.R.string.smb_shortname),
                                     modifier = Modifier.size(21.dp)
                                 )

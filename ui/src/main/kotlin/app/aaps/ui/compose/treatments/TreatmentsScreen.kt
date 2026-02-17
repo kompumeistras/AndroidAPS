@@ -32,10 +32,10 @@ import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.ToolbarConfig
 import app.aaps.core.ui.compose.icons.IcCarbs
-import app.aaps.core.ui.compose.icons.Careportal
 import app.aaps.core.ui.compose.icons.IcExtendedBolus
 import app.aaps.core.ui.compose.icons.IcProfile
 import androidx.compose.material.icons.filled.DirectionsRun
+import app.aaps.core.ui.compose.icons.IcNote
 import app.aaps.core.ui.compose.icons.TempBasal
 import app.aaps.core.ui.compose.icons.IcTtHigh
 import app.aaps.core.ui.compose.icons.UserEntry
@@ -183,7 +183,7 @@ fun TreatmentsScreen(
             val pageIndex5 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = Careportal,
+                    icon = IcNote,
                     titleRes = app.aaps.core.ui.R.string.careportal,
                     colorGetter = { iconColors.careportal },
                     content = {

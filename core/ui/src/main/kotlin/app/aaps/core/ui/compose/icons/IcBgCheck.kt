@@ -31,7 +31,7 @@ val IcBgCheck: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.Black),
+            fill = SolidColor(Color(0xFFE83258)),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,
