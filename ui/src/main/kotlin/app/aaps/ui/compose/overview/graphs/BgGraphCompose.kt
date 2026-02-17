@@ -14,13 +14,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.Square
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
+import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.TargetLineData
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.IcProfile
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
@@ -70,6 +73,7 @@ fun BgGraphCompose(
     val chartConfig by viewModel.chartConfigFlow.collectAsState()
     val basalData by viewModel.basalGraphFlow.collectAsState()
     val targetData by viewModel.targetLineFlow.collectAsState()
+    val treatmentData by viewModel.treatmentGraphFlow.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
     val (minTimestamp, maxTimestamp) = derivedTimeRange ?: run {
@@ -106,8 +110,15 @@ fun BgGraphCompose(
         minTimestamp to maxTimestamp
     }
 
+    // EPS data from treatment flow
+    val epsPoints = remember(treatmentData) { treatmentData.effectiveProfileSwitches }
+
     // Function to rebuild chart from registry
-    suspend fun rebuildChart(currentBasalData: BasalGraphData, currentTargetData: TargetLineData) {
+    suspend fun rebuildChart(
+        currentBasalData: BasalGraphData,
+        currentTargetData: TargetLineData,
+        currentEpsPoints: List<EpsGraphPoint>
+    ) {
         val regularPoints = seriesRegistry[SERIES_REGULAR] ?: emptyList()
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
 
@@ -175,14 +186,27 @@ fun BgGraphCompose(
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                 }
             }
+
+            // Block 4 → EPS layer (layer 3, end axis — shares with basal, no visible axis)
+            lineSeries {
+                if (currentEpsPoints.isNotEmpty()) {
+                    val pts = currentEpsPoints
+                        .map { timestampToX(it.timestamp, minTimestamp) to it.originalPercentage.toDouble() }
+                        .sortedBy { it.first }
+                    series(x = pts.map { it.first }, y = pts.map { it.second })
+                } else {
+                    // Dummy series - invisible
+                    series(x = listOf(0.0, 1.0), y = listOf(100.0, 100.0))
+                }
+            }
         }
     }
 
     // Single LaunchedEffect for all data - ensures atomic updates
-    LaunchedEffect(bgReadings, bucketedData, basalData, targetData, stableTimeRange) {
+    LaunchedEffect(bgReadings, bucketedData, basalData, targetData, epsPoints, stableTimeRange) {
         seriesRegistry[SERIES_REGULAR] = bgReadings
         seriesRegistry[SERIES_BUCKETED] = bucketedData
-        rebuildChart(basalData, targetData)
+        rebuildChart(basalData, targetData, epsPoints)
     }
 
     // Build lookup map for BUCKETED points: x-value -> BgDataPoint (for PointProvider)
@@ -287,6 +311,34 @@ fun BgGraphCompose(
 
     val targetLines = remember(targetLine) { listOf(targetLine) }
 
+    // =========================================================================
+    // EPS layer lines (layer 3) — profile icon points
+    // =========================================================================
+
+    val profileSwitchColor = AapsTheme.elementColors.profileSwitch
+    val profilePainter = rememberVectorPainter(IcProfile)
+
+    val epsLine = remember(profileSwitchColor, profilePainter) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = PainterComponent(profilePainter, tint = profileSwitchColor),
+                    size = 16.dp
+                )
+            )
+        )
+    }
+
+    val epsLines = remember(epsLine) { listOf(epsLine) }
+
+    // EPS Y-axis range: 0 to max(200, maxPercentage) so 100% is mid-chart
+    val epsMaxY = remember(epsPoints) {
+        val maxPct = epsPoints.maxOfOrNull { it.originalPercentage }?.toDouble() ?: 100.0
+        maxOf(200.0, maxPct * 1.5)
+    }
+
     // Basal Y-axis range: maxBasal * 4 so basal occupies ~25% of chart height
     val basalMaxY = remember(basalData.maxBasal) {
         if (basalData.maxBasal > 0.0) basalData.maxBasal * 4.0 else 1.0
@@ -331,6 +383,14 @@ fun BgGraphCompose(
                 lineProvider = LineCartesianLayer.LineProvider.series(targetLines),
                 rangeProvider = remember(maxX) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX) },
                 verticalAxisPosition = Axis.Position.Vertical.Start
+            ),
+            // Layer 3: EPS (end axis — percentage Y values, no visible axis)
+            rememberLineCartesianLayer(
+                lineProvider = LineCartesianLayer.LineProvider.series(epsLines),
+                rangeProvider = remember(maxX, epsMaxY) {
+                    CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = 0.0, maxY = epsMaxY)
+                },
+                verticalAxisPosition = Axis.Position.Vertical.End
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(

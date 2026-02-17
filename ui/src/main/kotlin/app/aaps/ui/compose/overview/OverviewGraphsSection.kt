@@ -1,9 +1,12 @@
 package app.aaps.ui.compose.overview
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,9 +15,10 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.aaps.ui.compose.overview.graphs.BgGraphCompose
 import app.aaps.ui.compose.overview.graphs.CobGraphCompose
 import app.aaps.ui.compose.overview.graphs.DEFAULT_GRAPH_ZOOM_MINUTES
@@ -161,8 +165,7 @@ fun OverviewGraphsSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         // Treatment Belt Graph - running mode background + therapy events
         TreatmentBeltGraphCompose(
@@ -176,21 +179,37 @@ fun OverviewGraphsSection(
             viewModel = graphViewModel,
             scrollState = bgScrollState,
             zoomState = bgZoomState,
-            modifier = Modifier.fillMaxWidth().offset(y = (-24).dp)
+            modifier = Modifier.fillMaxWidth().offset(y = (-16).dp)
         )
         // IOB Graph - non-interactive, synced from BG graph
-        IobGraphCompose(
-            viewModel = graphViewModel,
-            scrollState = iobScrollState,
-            zoomState = iobZoomState,
-            modifier = Modifier.fillMaxWidth().offset(y = (-24).dp)
-        )
+        Box(modifier = Modifier.offset(y = (-8).dp)) {
+            IobGraphCompose(
+                viewModel = graphViewModel,
+                scrollState = iobScrollState,
+                zoomState = iobZoomState,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "IOB",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.align(Alignment.TopStart).padding(start = 36.dp, top = 2.dp)
+            )
+        }
         // COB Graph - non-interactive, synced from BG graph
-        CobGraphCompose(
-            viewModel = graphViewModel,
-            scrollState = cobScrollState,
-            zoomState = cobZoomState,
-            modifier = Modifier.fillMaxWidth().offset(y = (-24).dp)
-        )
+        Box(modifier = Modifier.offset(y = (-8).dp)) {
+            CobGraphCompose(
+                viewModel = graphViewModel,
+                scrollState = cobScrollState,
+                zoomState = cobZoomState,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "COB",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.align(Alignment.TopStart).padding(start = 36.dp, top = 2.dp)
+            )
+        }
     }
 }

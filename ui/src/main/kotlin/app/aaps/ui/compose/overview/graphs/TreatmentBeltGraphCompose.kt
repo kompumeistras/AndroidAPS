@@ -605,7 +605,7 @@ private fun rememberBeltMarker(modeNameMap: Map<RM.Mode, String>): DefaultCartes
  * Vico's [DrawingContext] provides [DrawingContext.mutableDrawScope] which is a full [DrawScope],
  * allowing standard Compose drawing operations including [Painter.draw].
  */
-private class PainterComponent(
+internal class PainterComponent(
     private val painter: Painter,
     private val tint: Color? = null
 ) : Component {

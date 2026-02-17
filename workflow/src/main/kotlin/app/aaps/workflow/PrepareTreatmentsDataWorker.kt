@@ -26,6 +26,7 @@ import app.aaps.core.interfaces.overview.graph.ExtendedBolusGraphPoint
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.overview.graph.TherapyEventGraphPoint
 import app.aaps.core.interfaces.overview.graph.TherapyEventType
+import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -231,12 +232,30 @@ class PrepareTreatmentsDataWorker(
                 )
             }
 
+        // Effective Profile Switches
+        val epsPoints = persistenceLayer.getEffectiveProfileSwitchesFromTimeToTime(fromTimeNew, toTimeNew, true)
+            .map { eps ->
+                val label = buildString {
+                    if (eps.originalPercentage != 100) append("${eps.originalPercentage}%")
+                    if (eps.originalPercentage != 100 && eps.originalTimeshift != 0L) append(",")
+                    if (eps.originalTimeshift != 0L) append("${T.msecs(eps.originalTimeshift).hours()}${rh.gs(app.aaps.core.interfaces.R.string.shorthour)}")
+                }
+                EpsGraphPoint(
+                    timestamp = eps.timestamp,
+                    originalPercentage = eps.originalPercentage,
+                    originalTimeshift = eps.originalTimeshift,
+                    profileName = eps.originalCustomizedName,
+                    label = label
+                )
+            }
+
         overviewDataCache.updateTreatmentGraph(
             TreatmentGraphData(
                 boluses = bolusPoints,
                 carbs = carbsPoints,
                 extendedBoluses = extendedBolusPoints,
-                therapyEvents = therapyEventPoints
+                therapyEvents = therapyEventPoints,
+                effectiveProfileSwitches = epsPoints
             )
         )
         // ========== MIGRATION: KEEP - End Compose/Vico code ==========

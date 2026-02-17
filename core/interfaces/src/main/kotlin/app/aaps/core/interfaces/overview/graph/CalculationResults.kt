@@ -280,6 +280,17 @@ data class TherapyEventGraphPoint(
 )
 
 /**
+ * Effective profile switch data point for the main graph
+ */
+data class EpsGraphPoint(
+    val timestamp: Long,
+    val originalPercentage: Int,   // Profile percentage (100 = normal)
+    val originalTimeshift: Long,   // Timeshift in ms
+    val profileName: String,       // originalCustomizedName for tap display
+    val label: String              // Short label (e.g., "110%" or "110%,-2h")
+)
+
+/**
  * Container for all treatment graph data (overlaid on main BG graph).
  * All lists are computed together in PrepareTreatmentsDataWorker.
  */
@@ -287,7 +298,8 @@ data class TreatmentGraphData(
     val boluses: List<BolusGraphPoint>,
     val carbs: List<CarbsGraphPoint>,
     val extendedBoluses: List<ExtendedBolusGraphPoint>,
-    val therapyEvents: List<TherapyEventGraphPoint>
+    val therapyEvents: List<TherapyEventGraphPoint>,
+    val effectiveProfileSwitches: List<EpsGraphPoint> = emptyList()
 )
 
 // ============================================================================
