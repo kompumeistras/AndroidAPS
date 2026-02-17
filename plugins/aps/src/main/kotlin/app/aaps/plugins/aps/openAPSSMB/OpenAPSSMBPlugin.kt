@@ -61,7 +61,7 @@ import app.aaps.core.objects.extensions.put
 import app.aaps.core.objects.extensions.store
 import app.aaps.core.objects.extensions.target
 import app.aaps.core.objects.profile.ProfileSealed
-import app.aaps.core.ui.compose.icons.IcCalculator
+import app.aaps.core.ui.compose.icons.IcPluginOpenAPS
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.MidnightUtils
 import app.aaps.core.utils.extensions.put
@@ -115,7 +115,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
         .mainType(PluginType.APS)
         .fragmentClass(OpenAPSFragment::class.java.name)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_calculator)
-        .icon(IcCalculator)
+        .icon(IcPluginOpenAPS)
         .pluginName(R.string.openapssmb)
         .shortName(app.aaps.core.ui.R.string.smb_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

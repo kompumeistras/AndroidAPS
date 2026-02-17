@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.HardLimits
+import app.aaps.core.ui.compose.icons.IcPluginInsulin
 import kotlin.math.exp
 import kotlin.math.pow
 
@@ -38,6 +39,7 @@ abstract class InsulinOrefBasePlugin(
         .mainType(PluginType.INSULIN)
         .fragmentClass(InsulinFragment::class.java.name)
         .pluginIcon(R.drawable.ic_insulin)
+        .icon(IcPluginInsulin)
         .shortName(R.string.insulin_shortname)
         .visibleByDefault(false)
         .neverVisible(config.AAPSCLIENT),

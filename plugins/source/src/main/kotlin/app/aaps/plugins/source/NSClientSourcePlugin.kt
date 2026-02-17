@@ -14,6 +14,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.ui.compose.icons.IcPluginNsClientBg
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +40,7 @@ class NSClientSourcePlugin @Inject constructor(
             )
         }
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_nsclient_bg)
+        .icon(IcPluginNsClientBg)
         .pluginName(R.string.ns_client_bg)
         .shortName(R.string.ns_client_bg_short)
         .description(R.string.description_source_ns_client)

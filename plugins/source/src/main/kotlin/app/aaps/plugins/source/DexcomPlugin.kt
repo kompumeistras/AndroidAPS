@@ -26,6 +26,7 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.workflow.LoggingWorker
+import app.aaps.core.ui.compose.icons.IcPluginByoda
 import app.aaps.core.utils.receivers.DataWorkerStorage
 import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +58,7 @@ class DexcomPlugin @Inject constructor(
             )
         }
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_dexcom_g6)
+        .icon(IcPluginByoda)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .pluginName(R.string.dexcom_app_patched)
         .shortName(R.string.dexcom_short)

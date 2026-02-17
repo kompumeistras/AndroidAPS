@@ -31,6 +31,7 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.ui.compose.icons.IcPluginRandomBg
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.isRunningTest
 import app.aaps.core.validators.preferences.AdaptiveIntPreference
@@ -70,6 +71,7 @@ class RandomBgPlugin @Inject constructor(
             )
         }
         .pluginIcon(R.drawable.ic_dice)
+        .icon(IcPluginRandomBg)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .pluginName(R.string.random_bg)
         .shortName(R.string.random_bg_short)

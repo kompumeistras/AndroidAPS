@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 /**
  * Icon for Random BG Plugin.
  *
+ * replacing ic_dice
+ *
  * Bounding box: x: 1.2-22.8, y: 3.0-21.0 (viewport: 24x24, ~90% width)
  */
 val IcPluginRandomBg: ImageVector by lazy {
@@ -28,7 +30,7 @@ val IcPluginRandomBg: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

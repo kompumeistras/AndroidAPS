@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,9 +18,11 @@ import androidx.compose.ui.unit.dp
  * Icon for NSClient Plugin.
  * Represents Nightscout client connection.
  *
+ * replacing ic_nightscout_syncs
+ *
  * Bounding box: x: 1.2-22.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
-val PluginNsClient: ImageVector by lazy {
+val IcPluginNsClient: ImageVector by lazy {
     ImageVector.Builder(
         name = "PluginNsClient",
         defaultWidth = 48.dp,
@@ -29,7 +31,7 @@ val PluginNsClient: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,
@@ -214,7 +216,7 @@ val PluginNsClient: ImageVector by lazy {
 @Composable
 private fun PluginNsClientIconPreview() {
     Icon(
-        imageVector = PluginNsClient,
+        imageVector = IcPluginNsClient,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)

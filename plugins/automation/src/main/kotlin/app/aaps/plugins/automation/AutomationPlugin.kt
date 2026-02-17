@@ -34,6 +34,7 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.ui.compose.icons.IcPluginAutomation
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.validators.preferences.AdaptiveListPreference
 import app.aaps.plugins.automation.actions.Action
@@ -118,6 +119,7 @@ class AutomationPlugin @Inject constructor(
         .mainType(PluginType.GENERAL)
         .fragmentClass(AutomationFragment::class.qualifiedName)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_automation)
+        .icon(IcPluginAutomation)
         .pluginName(R.string.automation)
         .shortName(R.string.automation_short)
         .showInList { config.APS }

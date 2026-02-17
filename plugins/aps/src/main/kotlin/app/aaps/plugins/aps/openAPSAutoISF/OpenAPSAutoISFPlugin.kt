@@ -61,7 +61,7 @@ import app.aaps.core.objects.extensions.put
 import app.aaps.core.objects.extensions.store
 import app.aaps.core.objects.extensions.target
 import app.aaps.core.objects.profile.ProfileSealed
-import app.aaps.core.ui.compose.icons.IcCalculator
+import app.aaps.core.ui.compose.icons.IcPluginOpenAPS
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.MidnightUtils
 import app.aaps.core.validators.preferences.AdaptiveDoublePreference
@@ -114,7 +114,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
         .mainType(PluginType.APS)
         .fragmentClass(OpenAPSFragment::class.java.name)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_calculator)
-        .icon(IcCalculator)
+        .icon(IcPluginOpenAPS)
         .pluginName(R.string.openaps_auto_isf)
         .shortName(R.string.autoisf_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

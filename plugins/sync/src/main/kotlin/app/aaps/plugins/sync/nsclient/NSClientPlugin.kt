@@ -9,7 +9,6 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceScreen
 import app.aaps.core.data.plugin.PluginType
-import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -30,7 +29,6 @@ import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.sync.DataSyncSelector
 import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.sync.Sync
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
@@ -39,6 +37,7 @@ import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.toJson
+import app.aaps.core.ui.compose.icons.IcPluginNsClient
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.validators.DefaultEditTextValidator
 import app.aaps.core.validators.EditTextValidator
@@ -66,7 +65,6 @@ class NSClientPlugin @Inject constructor(
     private val context: Context,
     private val fabricPrivacy: FabricPrivacy,
     private val preferences: Preferences,
-    private val config: Config,
     private val receiverDelegate: ReceiverDelegate,
     private val dataSyncSelectorV1: DataSyncSelectorV1,
     private val dateUtil: DateUtil,
@@ -74,7 +72,6 @@ class NSClientPlugin @Inject constructor(
     private val nsSettingsStatus: NSSettingsStatus,
     private val decimalFormatter: DecimalFormatter,
     private val nsClientMvvmRepository: NSClientMvvmRepository,
-    private val uiInteraction: UiInteraction,
     private val persistenceLayer: PersistenceLayer,
     private val uel: UserEntryLogger,
     private val activePlugin: ActivePlugin
@@ -83,6 +80,7 @@ class NSClientPlugin @Inject constructor(
         .mainType(PluginType.SYNC)
         .fragmentClass(NSClientFragment::class.java.name)
         .pluginIcon(app.aaps.core.ui.R.drawable.ic_nightscout_syncs)
+        .icon(IcPluginNsClient)
         .pluginName(R.string.ns_client_title)
         .shortName(R.string.ns_client_short_name)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

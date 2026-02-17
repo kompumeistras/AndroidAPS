@@ -36,6 +36,7 @@ import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.pureProfileFromJson
 import app.aaps.core.objects.profile.ProfileSealed
+import app.aaps.core.ui.compose.icons.IcPluginAutotune
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.elements.WeekDay
 import app.aaps.core.utils.JsonHelper
@@ -84,6 +85,7 @@ class AutotunePlugin @Inject constructor(
         .mainType(PluginType.GENERAL)
         .fragmentClass(AutotuneFragment::class.qualifiedName)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_autotune)
+        .icon(IcPluginAutotune)
         .pluginName(app.aaps.core.ui.R.string.autotune)
         .shortName(R.string.autotune_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

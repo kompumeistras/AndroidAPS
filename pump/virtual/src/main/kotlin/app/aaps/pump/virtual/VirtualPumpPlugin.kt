@@ -44,6 +44,7 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.keys.interfaces.withEntries
+import app.aaps.core.ui.compose.icons.IcPluginVirtualPump
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.fabric.InstanceId
 import app.aaps.core.validators.preferences.AdaptiveListPreference
@@ -93,6 +94,7 @@ open class VirtualPumpPlugin @Inject constructor(
             )
         }
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_virtual_pump)
+        .icon(IcPluginVirtualPump)
         .pluginName(app.aaps.core.ui.R.string.virtual_pump)
         .shortName(R.string.virtual_pump_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

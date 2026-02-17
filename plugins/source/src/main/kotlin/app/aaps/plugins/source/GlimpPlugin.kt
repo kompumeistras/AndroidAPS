@@ -20,6 +20,7 @@ import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.workflow.LoggingWorker
+import app.aaps.core.ui.compose.icons.IcPluginGlimp
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,6 +48,7 @@ class GlimpPlugin @Inject constructor(
             )
         }
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_glimp)
+        .icon(IcPluginGlimp)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .pluginName(R.string.glimp)
         .preferencesVisibleInSimpleMode(false)

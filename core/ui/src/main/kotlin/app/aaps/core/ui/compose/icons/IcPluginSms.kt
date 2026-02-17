@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,14 +15,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Icon for Simple Up Arrow.
- * Represents upward trend or direction.
+ * Icon for SMS Plugin.
  *
- * Bounding box: x: 5.4-18.6, y: 1.2-22.8 (viewport: 24x24, ~90% height)
+ * replacing ic_sms
+ *
+ * Bounding box: x: 1.2-22.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
-val IcArrowSimpleUp: ImageVector by lazy {
+val IcPluginSms: ImageVector by lazy {
     ImageVector.Builder(
-        name = "IcArrowSimpleUp",
+        name = "IcPluginSms",
         defaultWidth = 48.dp,
         defaultHeight = 48.dp,
         viewportWidth = 24f,
@@ -38,20 +39,36 @@ val IcArrowSimpleUp: ImageVector by lazy {
             strokeLineJoin = StrokeJoin.Miter,
             strokeLineMiter = 1.0f
         ) {
-            moveTo(17.772f, 7.347f)
-            curveToRelative(-2.121f, -1.967f, -4.65f, -4.43f, -5.771f, -6.145f)
-            verticalLineTo(1.2f)
-            lineTo(12f, 1.201f)
-            lineTo(11.999f, 1.2f)
-            lineToRelative(0f, 0.002f)
-            curveToRelative(-1.121f, 1.715f, -3.65f, 4.178f, -5.771f, 6.145f)
-            lineToRelative(1.44f, 1.979f)
-            curveToRelative(0f, 0f, 1.715f, -1.53f, 3.188f, -2.964f)
-            verticalLineTo(22.8f)
-            horizontalLineToRelative(2.286f)
-            verticalLineTo(6.362f)
-            curveToRelative(1.474f, 1.434f, 3.189f, 2.964f, 3.189f, 2.964f)
-            lineTo(17.772f, 7.347f)
+            moveTo(20.64f, 1.2f)
+            horizontalLineTo(3.36f)
+            curveToRelative(-1.188f, 0f, -2.149f, 0.972f, -2.149f, 2.16f)
+            lineTo(1.2f, 22.8f)
+            lineToRelative(4.32f, -4.32f)
+            horizontalLineToRelative(15.12f)
+            curveToRelative(1.188f, 0f, 2.16f, -0.972f, 2.16f, -2.16f)
+            verticalLineTo(3.36f)
+            curveTo(22.8f, 2.172f, 21.828f, 1.2f, 20.64f, 1.2f)
+            close()
+
+            moveTo(8.76f, 10.92f)
+            horizontalLineTo(6.6f)
+            verticalLineTo(8.76f)
+            horizontalLineToRelative(2.16f)
+            verticalLineTo(10.92f)
+            close()
+
+            moveTo(13.08f, 10.92f)
+            horizontalLineToRelative(-2.16f)
+            verticalLineTo(8.76f)
+            horizontalLineToRelative(2.16f)
+            verticalLineTo(10.92f)
+            close()
+
+            moveTo(17.4f, 10.92f)
+            horizontalLineToRelative(-2.16f)
+            verticalLineTo(8.76f)
+            horizontalLineToRelative(2.16f)
+            verticalLineTo(10.92f)
             close()
         }
     }.build()
@@ -59,9 +76,9 @@ val IcArrowSimpleUp: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun IcArrowSimpleUpIconPreview() {
+private fun IcPluginSmsIconPreview() {
     Icon(
-        imageVector = IcArrowSimpleUp,
+        imageVector = IcPluginSms,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)
@@ -76,10 +93,12 @@ private fun IcArrowSimpleUpIconPreview() {
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px"
 	 height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
-<g id="ic_arrow_simple_up">
-	<path display="inline" fill="#36FF00" d="M17.772,7.347c-2.121-1.967-4.65-4.43-5.771-6.145V1.2L12,1.201L11.999,1.2l0,0.002
-		c-1.121,1.715-3.65,4.178-5.771,6.145l1.44,1.979c0,0,1.715-1.53,3.188-2.964V22.8h2.286V6.362
-		c1.474,1.434,3.189,2.964,3.189,2.964L17.772,7.347z"/>
+<g id="ic_plugin_sms">
+	<g id="SMS" display="inline">
+		<path fill="#FFFFFF" d="M20.64,1.2H3.36c-1.188,0-2.149,0.972-2.149,2.16L1.2,22.8l4.32-4.32h15.12c1.188,0,2.16-0.972,2.16-2.16
+			V3.36C22.8,2.172,21.828,1.2,20.64,1.2z M8.76,10.92H6.6V8.76h2.16V10.92z M13.08,10.92h-2.16V8.76h2.16V10.92z M17.4,10.92h-2.16
+			V8.76h2.16V10.92z"/>
+	</g>
 </g>
 </svg>
  */

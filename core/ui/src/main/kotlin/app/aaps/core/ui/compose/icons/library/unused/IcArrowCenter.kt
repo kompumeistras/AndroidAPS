@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons.library.unused
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,20 +15,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Icon for SMS Plugin.
+ * Icon for Center Arrow.
+ * Represents centered or neutral position.
  *
  * Bounding box: x: 1.2-22.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
-val IcPluginSms: ImageVector by lazy {
+val IcArrowCenter: ImageVector by lazy {
     ImageVector.Builder(
-        name = "IcPluginSms",
+        name = "IcArrowCenter",
         defaultWidth = 48.dp,
         defaultHeight = 48.dp,
         viewportWidth = 24f,
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,
@@ -37,36 +38,25 @@ val IcPluginSms: ImageVector by lazy {
             strokeLineJoin = StrokeJoin.Miter,
             strokeLineMiter = 1.0f
         ) {
-            moveTo(20.64f, 1.2f)
-            horizontalLineTo(3.36f)
-            curveToRelative(-1.188f, 0f, -2.149f, 0.972f, -2.149f, 2.16f)
-            lineTo(1.2f, 22.8f)
-            lineToRelative(4.32f, -4.32f)
-            horizontalLineToRelative(15.12f)
-            curveToRelative(1.188f, 0f, 2.16f, -0.972f, 2.16f, -2.16f)
-            verticalLineTo(3.36f)
-            curveTo(22.8f, 2.172f, 21.828f, 1.2f, 20.64f, 1.2f)
+            moveTo(12f, 1.2f)
+            curveTo(6.035f, 1.2f, 1.2f, 6.035f, 1.2f, 12f)
+            reflectiveCurveTo(6.035f, 22.8f, 12f, 22.8f)
+            reflectiveCurveTo(22.8f, 17.965f, 22.8f, 12f)
+            reflectiveCurveTo(17.965f, 1.2f, 12f, 1.2f)
             close()
 
-            moveTo(8.76f, 10.92f)
-            horizontalLineTo(6.6f)
-            verticalLineTo(8.76f)
-            horizontalLineToRelative(2.16f)
-            verticalLineTo(10.92f)
+            moveTo(12f, 19.312f)
+            curveToRelative(-4.038f, 0f, -7.312f, -3.274f, -7.312f, -7.312f)
+            reflectiveCurveTo(7.962f, 4.688f, 12f, 4.688f)
+            reflectiveCurveTo(19.312f, 7.962f, 19.312f, 12f)
+            reflectiveCurveTo(16.038f, 19.312f, 12f, 19.312f)
             close()
 
-            moveTo(13.08f, 10.92f)
-            horizontalLineToRelative(-2.16f)
-            verticalLineTo(8.76f)
-            horizontalLineToRelative(2.16f)
-            verticalLineTo(10.92f)
-            close()
-
-            moveTo(17.4f, 10.92f)
-            horizontalLineToRelative(-2.16f)
-            verticalLineTo(8.76f)
-            horizontalLineToRelative(2.16f)
-            verticalLineTo(10.92f)
+            moveTo(12f, 13.744f)
+            curveToRelative(-0.963f, 0f, -1.744f, -0.781f, -1.744f, -1.744f)
+            reflectiveCurveToRelative(0.781f, -1.744f, 1.744f, -1.744f)
+            reflectiveCurveToRelative(1.744f, 0.781f, 1.744f, 1.744f)
+            reflectiveCurveToRelative(-0.781f, 1.744f, -1.744f, 1.744f)
             close()
         }
     }.build()
@@ -74,9 +64,9 @@ val IcPluginSms: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun IcPluginSmsIconPreview() {
+private fun IcArrowCenterIconPreview() {
     Icon(
-        imageVector = IcPluginSms,
+        imageVector = IcArrowCenter,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)
@@ -91,11 +81,11 @@ private fun IcPluginSmsIconPreview() {
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px"
 	 height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
-<g id="ic_plugin_sms">
-	<g id="SMS" display="inline">
-		<path fill="#FFFFFF" d="M20.64,1.2H3.36c-1.188,0-2.149,0.972-2.149,2.16L1.2,22.8l4.32-4.32h15.12c1.188,0,2.16-0.972,2.16-2.16
-			V3.36C22.8,2.172,21.828,1.2,20.64,1.2z M8.76,10.92H6.6V8.76h2.16V10.92z M13.08,10.92h-2.16V8.76h2.16V10.92z M17.4,10.92h-2.16
-			V8.76h2.16V10.92z"/>
+<g id="ic_arrow_center">
+	<g>
+		<path d="M12,1.2C6.035,1.2,1.2,6.035,1.2,12S6.035,22.8,12,22.8S22.8,17.965,22.8,12S17.965,1.2,12,1.2z M12,19.312
+			c-4.038,0-7.312-3.274-7.312-7.312S7.962,4.688,12,4.688S19.312,7.962,19.312,12S16.038,19.312,12,19.312z"/>
+		<circle cx="12" cy="12" r="1.744"/>
 	</g>
 </g>
 </svg>

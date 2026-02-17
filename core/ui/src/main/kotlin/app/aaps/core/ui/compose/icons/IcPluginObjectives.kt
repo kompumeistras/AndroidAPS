@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for Objectives Plugin.
  * Represents objectives and goals tracking.
  *
+ * replacing ic_graduation
+ *
  * Bounding box: x: 1.8-22.2, y: 5.4-18.6 (viewport: 24x24, ~90% height)
  */
 val IcPluginObjectives: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcPluginObjectives: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons.library.unused
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,21 +15,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Icon for Center Arrow.
- * Represents centered or neutral position.
+ * Icon for Flat Arrow.
+ * Represents flat or stable trend.
  *
- * Bounding box: x: 1.2-22.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
+ * Bounding box: x: 1.2-22.8, y: 5.4-18.6 (viewport: 24x24, ~90% width)
  */
-val IcArrowCenter: ImageVector by lazy {
+val IcArrowFlat: ImageVector by lazy {
     ImageVector.Builder(
-        name = "IcArrowCenter",
+        name = "IcArrowFlat",
         defaultWidth = 48.dp,
         defaultHeight = 48.dp,
         viewportWidth = 24f,
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,
@@ -38,25 +38,20 @@ val IcArrowCenter: ImageVector by lazy {
             strokeLineJoin = StrokeJoin.Miter,
             strokeLineMiter = 1.0f
         ) {
-            moveTo(12f, 1.2f)
-            curveTo(6.035f, 1.2f, 1.2f, 6.035f, 1.2f, 12f)
-            reflectiveCurveTo(6.035f, 22.8f, 12f, 22.8f)
-            reflectiveCurveTo(22.8f, 17.965f, 22.8f, 12f)
-            reflectiveCurveTo(17.965f, 1.2f, 12f, 1.2f)
-            close()
-
-            moveTo(12f, 19.312f)
-            curveToRelative(-4.038f, 0f, -7.312f, -3.274f, -7.312f, -7.312f)
-            reflectiveCurveTo(7.962f, 4.688f, 12f, 4.688f)
-            reflectiveCurveTo(19.312f, 7.962f, 19.312f, 12f)
-            reflectiveCurveTo(16.038f, 19.312f, 12f, 19.312f)
-            close()
-
-            moveTo(12f, 13.744f)
-            curveToRelative(-0.963f, 0f, -1.744f, -0.781f, -1.744f, -1.744f)
-            reflectiveCurveToRelative(0.781f, -1.744f, 1.744f, -1.744f)
-            reflectiveCurveToRelative(1.744f, 0.781f, 1.744f, 1.744f)
-            reflectiveCurveToRelative(-0.781f, 1.744f, -1.744f, 1.744f)
+            moveTo(16.653f, 17.772f)
+            curveToRelative(1.967f, -2.121f, 4.43f, -4.65f, 6.145f, -5.771f)
+            horizontalLineTo(22.8f)
+            lineTo(22.799f, 12f)
+            lineToRelative(0.001f, -0.001f)
+            horizontalLineToRelative(-0.002f)
+            curveToRelative(-1.715f, -1.121f, -4.178f, -3.65f, -6.145f, -5.771f)
+            lineToRelative(-1.979f, 1.44f)
+            curveToRelative(0f, 0f, 1.53f, 1.715f, 2.964f, 3.188f)
+            horizontalLineTo(1.2f)
+            verticalLineToRelative(2.286f)
+            horizontalLineToRelative(16.438f)
+            curveToRelative(-1.434f, 1.474f, -2.964f, 3.189f, -2.964f, 3.189f)
+            lineTo(16.653f, 17.772f)
             close()
         }
     }.build()
@@ -64,9 +59,9 @@ val IcArrowCenter: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun IcArrowCenterIconPreview() {
+private fun IcArrowFlatIconPreview() {
     Icon(
-        imageVector = IcArrowCenter,
+        imageVector = IcArrowFlat,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)
@@ -81,12 +76,10 @@ private fun IcArrowCenterIconPreview() {
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px"
 	 height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
-<g id="ic_arrow_center">
-	<g>
-		<path d="M12,1.2C6.035,1.2,1.2,6.035,1.2,12S6.035,22.8,12,22.8S22.8,17.965,22.8,12S17.965,1.2,12,1.2z M12,19.312
-			c-4.038,0-7.312-3.274-7.312-7.312S7.962,4.688,12,4.688S19.312,7.962,19.312,12S16.038,19.312,12,19.312z"/>
-		<circle cx="12" cy="12" r="1.744"/>
-	</g>
+<g id="ic_arrow_flat">
+	<path display="inline" fill="#36FF00" d="M16.653,17.772c1.967-2.121,4.43-4.65,6.145-5.771H22.8L22.799,12l0.001-0.001h-0.002
+		c-1.715-1.121-4.178-3.65-6.145-5.771l-1.979,1.44c0,0,1.53,1.715,2.964,3.188H1.2v2.286h16.438
+		c-1.434,1.474-2.964,3.189-2.964,3.189L16.653,17.772z"/>
 </g>
 </svg>
  */

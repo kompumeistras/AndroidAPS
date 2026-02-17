@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for BYODA Plugin.
  * Represents Bring Your Own Device AAPS integration.
  *
+ * replacing ic_dexcom_g6
+ *
  * Bounding box: x: 5.2-18.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
 val IcPluginByoda: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcPluginByoda: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

@@ -3,6 +3,8 @@ package app.aaps.plugins.sync.wear
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Watch
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceScreen
@@ -63,6 +65,7 @@ class WearPlugin @Inject constructor(
         .mainType(PluginType.SYNC)
         .fragmentClass(WearFragment::class.java.name)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_watch)
+        .icon(Icons.Default.Watch)
         .pluginName(app.aaps.core.ui.R.string.wear)
         .shortName(R.string.wear_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

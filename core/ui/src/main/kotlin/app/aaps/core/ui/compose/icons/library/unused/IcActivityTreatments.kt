@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons.library.unused
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,7 +28,7 @@ val IcActivityTreatments: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color.White),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

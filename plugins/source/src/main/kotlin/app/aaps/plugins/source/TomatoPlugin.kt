@@ -19,6 +19,7 @@ import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.workflow.LoggingWorker
+import app.aaps.core.ui.compose.icons.IcPluginTomato
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,6 +47,7 @@ class TomatoPlugin @Inject constructor(
             )
         }
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_sensor)
+        .icon(IcPluginTomato)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .pluginName(R.string.tomato)
         .shortName(R.string.tomato_short)

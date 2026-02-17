@@ -61,6 +61,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.nssdk.NSAndroidClientImpl
 import app.aaps.core.nssdk.interfaces.NSAndroidClient
 import app.aaps.core.nssdk.remotemodel.LastModified
+import app.aaps.core.ui.compose.icons.IcPluginNsClient
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.validators.DefaultEditTextValidator
 import app.aaps.core.validators.EditTextValidator
@@ -132,6 +133,7 @@ class NSClientV3Plugin @Inject constructor(
         .mainType(PluginType.SYNC)
         .fragmentClass(NSClientFragment::class.java.name)
         .pluginIcon(app.aaps.core.ui.R.drawable.ic_nightscout_syncs)
+        .icon(IcPluginNsClient)
         .pluginName(R.string.ns_client_v3_title)
         .shortName(R.string.ns_client_v3_short_name)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

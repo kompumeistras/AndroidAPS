@@ -68,6 +68,7 @@ import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.core.objects.extensions.generateCOBString
 import app.aaps.core.objects.extensions.round
 import app.aaps.core.objects.workflow.LoggingWorker
+import app.aaps.core.ui.compose.icons.IcPluginSms
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.receivers.DataWorkerStorage
 import app.aaps.core.validators.DefaultEditTextValidator
@@ -133,6 +134,7 @@ class SmsCommunicatorPlugin @Inject constructor(
         .mainType(PluginType.GENERAL)
         .fragmentClass(SmsCommunicatorFragment::class.java.name)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_sms)
+        .icon(IcPluginSms)
         .pluginName(R.string.smscommunicator)
         .shortName(R.string.smscommunicator_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
