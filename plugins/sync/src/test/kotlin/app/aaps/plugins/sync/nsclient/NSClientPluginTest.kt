@@ -25,8 +25,8 @@ class NSClientPluginTest : TestBaseWithProfile() {
 
     @BeforeEach fun prepare() {
         nsClientPlugin = NSClientPlugin(
-            aapsLogger, aapsSchedulers, rxBus, rh, context, fabricPrivacy, preferences, config, receiverDelegate, dataSyncSelectorV1,
-            dateUtil, profileUtil, nsSettingsStatus, decimalFormatter, nsClientMvvmRepository, uiInteraction, persistenceLayer, uel, activePlugin
+            aapsLogger, aapsSchedulers, rxBus, rh, context, fabricPrivacy, preferences, receiverDelegate, dataSyncSelectorV1,
+            dateUtil, profileUtil, nsSettingsStatus, decimalFormatter, nsClientMvvmRepository, persistenceLayer, uel, activePlugin
         )
     }
 
