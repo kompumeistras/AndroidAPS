@@ -1,5 +1,6 @@
 package app.aaps.plugins.automation
 
+import android.Manifest
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
@@ -19,6 +20,7 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
+import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
@@ -153,6 +155,19 @@ class AutomationPlugin @Inject constructor(
     }
 
     override fun specialEnableCondition(): Boolean = !config.AAPSCLIENT
+
+    override fun requiredPermissions(): List<PermissionGroup> = listOf(
+        PermissionGroup(
+            permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+            rationaleTitle = R.string.permission_location_title,
+            rationaleDescription = R.string.permission_location_description,
+        ),
+        PermissionGroup(
+            permissions = listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+            rationaleTitle = R.string.permission_location_title,
+            rationaleDescription = R.string.permission_background_location_description,
+        ),
+    )
 
     override fun onStart() {
         handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)

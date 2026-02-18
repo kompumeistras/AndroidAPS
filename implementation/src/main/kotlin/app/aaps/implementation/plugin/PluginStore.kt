@@ -1,5 +1,6 @@
 package app.aaps.implementation.plugin
 
+import android.content.Context
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.Sensitivity
@@ -12,6 +13,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.overview.Overview
 import app.aaps.core.interfaces.plugin.ActivePlugin
+import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.profile.ProfileSource
@@ -214,5 +216,10 @@ class PluginStore @Inject constructor(
         get() = getSpecificPluginsList(PluginType.SYNC) as ArrayList<Sync>
 
     override fun getPluginsList(): ArrayList<PluginBase> = ArrayList(plugins)
+
+    override fun collectMissingPermissions(context: Context): List<PermissionGroup> =
+        plugins.filter { it.isEnabled() }
+            .flatMap { it.missingPermissions(context) }
+            .distinctBy { it.permissions.toSet() }
 
 }

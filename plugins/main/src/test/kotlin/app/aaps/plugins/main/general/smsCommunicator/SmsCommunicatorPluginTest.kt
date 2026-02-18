@@ -1,5 +1,6 @@
 package app.aaps.plugins.main.general.smsCommunicator
 
+import android.Manifest
 import android.telephony.SmsManager
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.iob.CobInfo
@@ -1127,5 +1128,13 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
         val screen = preferenceManager.createPreferenceScreen(context)
         smsCommunicatorPlugin.addPreferenceScreen(preferenceManager, screen, context, null)
         assertThat(screen.preferenceCount).isGreaterThan(0)
+    }
+
+    @Test
+    fun `requiredPermissions should include sms permissions`() {
+        val allPermissions = smsCommunicatorPlugin.requiredPermissions().flatMap { it.permissions }
+        assertThat(allPermissions).contains(Manifest.permission.RECEIVE_SMS)
+        assertThat(allPermissions).contains(Manifest.permission.SEND_SMS)
+        assertThat(allPermissions).contains(Manifest.permission.RECEIVE_MMS)
     }
 }

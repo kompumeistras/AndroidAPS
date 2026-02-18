@@ -128,4 +128,7 @@
     <string name="string_pause_failed">Suspension failed.</string>
     <string name="string_resume_failed">Resume failed.</string>
     <string name="date_format_yyyy_m_d_e_a_hh_mm_comma">EEE, d MMM, yyyy hh:mm a</string>
+    <!-- Permission rationales -->
+    <string name="permission_exact_alarm_title">Exact Alarms</string>
+    <string name="permission_exact_alarm_description">Application needs permission to schedule exact alarms for patch management</string>
 </resources>

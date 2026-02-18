@@ -1,5 +1,6 @@
 package app.aaps.core.interfaces.plugin
 
+import android.content.Context
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.Sensitivity
@@ -146,4 +147,9 @@ interface ActivePlugin {
      * See: [app.aaps.core.interfaces.maintenance.ImportExportPrefs.doImportSharedPreferences]
      */
     fun afterImport()
+
+    /**
+     * Collects missing permissions across all enabled plugins, deduplicated by permission set.
+     */
+    fun collectMissingPermissions(context: Context): List<PermissionGroup>
 }

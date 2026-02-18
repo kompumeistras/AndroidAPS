@@ -29,4 +29,10 @@ class DexcomPluginTest : TestBaseWithProfile() {
         dexcomPlugin.addPreferenceScreen(preferenceManager, screen, context, null)
         assertThat(screen.preferenceCount).isGreaterThan(0)
     }
+
+    @Test
+    fun `requiredPermissions should include dexcom permission`() {
+        val allPermissions = dexcomPlugin.requiredPermissions().flatMap { it.permissions }
+        assertThat(allPermissions).contains(DexcomPlugin.PERMISSION)
+    }
 }

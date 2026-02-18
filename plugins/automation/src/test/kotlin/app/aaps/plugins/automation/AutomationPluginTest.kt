@@ -1,5 +1,6 @@
 package app.aaps.plugins.automation
 
+import android.Manifest
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -43,5 +44,13 @@ class AutomationPluginTest : TestBaseWithProfile() {
         val screen = preferenceManager.createPreferenceScreen(context)
         automationPlugin.addPreferenceScreen(preferenceManager, screen, context, null)
         assertThat(screen.preferenceCount).isGreaterThan(0)
+    }
+
+    @Test
+    fun `requiredPermissions should include location permissions`() {
+        val allPermissions = automationPlugin.requiredPermissions().flatMap { it.permissions }
+        assertThat(allPermissions).contains(Manifest.permission.ACCESS_FINE_LOCATION)
+        assertThat(allPermissions).contains(Manifest.permission.ACCESS_COARSE_LOCATION)
+        assertThat(allPermissions).contains(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
     }
 }

@@ -55,4 +55,9 @@ class VirtualPumpPluginTest : TestBaseWithProfile() {
         virtualPumpPlugin.addPreferenceScreen(preferenceManager, screen, context, null)
         assertThat(screen.preferenceCount).isGreaterThan(0)
     }
+
+    @Test
+    fun `requiredPermissions should return empty list`() {
+        assertThat(virtualPumpPlugin.requiredPermissions()).isEmpty()
+    }
 }

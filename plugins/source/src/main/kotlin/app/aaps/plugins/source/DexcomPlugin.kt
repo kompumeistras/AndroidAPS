@@ -17,6 +17,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -76,6 +77,14 @@ class DexcomPlugin @Inject constructor(
     }
 
     override fun advancedFilteringSupported(): Boolean = true
+
+    override fun requiredPermissions(): List<PermissionGroup> = listOf(
+        PermissionGroup(
+            permissions = listOf(PERMISSION),
+            rationaleTitle = R.string.permission_dexcom_title,
+            rationaleDescription = R.string.permission_dexcom_description,
+        )
+    )
 
     override fun onStart() {
         super.onStart()

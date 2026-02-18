@@ -1,5 +1,6 @@
 package app.aaps.pump.eopatch
 
+import android.Manifest
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.pump.defs.ManufacturerType
 import app.aaps.core.data.pump.defs.PumpType
@@ -236,5 +237,18 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     @Test
     fun `plugin name should be set`() {
         assertThat(plugin.name).isNotEmpty()
+    }
+
+    @Test
+    fun `requiredPermissions should include bluetooth permissions`() {
+        val allPermissions = plugin.requiredPermissions().flatMap { it.permissions }
+        assertThat(allPermissions).contains(Manifest.permission.BLUETOOTH_CONNECT)
+        assertThat(allPermissions).contains(Manifest.permission.BLUETOOTH_SCAN)
+    }
+
+    @Test
+    fun `requiredPermissions should include SCHEDULE_EXACT_ALARM as special`() {
+        val exactAlarmGroup = plugin.requiredPermissions().first { Manifest.permission.SCHEDULE_EXACT_ALARM in it.permissions }
+        assertThat(exactAlarmGroup.special).isTrue()
     }
 }

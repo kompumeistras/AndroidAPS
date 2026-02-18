@@ -155,5 +155,9 @@
     <string name="pick_from_map">Pick from map</string>
     <string name="tap_to_select_location">Tap on the map to select a location</string>
     <string name="selected_coords">Selected: %1$.6f, %2$.6f</string>
+    <!-- Permission rationales -->
+    <string name="permission_location_title">Location</string>
+    <string name="permission_location_description">Application needs location permission for BT scan and WiFi identification</string>
+    <string name="permission_background_location_description">Application needs background location permission for automations</string>
 
 </resources>

@@ -1,5 +1,6 @@
 package app.aaps.pump.eopatch
 
+import android.Manifest
 import android.content.Context
 import android.os.SystemClock
 import androidx.preference.PreferenceCategory
@@ -14,6 +15,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.BolusProgressData
@@ -103,6 +105,15 @@ class EopatchPumpPlugin @Inject constructor(
     private var mPumpType: PumpType = PumpType.EOFLOW_EOPATCH2
     private var mLastDataTime: Long = 0
     private val mPumpDescription = PumpDescription().fillFor(mPumpType)
+
+    override fun requiredPermissions(): List<PermissionGroup> = super.requiredPermissions() + listOf(
+        PermissionGroup(
+            permissions = listOf(Manifest.permission.SCHEDULE_EXACT_ALARM),
+            rationaleTitle = R.string.permission_exact_alarm_title,
+            rationaleDescription = R.string.permission_exact_alarm_description,
+            special = true,
+        )
+    )
 
     override fun onStart() {
         super.onStart()

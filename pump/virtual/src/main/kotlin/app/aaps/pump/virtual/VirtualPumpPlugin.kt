@@ -20,6 +20,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.Notification
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
+import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -144,6 +145,8 @@ open class VirtualPumpPlugin @Inject constructor(
         //it.storesCarbInfo = false
         it.is30minBasalRatesCapable = true
     }
+
+    override fun requiredPermissions(): List<PermissionGroup> = emptyList()
 
     override fun onStart() {
         super.onStart()

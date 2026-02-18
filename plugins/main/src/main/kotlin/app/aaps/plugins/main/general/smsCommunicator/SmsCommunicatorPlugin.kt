@@ -1,5 +1,6 @@
 package app.aaps.plugins.main.general.smsCommunicator
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.telephony.SmsManager
@@ -35,6 +36,7 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.notifications.Notification
 import app.aaps.core.interfaces.plugin.ActivePlugin
+import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.LocalProfileManager
@@ -164,6 +166,14 @@ class SmsCommunicatorPlugin @Inject constructor(
         "CARBS" to "CARBS 12\nCARBS 12 23:05\nCARBS 12 11:05PM",
         "HELP" to "HELP\nHELP command",
         "RESTART" to "RESTART\nRestart AAPS"
+    )
+
+    override fun requiredPermissions(): List<PermissionGroup> = listOf(
+        PermissionGroup(
+            permissions = listOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_MMS),
+            rationaleTitle = R.string.permission_sms_title,
+            rationaleDescription = R.string.permission_sms_description,
+        )
     )
 
     override fun onStart() {
