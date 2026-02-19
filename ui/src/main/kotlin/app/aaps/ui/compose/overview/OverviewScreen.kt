@@ -60,6 +60,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
+import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.statusLevelToColor
 import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
@@ -80,6 +81,7 @@ fun OverviewScreen(
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
     manageViewModel: ManageViewModel,
@@ -157,14 +159,27 @@ fun OverviewScreen(
                     .padding(start = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                // Running mode chip
+                // Running mode chip + simple mode icon
                 if (runningModeText.isNotEmpty()) {
-                    RunningModeChip(
-                        mode = runningMode,
-                        text = runningModeText,
-                        progress = runningModeProgress,
-                        onClick = onRunningModeClick
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RunningModeChip(
+                            mode = runningMode,
+                            text = runningModeText,
+                            progress = runningModeProgress,
+                            onClick = onRunningModeClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isSimpleMode) {
+                            Icon(
+                                imageVector = IcSettingsOff,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .size(20.dp)
+                            )
+                        }
+                    }
                 }
                 // Profile chip
                 if (profileName.isNotEmpty()) {

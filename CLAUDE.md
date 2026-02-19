@@ -72,6 +72,7 @@
 - On KSP error during compilation just compile again. Do not clean build.
 - On file locked error stop gradle daemons
 - Never install app automatically
+- **NEVER run Android instrumented tests (connectedAndroidTest) without explicit user permission** — they uninstall the app from the device
 - Use %TEMP% directory for screenshots
 - Can edit files and run commands freely without asking for permission
 - Can use internet/web search as needed
