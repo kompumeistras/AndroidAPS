@@ -517,7 +517,8 @@ fun TreatmentBeltGraphCompose(
 private fun createModeSegmentLine(color: Color): LineCartesianLayer.Line =
     LineCartesianLayer.Line(
         fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
-        areaFill = LineCartesianLayer.AreaFill.single(Fill(color.copy(alpha = 0.3f)))
+        areaFill = if (color == Color.Transparent) null
+        else LineCartesianLayer.AreaFill.single(Fill(color.copy(alpha = 0.3f)))
     )
 
 /**

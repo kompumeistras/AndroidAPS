@@ -57,7 +57,7 @@ fun MaintenanceBottomSheet(
     onCloudDirectoryClick: () -> Unit,
     onClearCloudClick: () -> Unit,
     onExportSettingsClick: () -> Unit,
-    onImportSettingsClick: () -> Unit,
+    onImportSettingsClick: (ImportSource) -> Unit,
     onExportCsvClick: () -> Unit,
     onResetApsResultsClick: () -> Unit,
     onCleanupDbClick: () -> Unit,
@@ -112,7 +112,7 @@ internal fun MaintenanceBottomSheetContent(
     onCloudDirectoryClick: () -> Unit = {},
     onClearCloudClick: () -> Unit = {},
     onExportSettingsClick: () -> Unit = {},
-    onImportSettingsClick: () -> Unit = {},
+    onImportSettingsClick: (ImportSource) -> Unit = {},
     onExportCsvClick: () -> Unit = {},
     onResetApsResultsClick: () -> Unit = {},
     onCleanupDbClick: () -> Unit = {},
@@ -243,7 +243,14 @@ internal fun MaintenanceBottomSheetContent(
             icon = Icons.Default.FileDownload,
             color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onImportSettingsClick,
+            onClick = {
+                val source = when {
+                    exportConfig?.settingsLocal == true && exportConfig.settingsCloud && isCloudActive -> ImportSource.BOTH
+                    exportConfig?.settingsCloud == true && isCloudActive                               -> ImportSource.CLOUD
+                    else                                                                               -> ImportSource.LOCAL
+                }
+                onImportSettingsClick(source)
+            },
             trailingContent = exportConfig?.let {
                 {
                     DestinationChips(

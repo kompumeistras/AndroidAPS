@@ -34,6 +34,7 @@ import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.management.MaintenanceViewModel.ExportState
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import app.aaps.ui.compose.management.CloudDirectorySheet
+import app.aaps.ui.compose.management.ImportSource
 import app.aaps.ui.compose.management.LogSettingBottomSheet
 import app.aaps.ui.compose.management.MaintenanceBottomSheet
 import app.aaps.ui.compose.management.MaintenanceEvent
@@ -86,7 +87,7 @@ fun MainScreen(
     onDirectoryClick: () -> Unit,
     onLaunchBrowser: (String) -> Unit,
     onBringToForeground: () -> Unit,
-    onImportSettingsExecute: () -> Unit,
+    onImportSettingsNavigate: (ImportSource) -> Unit,
     onExportCsvExecute: () -> Unit,
     onRecreateActivity: () -> Unit,
     // Overview status callbacks
@@ -408,9 +409,9 @@ fun MainScreen(
             onExportSettingsClick = {
                 maintenanceViewModel.startExport()
             },
-            onImportSettingsClick = {
+            onImportSettingsClick = { source ->
                 maintenanceViewModel.logImportSettings()
-                onImportSettingsExecute()
+                onImportSettingsNavigate(source)
             },
             onExportCsvClick = { showConfirmExportCsv = true },
             onResetApsResultsClick = { showConfirmResetAps = true },

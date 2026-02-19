@@ -35,8 +35,10 @@ import app.aaps.core.interfaces.maintenance.ExportDestination
 import app.aaps.core.interfaces.maintenance.ExportPreparation
 import app.aaps.core.interfaces.maintenance.ExportResult
 import app.aaps.core.interfaces.maintenance.FileListProvider
+import app.aaps.core.interfaces.maintenance.ImportDecryptResult
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.PrefMetadata
+import app.aaps.core.interfaces.maintenance.Prefs
 import app.aaps.core.interfaces.maintenance.PrefsFile
 import app.aaps.core.interfaces.maintenance.PrefsMetadataKey
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -69,7 +71,6 @@ import app.aaps.plugins.configuration.maintenance.cloud.ExportOptionsDialog
 import app.aaps.plugins.configuration.maintenance.cloud.ImportSourceDialog
 import app.aaps.plugins.configuration.maintenance.data.PrefFileNotFoundError
 import app.aaps.plugins.configuration.maintenance.data.PrefIOError
-import app.aaps.plugins.configuration.maintenance.data.Prefs
 import app.aaps.plugins.configuration.maintenance.data.PrefsFormat
 import app.aaps.plugins.configuration.maintenance.data.PrefsStatusImpl
 import app.aaps.plugins.configuration.maintenance.dialogs.PrefImportSummaryDialog
@@ -1139,6 +1140,112 @@ class ImportExportPrefsImpl @Inject constructor(
                 }
                 configBuilder.exitApp("Import", Sources.Maintenance, false)
             })
+    }
+
+    // Compose import support — discrete steps, no UI
+
+    override suspend fun getLocalImportFiles(): List<PrefsFile> =
+        kotlinx.coroutines.withContext(Dispatchers.IO) {
+            prefFileList.listPreferenceFiles()
+        }
+
+    override suspend fun getCloudImportFiles(pageToken: String?): Pair<List<PrefsFile>, String?> =
+        kotlinx.coroutines.withContext(Dispatchers.IO) {
+            val provider = cloudStorageManager.getActiveProvider()
+                ?: return@withContext Pair(emptyList(), null)
+
+            if (!provider.testConnection()) {
+                return@withContext Pair(emptyList(), null)
+            }
+
+            val settingsFolderId = provider.getOrCreateFolderPath(CloudConstants.CLOUD_PATH_SETTINGS)
+            if (!settingsFolderId.isNullOrEmpty()) {
+                provider.setSelectedFolderId(settingsFolderId)
+            }
+
+            val page = provider.listSettingsFiles(
+                pageSize = CloudConstants.DEFAULT_PAGE_SIZE,
+                pageToken = pageToken
+            )
+
+            val namePattern = Regex("^\\d{4}-\\d{2}-\\d{2}_\\d{6}.*\\.json$", RegexOption.IGNORE_CASE)
+            val matchingFiles = page.files.filter { f -> namePattern.containsMatchIn(f.name) }
+
+            val prefsFiles = mutableListOf<PrefsFile>()
+            for (file in matchingFiles) {
+                try {
+                    val bytes = provider.downloadFile(file.id)
+                    if (bytes != null) {
+                        val content = String(bytes, Charsets.UTF_8)
+                        val metadata = encryptedPrefsFormat.loadMetadata(content)
+                        prefsFiles.add(PrefsFile(file.name, content, metadata))
+                    }
+                } catch (e: Exception) {
+                    aapsLogger.warn(LTag.CORE, "Failed to load cloud file ${file.name}", e)
+                    try {
+                        val bytes = provider.downloadFile(file.id)
+                        if (bytes != null) {
+                            val content = String(bytes, Charsets.UTF_8)
+                            prefsFiles.add(PrefsFile(file.name, content, emptyMap()))
+                        }
+                    } catch (e2: Exception) {
+                        aapsLogger.error(LTag.CORE, "Failed to download ${file.name}", e2)
+                    }
+                }
+            }
+
+            Pair(prefsFiles, page.nextPageToken)
+        }
+
+    override suspend fun getCloudImportFileCount(): Int =
+        kotlinx.coroutines.withContext(Dispatchers.IO) {
+            val provider = cloudStorageManager.getActiveProvider() ?: return@withContext 0
+            provider.countSettingsFiles()
+        }
+
+    override fun decryptImportFile(file: PrefsFile, password: String): ImportDecryptResult {
+        return try {
+            val format: PrefsFormat = encryptedPrefsFormat
+            val prefs = format.loadPreferences(file.content, password)
+            prefs.metadata = prefFileList.checkMetadata(prefs.metadata)
+
+            val importOk = checkIfImportIsOk(prefs)
+
+            // Check if encryption metadata has ERROR → wrong password
+            if (!importOk && prefs.metadata[PrefsMetadataKeyImpl.ENCRYPTION]?.status == PrefsStatusImpl.ERROR) {
+                return ImportDecryptResult.WrongPassword
+            }
+
+            val importPossible = (importOk || config.isEngineeringMode()) && prefs.values.isNotEmpty()
+            ImportDecryptResult.Success(prefs, importOk, importPossible)
+        } catch (e: PrefFileNotFoundError) {
+            aapsLogger.error(LTag.CORE, "Decrypt failed: file not found", e)
+            ImportDecryptResult.Error(e.message ?: "File not found")
+        } catch (e: PrefIOError) {
+            aapsLogger.error(LTag.CORE, "Decrypt failed: IO error", e)
+            ImportDecryptResult.Error(e.message ?: "IO error")
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "Decrypt failed", e)
+            ImportDecryptResult.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    override fun executeImport(prefs: Prefs) {
+        activePlugin.beforeImport()
+        sp.clear()
+        for ((key, value) in prefs.values) {
+            if (value == "true" || value == "false") {
+                sp.putBoolean(key, value.toBoolean())
+            } else {
+                sp.putString(key, value)
+            }
+        }
+        activePlugin.afterImport()
+    }
+
+    override fun prepareImportRestart() {
+        rxBus.send(EventDiaconnG8PumpLogReset())
+        preferences.put(BooleanNonKey.GeneralSetupWizardProcessed, true)
     }
 
     override fun exportUserEntriesCsv(context: Context) {

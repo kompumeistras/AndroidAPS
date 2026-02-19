@@ -28,8 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
+import androidx.core.graphics.drawable.toBitmap
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -247,8 +251,15 @@ private fun UserEntryItem(
 
                 // Source Icon
                 val composeIcon = userEntryPresentationHelper.icon(userEntry.source)
+                val context = LocalContext.current
                 val iconPainter = if (composeIcon != null) rememberVectorPainter(composeIcon)
-                    else painterResource(id = userEntryPresentationHelper.iconId(userEntry.source))
+                else {
+                    val resId = userEntryPresentationHelper.iconId(userEntry.source)
+                    remember(resId) {
+                        val drawable = AppCompatResources.getDrawable(context, resId)!!
+                        BitmapPainter(drawable.toBitmap().asImageBitmap())
+                    }
+                }
                 Image(
                     painter = iconPainter,
                     contentDescription = "${stringResource(app.aaps.core.ui.R.string.ue_source)}: ${userEntry.source}",

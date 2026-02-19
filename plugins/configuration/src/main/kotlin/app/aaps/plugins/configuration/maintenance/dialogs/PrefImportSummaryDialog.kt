@@ -59,7 +59,7 @@ import app.aaps.core.ui.compose.LocalRxBus
 import app.aaps.core.ui.extensions.runOnUiThread
 import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.plugins.configuration.R
-import app.aaps.plugins.configuration.maintenance.data.Prefs
+import app.aaps.core.interfaces.maintenance.Prefs
 import app.aaps.plugins.configuration.maintenance.data.PrefsStatusImpl
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -202,8 +202,8 @@ class PrefImportSummaryDialog @Inject constructor(
                     painter = painterResource(id = headerIcon),
                     contentDescription = null,
                     tint = when {
-                        importOk       -> MaterialTheme.colorScheme.primary
-                        importPossible -> MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        importOk       -> AapsTheme.generalColors.statusNormal
+                        importPossible -> AapsTheme.generalColors.statusWarning
                         else           -> MaterialTheme.colorScheme.error
                     }
                 )
@@ -284,8 +284,10 @@ class PrefImportSummaryDialog @Inject constructor(
         metaEntry: PrefMetadata
     ) {
         val context = LocalContext.current
+        val colors = AapsTheme.generalColors
         val textColor = when (metaEntry.status) {
-            PrefsStatusImpl.WARN  -> MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+            PrefsStatusImpl.OK    -> colors.statusNormal
+            PrefsStatusImpl.WARN  -> colors.statusWarning
             PrefsStatusImpl.ERROR -> MaterialTheme.colorScheme.error
             else                  -> MaterialTheme.colorScheme.onSurface
         }
@@ -314,8 +316,8 @@ class PrefImportSummaryDialog @Inject constructor(
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = when (metaEntry.status) {
-                    PrefsStatusImpl.OK    -> MaterialTheme.colorScheme.primary
-                    PrefsStatusImpl.WARN  -> MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    PrefsStatusImpl.OK    -> colors.statusNormal
+                    PrefsStatusImpl.WARN  -> colors.statusWarning
                     PrefsStatusImpl.ERROR -> MaterialTheme.colorScheme.error
                     else                  -> MaterialTheme.colorScheme.onSurface
                 }

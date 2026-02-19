@@ -885,6 +885,31 @@
     <string name="aaps_directory">AAPS directory</string>
     <string name="import_setting">Import settings</string>
     <string name="miscellaneous">Miscellaneous</string>
+
+    <!-- Import settings screen -->
+    <string name="import_decrypt_review">Decrypt &amp; Review</string>
+    <string name="import_decrypt">Decrypt</string>
+    <string name="import_master_password">Master password</string>
+    <string name="import_decryption_password">Decryption password</string>
+    <string name="import_different_password_hint">File was encrypted with a different password</string>
+    <string name="import_wrong_password">Wrong password</string>
+    <string name="import_btn">Import</string>
+    <string name="import_anyway_btn">Import anyway</string>
+    <string name="import_restart_title">Settings imported</string>
+    <string name="import_restart_message">Settings have been imported. The app needs to restart.</string>
+    <string name="import_file_details">File details</string>
+    <string name="import_source_local">Local</string>
+    <string name="import_source_cloud">Cloud</string>
+    <string name="import_load_more">Load more</string>
+    <string name="import_no_files">No settings files found</string>
+    <string name="import_review_summary">Import summary</string>
+    <string name="import_decrypt_ok">Decryption successful. Ready to import.</string>
+    <string name="import_decrypt_warn">Decryption successful, but there are warnings.</string>
+    <string name="import_decrypt_error">Decryption successful, but import is not possible.</string>
+    <string name="import_check_before">Please check preferences before importing:</string>
+    <string name="import_check_dangerous">Preferences should not be imported!</string>
+    <string name="import_check_cannot">Preferences cannot be imported!</string>
+    <string name="import_explain_issues">Explain import issues\u2026</string>
     <string name="reset_aps_results">Reset APS results</string>
     <string name="database_cleanup">Database cleanup</string>
     <string name="nav_resetdb">Reset Databases</string>

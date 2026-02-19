@@ -85,4 +85,37 @@ interface ImportExportPrefs {
      * Store for selected file from UI
      */
     var selectedImportFile: PrefsFile?
+
+    // Compose import support — discrete steps, no UI
+
+    /** Get list of local preference files. */
+    suspend fun getLocalImportFiles(): List<PrefsFile>
+
+    /** Get a page of cloud preference files. Returns (files, nextPageToken). */
+    suspend fun getCloudImportFiles(pageToken: String?): Pair<List<PrefsFile>, String?>
+
+    /** Get total count of settings files in cloud. */
+    suspend fun getCloudImportFileCount(): Int
+
+    /** Attempt to decrypt a preference file with the given password. */
+    fun decryptImportFile(file: PrefsFile, password: String): ImportDecryptResult
+
+    /** Write the decrypted prefs to SharedPreferences and call plugin hooks. */
+    fun executeImport(prefs: Prefs)
+
+    /** Send events needed before app restart after import. */
+    fun prepareImportRestart()
+}
+
+/** Result of attempting to decrypt a preference file for import. */
+sealed interface ImportDecryptResult {
+
+    data class Success(
+        val prefs: Prefs,
+        val importOk: Boolean,
+        val importPossible: Boolean
+    ) : ImportDecryptResult
+
+    data object WrongPassword : ImportDecryptResult
+    data class Error(val message: String) : ImportDecryptResult
 }
