@@ -22,8 +22,10 @@ import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.graph.AbsIobGraphData
+import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgInfoData
@@ -38,8 +40,10 @@ import app.aaps.core.interfaces.overview.graph.DeviationsGraphData
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.ExtendedBolusGraphPoint
 import app.aaps.core.interfaces.overview.graph.GraphDataPoint
-import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.IobGraphData
+import app.aaps.core.interfaces.overview.graph.NsClientLevel
+import app.aaps.core.interfaces.overview.graph.NsClientStatusData
+import app.aaps.core.interfaces.overview.graph.NsClientStatusItem
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.overview.graph.ProfileDisplayData
 import app.aaps.core.interfaces.overview.graph.RatioGraphData
@@ -61,10 +65,13 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
+import app.aaps.core.interfaces.rx.events.EventNsClientStatusUpdated
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
-import app.aaps.core.interfaces.utils.TrendCalculator
+import app.aaps.core.interfaces.utils.Round
 import app.aaps.core.interfaces.utils.Translator
+import app.aaps.core.interfaces.utils.TrendCalculator
+import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -113,6 +120,7 @@ class OverviewDataCacheImpl @Inject constructor(
     private val loop: Loop,
     private val config: Config,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
+    private val nsSettingsStatus: NSSettingsStatus,
     private val rxBus: RxBus,
     private val activePlugin: ActivePlugin,
     private val decimalFormatter: DecimalFormatter,
@@ -185,6 +193,10 @@ class OverviewDataCacheImpl @Inject constructor(
     private val _runningModeGraphFlow = MutableStateFlow(RunningModeGraphData(emptyList()))
     override val runningModeGraphFlow: StateFlow<RunningModeGraphData> = _runningModeGraphFlow.asStateFlow()
 
+    // NSClient status
+    private val _nsClientStatusFlow = MutableStateFlow(NsClientStatusData())
+    override val nsClientStatusFlow: StateFlow<NsClientStatusData> = _nsClientStatusFlow.asStateFlow()
+
     init {
         // Load initial data from database
         scope.launch {
@@ -249,8 +261,10 @@ class OverviewDataCacheImpl @Inject constructor(
         // =========================================================================
 
         // Observe treatment-related DB changes
-        for (type in listOf(BS::class.java, CA::class.java, EB::class.java,
-                            TE::class.java, HR::class.java, SC::class.java)) {
+        for (type in listOf(
+            BS::class.java, CA::class.java, EB::class.java,
+            TE::class.java, HR::class.java, SC::class.java
+        )) {
             scope.launch {
                 persistenceLayer.observeChanges(type)
                     .debounce(300)
@@ -315,6 +329,22 @@ class OverviewDataCacheImpl @Inject constructor(
                 .debounce(300)
                 .collect { rebuildBasalGraph() }
         }
+
+        // NSClient status: initial load + subscribe to updates + 60s ticker for time-ago refresh
+        if (config.AAPSCLIENT) {
+            scope.launch { rebuildNsClientStatus() }
+            scope.launch {
+                rxBus.toFlow(EventNsClientStatusUpdated::class.java).collect {
+                    rebuildNsClientStatus()
+                }
+            }
+            scope.launch {
+                while (true) {
+                    delay(60_000)
+                    rebuildNsClientStatus()
+                }
+            }
+        }
     }
 
     // =========================================================================
@@ -324,7 +354,7 @@ class OverviewDataCacheImpl @Inject constructor(
     private suspend fun updateBgInfoFromDatabase() {
         // Use bucketed (smoothed) data like legacy, with raw DB fallback
         val lastBg = iobCobCalculator.ads.bucketedData?.firstOrNull()
-        val lastGv = lastBg ?: persistenceLayer.getLastGlucoseValue()?.let { InMemoryGlucoseValue.Companion.fromGv(it) }
+        val lastGv = lastBg ?: persistenceLayer.getLastGlucoseValue()?.let { InMemoryGlucoseValue.fromGv(it) }
         if (lastGv == null) {
             _bgInfoFlow.value = null
             return
@@ -388,9 +418,9 @@ class OverviewDataCacheImpl @Inject constructor(
             if (profile != null) {
                 // Check if APS/AAPSCLIENT has adjusted target
                 val targetUsed = when {
-                    config.APS -> loop.lastRun?.constraintsProcessed?.targetBG ?: 0.0
+                    config.APS        -> loop.lastRun?.constraintsProcessed?.targetBG ?: 0.0
                     config.AAPSCLIENT -> processedDeviceStatusData.getAPSResult()?.targetBG ?: 0.0
-                    else -> 0.0
+                    else              -> 0.0
                 }
 
                 if (targetUsed != 0.0 && abs(profile.getTargetMgdl() - targetUsed) > 0.01) {
@@ -577,7 +607,7 @@ class OverviewDataCacheImpl @Inject constructor(
                     te.type == TE.Type.FINGER_STICK_BG_VALUE -> TherapyEventType.FINGER_STICK
                     te.type == TE.Type.ANNOUNCEMENT          -> TherapyEventType.ANNOUNCEMENT
                     te.type == TE.Type.SETTINGS_EXPORT       -> TherapyEventType.SETTINGS_EXPORT
-                    te.type == TE.Type.EXERCISE               -> TherapyEventType.EXERCISE
+                    te.type == TE.Type.EXERCISE              -> TherapyEventType.EXERCISE
                     te.duration > 0                          -> TherapyEventType.GENERAL_WITH_DURATION
                     else                                     -> TherapyEventType.GENERAL
                 }
@@ -713,6 +743,108 @@ class OverviewDataCacheImpl @Inject constructor(
         _basalGraphFlow.value = BasalGraphData(profileBasal, actualBasal, maxBasal)
     }
 
+    // =========================================================================
+    // NSClient status rebuild
+    // =========================================================================
+
+    private fun rebuildNsClientStatus() {
+        val now = dateUtil.now()
+        val pumpItem = processedDeviceStatusData.pumpData?.let { pumpData ->
+            val level = when {
+                pumpData.clock + nsSettingsStatus.extendedPumpSettings("urgentClock") * 60 * 1000L < now                               -> NsClientLevel.URGENT
+                pumpData.reservoir < nsSettingsStatus.extendedPumpSettings("urgentRes")                                                -> NsClientLevel.URGENT
+                pumpData.isPercent && pumpData.percent < nsSettingsStatus.extendedPumpSettings("urgentBattP")                          -> NsClientLevel.URGENT
+                !pumpData.isPercent && pumpData.voltage > 0 && pumpData.voltage < nsSettingsStatus.extendedPumpSettings("urgentBattV") -> NsClientLevel.URGENT
+                pumpData.clock + nsSettingsStatus.extendedPumpSettings("warnClock") * 60 * 1000L < now                                 -> NsClientLevel.WARN
+                pumpData.reservoir < nsSettingsStatus.extendedPumpSettings("warnRes")                                                  -> NsClientLevel.WARN
+                pumpData.isPercent && pumpData.percent < nsSettingsStatus.extendedPumpSettings("warnBattP")                            -> NsClientLevel.WARN
+                !pumpData.isPercent && pumpData.voltage > 0 && pumpData.voltage < nsSettingsStatus.extendedPumpSettings("warnBattV")   -> NsClientLevel.WARN
+                else                                                                                                                   -> NsClientLevel.INFO
+            }
+            // Format: "75% 3 min ago" (running mode excluded — already shown in RunningMode chip)
+            val value = buildString {
+                if (pumpData.isPercent) append("${pumpData.percent}% ")
+                if (!pumpData.isPercent && pumpData.voltage > 0) append("${Round.roundTo(pumpData.voltage, 0.001)} ")
+                append(dateUtil.minAgo(rh, pumpData.clock))
+            }.trim()
+            val dialogText = buildString {
+                pumpData.extended?.let {
+                    append(it.replace("<br>", "\n").replace(Regex("<[^>]*>"), "").replace("&nbsp;", " ").trim())
+                }
+            }
+            NsClientStatusItem(
+                label = rh.gs(app.aaps.core.ui.R.string.pump),
+                value = value,
+                level = level,
+                dialogTitle = rh.gs(app.aaps.core.ui.R.string.pump),
+                dialogText = dialogText
+            )
+        }
+
+        val openApsItem = if (processedDeviceStatusData.openAPSData.clockSuggested != 0L) {
+            val clockSuggested = processedDeviceStatusData.openAPSData.clockSuggested
+            val level = when {
+                clockSuggested + T.mins(preferences.get(IntKey.NsClientUrgentAlarmStaleData).toLong()).msecs() < now -> NsClientLevel.URGENT
+                clockSuggested + T.mins(preferences.get(IntKey.NsClientAlarmStaleData).toLong()).msecs() < now       -> NsClientLevel.WARN
+                else                                                                                                 -> NsClientLevel.INFO
+            }
+            // Match original format: "2 min ago"
+            val value = dateUtil.minOrSecAgo(rh, clockSuggested)
+            val dialogText = buildString {
+                processedDeviceStatusData.openAPSData.enacted?.let {
+                    if (processedDeviceStatusData.openAPSData.clockEnacted != clockSuggested) {
+                        append("Enacted: ${dateUtil.minAgo(rh, processedDeviceStatusData.openAPSData.clockEnacted)}")
+                        it.reason?.let { reason -> append(" $reason") }
+                        append("\n")
+                    }
+                }
+                processedDeviceStatusData.openAPSData.suggested?.let {
+                    append("Suggested: ${dateUtil.minAgo(rh, clockSuggested)}")
+                    it.reason?.let { reason -> append(" $reason") }
+                }
+            }
+            NsClientStatusItem(
+                label = rh.gs(app.aaps.core.ui.R.string.openaps_short),
+                value = value,
+                level = level,
+                dialogTitle = rh.gs(app.aaps.core.ui.R.string.openaps),
+                dialogText = dialogText
+            )
+        } else null
+
+        val uploaderItem = if (processedDeviceStatusData.uploaderMap.isNotEmpty()) {
+            var minBattery = 100
+            var isCharging = false
+            for ((_, uploader) in processedDeviceStatusData.uploaderMap) {
+                if (uploader.battery <= minBattery) {
+                    minBattery = uploader.battery
+                    isCharging = uploader.isCharging == true
+                }
+            }
+            // Match original format: "ᴪ 93%" or "93%"
+            val value = buildString {
+                if (isCharging) append("\u1D6A ")
+                append("$minBattery%")
+            }
+            val dialogText = buildString {
+                for ((device, uploader) in processedDeviceStatusData.uploaderMap) {
+                    append("$device: ${uploader.battery}%")
+                    if (uploader.isCharging == true) append(" \u1D6A")
+                    append("\n")
+                }
+            }.trimEnd()
+            NsClientStatusItem(
+                label = rh.gs(app.aaps.core.ui.R.string.uploader_short),
+                value = value,
+                level = NsClientLevel.INFO,
+                dialogTitle = rh.gs(app.aaps.core.ui.R.string.uploader),
+                dialogText = dialogText
+            )
+        } else null
+
+        _nsClientStatusFlow.value = NsClientStatusData(pump = pumpItem, openAps = openApsItem, uploader = uploaderItem)
+    }
+
     override fun reset() {
         _timeRangeFlow.value = null
         _bgReadingsFlow.value = emptyList()
@@ -737,6 +869,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _basalGraphFlow.value = BasalGraphData(emptyList(), emptyList(), 0.0)
         _targetLineFlow.value = TargetLineData(emptyList())
         _runningModeGraphFlow.value = RunningModeGraphData(emptyList())
+        _nsClientStatusFlow.value = NsClientStatusData()
         _calcProgressFlow.value = 100
     }
 }

@@ -206,6 +206,8 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             binding.nsclientCard.setBackgroundColor(Color.argb(80, 0xE8, 0xC5, 0x0C))
         if (config.AAPSCLIENT2)
             binding.nsclientCard.setBackgroundColor(Color.argb(80, 0x0F, 0xBB, 0xE0))
+        if (config.AAPSCLIENT3)
+            binding.nsclientCard.setBackgroundColor(Color.argb(80, 0x4C, 0xAF, 0x50))
 
         overview.setVersionView(binding.infoLayout.version)
 
@@ -759,11 +761,11 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
             // OpenAPS status from ns
             binding.openaps.text = processedDeviceStatusData.openApsStatus
-            binding.openaps.setOnClickListener { activity?.let { uiInteraction.showOkDialog(context = it, title = rh.gs(R.string.openaps), message = processedDeviceStatusData.extendedOpenApsStatusHtml) } }
+            binding.openaps.setOnClickListener { activity?.let { uiInteraction.showOkDialog(context = it, title = rh.gs(app.aaps.core.ui.R.string.openaps), message = processedDeviceStatusData.extendedOpenApsStatusHtml) } }
 
             // Uploader status from ns
             binding.uploader.text = processedDeviceStatusData.uploaderStatusSpanned
-            binding.uploader.setOnClickListener { activity?.let { uiInteraction.showOkDialog(context = it, title = rh.gs(R.string.uploader), message = processedDeviceStatusData.extendedUploaderStatusHtml) } }
+            binding.uploader.setOnClickListener { activity?.let { uiInteraction.showOkDialog(context = it, title = rh.gs(app.aaps.core.ui.R.string.uploader), message = processedDeviceStatusData.extendedUploaderStatusHtml) } }
         }
     }
 

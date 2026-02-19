@@ -11,7 +11,6 @@ import app.aaps.core.interfaces.utils.Round
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.utils.HtmlHelper
-import app.aaps.plugins.sync.R
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -99,7 +98,7 @@ class ProcessedDeviceStatusDataImpl @Inject constructor(
         get() {
             val string = StringBuilder()
                 .append("<span style=\"color:${rh.gac(app.aaps.core.ui.R.attr.nsTitleColor)}\">")
-                .append(rh.gs(R.string.openaps_short))
+                .append(rh.gs(app.aaps.core.ui.R.string.openaps_short))
                 .append(": </span>")
 
             // test warning level
@@ -139,7 +138,7 @@ class ProcessedDeviceStatusDataImpl @Inject constructor(
             var isCharging = false
             val string = StringBuilder()
             string.append("<span style=\"color:${rh.gac(app.aaps.core.ui.R.attr.nsTitleColor)}\">")
-            string.append(rh.gs(R.string.uploader_short))
+            string.append(rh.gs(app.aaps.core.ui.R.string.uploader_short))
             string.append(": </span>")
             val iterator: Iterator<*> = uploaderMap.entries.iterator()
             var minBattery = 100

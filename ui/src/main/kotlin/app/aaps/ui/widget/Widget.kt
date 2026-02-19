@@ -130,6 +130,8 @@ class Widget : AppWidgetProvider() {
             views.setInt(R.id.widget_layout, "setBackgroundColor", Color.argb(alpha, 0xE8, 0xC5, 0x0C))
         else if (config.AAPSCLIENT2)
             views.setInt(R.id.widget_layout, "setBackgroundColor", Color.argb(alpha, 0x0F, 0xBB, 0xE0))
+        else if (config.AAPSCLIENT3)
+            views.setInt(R.id.widget_layout, "setBackgroundColor", Color.argb(alpha, 0x4C, 0xAF, 0x50))
 
         handler.post {
             if (config.appInitialized) {

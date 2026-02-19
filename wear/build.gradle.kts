@@ -90,6 +90,13 @@ android {
             versionName = Versions.appVersion + "-aapsclient2"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_blueowl"
         }
+        create("aapsclient3") {
+            applicationId = "info.nightscout.aapsclient3"
+            dimension = "standard"
+            resValue("string", "app_name", "AAPSClient3")
+            versionName = Versions.appVersion + "-aapsclient3"
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_greenowl"
+        }
     }
     buildFeatures {
         buildConfig = true

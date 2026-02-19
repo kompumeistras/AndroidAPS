@@ -6,15 +6,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Settings
-import app.aaps.core.ui.compose.OkCancelDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,9 +44,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -55,19 +54,20 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.OkCancelDialog
+import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
-import app.aaps.core.ui.compose.icons.IcSettingsOff
 import app.aaps.core.ui.compose.statusLevelToColor
-import app.aaps.ui.compose.overview.manage.ManageViewModel
-import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.main.TempTargetChipState
-import app.aaps.ui.compose.overview.statusLights.StatusViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
+import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.overview.statusLights.StatusItem
 import app.aaps.ui.compose.overview.statusLights.StatusSectionContent
+import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 
 @Composable
 fun OverviewScreen(
@@ -227,6 +227,20 @@ fun OverviewScreen(
             config = config,
             onCopyFromNightscout = { manageViewModel.copyStatusLightsFromNightscout() }
         )
+
+        // NSClient status card (only in AAPSCLIENT builds)
+        if (config.AAPSCLIENT) {
+            val nsClientStatus by graphViewModel.nsClientStatusFlow.collectAsState()
+            val flavorTint = when {
+                config.AAPSCLIENT3 -> AapsTheme.generalColors.flavorClient3Tint
+                config.AAPSCLIENT2 -> AapsTheme.generalColors.flavorClient2Tint
+                else               -> AapsTheme.generalColors.flavorClient1Tint
+            }
+            NsClientStatusCard(
+                statusData = nsClientStatus,
+                flavorTint = flavorTint
+            )
+        }
 
         // Graph content - New Compose/Vico graphs
         OverviewGraphsSection(graphViewModel = graphViewModel)

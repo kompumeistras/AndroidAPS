@@ -173,7 +173,7 @@ class WearPlugin @Inject constructor(
 
     private fun broadcastData(payload: EventData) {
         // Identify and update source set before broadcast
-        val client = if (config.AAPSCLIENT1) 1 else if (config.AAPSCLIENT2) 2 else throw UnsupportedOperationException()
+        val client = if (config.AAPSCLIENT1) 1 else if (config.AAPSCLIENT2) 2 else if (config.AAPSCLIENT3) 3 else throw UnsupportedOperationException()
         val dataToSend = when (payload) {
             is EventData.SingleBg -> payload.copy().apply { dataset = client }
             is EventData.Status   -> payload.copy().apply { dataset = client }
@@ -183,7 +183,7 @@ class WearPlugin @Inject constructor(
             Intent(Intents.AAPS_CLIENT_WEAR_DATA)
                 .addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
                 .putExtras(Bundle().apply {
-                    putInt(WearDataReceiver.CLIENT, if (config.AAPSCLIENT1) 1 else if (config.AAPSCLIENT2) 2 else throw UnsupportedOperationException())
+                    putInt(WearDataReceiver.CLIENT, if (config.AAPSCLIENT1) 1 else if (config.AAPSCLIENT2) 2 else if (config.AAPSCLIENT3) 3 else throw UnsupportedOperationException())
                     putString(WearDataReceiver.DATA, dataToSend.serialize())
                 })
         )

@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.overview.graphs
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.interfaces.aps.Loop
@@ -22,7 +22,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.keys.BooleanNonKey
-import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.displayText
@@ -34,8 +33,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.Locale
@@ -154,6 +153,9 @@ class GraphViewModel @Inject constructor(
     val basalGraphFlow = cache.basalGraphFlow
     val targetLineFlow = cache.targetLineFlow
     val runningModeGraphFlow = cache.runningModeGraphFlow
+
+    // NSClient status (pump/openAPS/uploader from Nightscout)
+    val nsClientStatusFlow = cache.nsClientStatusFlow
 
     // =========================================================================
     // BG Info Section (Overview info display)

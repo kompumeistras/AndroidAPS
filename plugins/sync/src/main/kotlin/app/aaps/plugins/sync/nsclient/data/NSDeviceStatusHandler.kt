@@ -8,6 +8,8 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.rx.events.EventNsClientStatusUpdated
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.workflow.CalculationWorkflow
 import app.aaps.core.keys.BooleanNonKey
@@ -86,6 +88,7 @@ class NSDeviceStatusHandler @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val overviewData: OverviewData,
     private val calculationWorkflow: CalculationWorkflow,
+    private val rxBus: RxBus,
     @ApplicationScope private val appScope: CoroutineScope
 ) {
 
@@ -112,6 +115,8 @@ class NSDeviceStatusHandler @Inject constructor(
                 nsDeviceStatus.pump?.let { preferences.put(BooleanNonKey.ObjectivesPumpStatusIsAvailableInNS, true) }  // Objective 0
             }
         }
+        if (config.AAPSCLIENT && deviceStatuses.isNotEmpty())
+            rxBus.send(EventNsClientStatusUpdated())
     }
 
     private fun updateDeviceData(deviceStatus: NSDeviceStatus) {

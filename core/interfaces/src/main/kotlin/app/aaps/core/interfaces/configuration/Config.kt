@@ -5,9 +5,10 @@ interface Config {
 
     val SUPPORTED_NS_VERSION: Int
     val APS: Boolean
-    val AAPSCLIENT: Boolean // aapsclient || aapsclient2
+    val AAPSCLIENT: Boolean // aapsclient || aapsclient2 || aapsclient3
     val AAPSCLIENT1: Boolean // aapsclient
     val AAPSCLIENT2: Boolean // aapsclient2
+    val AAPSCLIENT3: Boolean // aapsclient3
     val PUMPCONTROL: Boolean
     val PUMPDRIVERS: Boolean
     val FLAVOR: String
