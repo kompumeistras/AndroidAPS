@@ -100,25 +100,25 @@ fun BgInfoSection(
                         style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                     )
 
-                    // Triangles pointing outward, placed side by side along the arc
-                    val centerRad = Math.toRadians(indicator.centerAngle.toDouble())
+                    // Triangles pointing outward, each placed on the circle at its own angle
                     val ringCenterX = topLeft.x + arcSize.width / 2
                     val ringCenterY = topLeft.y + arcSize.height / 2
                     val ringRadius = arcSize.width / 2
-                    val dirX = cos(centerRad).toFloat()
-                    val dirY = sin(centerRad).toFloat()
-                    val perpX = -dirY
-                    val perpY = dirX
                     val triHeight = strokeWidth * 1.3f
                     val triHalfBase = strokeWidth * 0.7f
-                    val triSpacing = triHalfBase * 2.2f
                     val n = indicator.triangleCount
-                    val baseDist = ringRadius + strokeWidth / 2
+                    val baseDist = ringRadius + strokeWidth * 0.2f
+                    val angularSpacing = Math.toDegrees((triHalfBase * 2.2 / ringRadius).toDouble()).toFloat()
 
                     for (i in 0 until n) {
-                        val lateralOffset = (i - (n - 1) / 2f) * triSpacing
-                        val baseX = ringCenterX + baseDist * dirX + lateralOffset * perpX
-                        val baseY = ringCenterY + baseDist * dirY + lateralOffset * perpY
+                        val triAngle = indicator.centerAngle + (i - (n - 1) / 2f) * angularSpacing
+                        val triRad = Math.toRadians(triAngle.toDouble())
+                        val dirX = cos(triRad).toFloat()
+                        val dirY = sin(triRad).toFloat()
+                        val perpX = -dirY
+                        val perpY = dirX
+                        val baseX = ringCenterX + baseDist * dirX
+                        val baseY = ringCenterY + baseDist * dirY
                         val tipX = baseX + triHeight * dirX
                         val tipY = baseY + triHeight * dirY
                         drawPath(
