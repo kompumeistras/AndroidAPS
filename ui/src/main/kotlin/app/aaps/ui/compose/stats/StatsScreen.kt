@@ -16,9 +16,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -278,6 +281,75 @@ fun StatsScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // TDD Cycle Pattern Section
+            AapsCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.toggleTddCycleExpanded() }
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.tdd_cycle_pattern),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = if (state.tddCycleExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    AnimatedVisibility(visible = state.tddCycleExpanded) {
+                        when {
+                            state.tddCycleLoading -> Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    LinearProgressIndicator(
+                                        progress = { state.tddCycleProgress },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(8.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(
+                                            R.string.calculation_in_progress_percent,
+                                            (state.tddCycleProgress * 100).toInt()
+                                        ),
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                }
+                            }
+                            state.tddCyclePatternData != null -> TddCyclePatternCompose(
+                                data = state.tddCyclePatternData!!,
+                                offset = state.tddCycleOffset,
+                                onOffsetChange = { viewModel.updateCycleOffset(it) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            else -> Text(
+                                text = stringResource(R.string.not_enough_data_for_cycles),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }

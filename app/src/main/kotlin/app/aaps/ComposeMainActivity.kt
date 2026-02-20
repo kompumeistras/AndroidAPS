@@ -972,7 +972,8 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                 when (item.dialogKey) {
                     // Drawer menu screens
                     "treatments"              -> navController.navigate(AppRoute.Treatments.route)
-                    "stats"                   -> navController.navigate(AppRoute.Stats.route)
+                    "stats",
+                    "stats_cycle_pattern"     -> navController.navigate(AppRoute.Stats.route)
                     "profile_helper"          -> navController.navigate(AppRoute.ProfileHelper.route)
 
                     "history_browser"         -> {

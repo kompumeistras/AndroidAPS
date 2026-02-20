@@ -54,6 +54,14 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
         )
         add(
             SearchableItem.Dialog(
+                dialogKey = "stats_cycle_pattern",
+                dialogTitleResId = app.aaps.ui.R.string.tdd_cycle_pattern,
+                dialogIcon = IcStats,
+                dialogSummaryResId = app.aaps.ui.R.string.tdd_cycle_pattern_desc
+            )
+        )
+        add(
+            SearchableItem.Dialog(
                 dialogKey = "profile_helper",
                 dialogTitleResId = app.aaps.ui.R.string.nav_profile_helper,
                 dialogIcon = IcProfile,
