@@ -22,6 +22,7 @@ import app.aaps.ui.compose.overview.graphs.IobUiState
 @Composable
 internal fun IobChip(
     state: IobUiState,
+    showIcon: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val hasValue = state.iobTotal != 0.0
@@ -34,16 +35,18 @@ internal fun IobChip(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
-            Icon(
-                imageVector = IcBolus,
-                contentDescription = null,
-                tint = AapsTheme.elementColors.insulin,
-                modifier = Modifier.size(24.dp)
-            )
+            if (showIcon) {
+                Icon(
+                    imageVector = IcBolus,
+                    contentDescription = null,
+                    tint = AapsTheme.elementColors.insulin,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Text(
                 text = state.text,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = if (showIcon) 8.dp else 0.dp)
             )
         }
     }

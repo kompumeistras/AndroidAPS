@@ -29,6 +29,7 @@ import app.aaps.ui.compose.overview.graphs.CobUiState
 @Composable
 internal fun CobChip(
     state: CobUiState,
+    showIcon: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val alphaModifier = if (state.carbsReq > 0) {
@@ -59,16 +60,18 @@ internal fun CobChip(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
-            Icon(
-                imageVector = IcCarbs,
-                contentDescription = null,
-                tint = AapsTheme.elementColors.carbs,
-                modifier = Modifier.size(24.dp)
-            )
+            if (showIcon) {
+                Icon(
+                    imageVector = IcCarbs,
+                    contentDescription = null,
+                    tint = AapsTheme.elementColors.carbs,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Text(
                 text = state.text,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = if (showIcon) 8.dp else 0.dp)
             )
         }
     }

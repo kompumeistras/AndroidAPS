@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.ui.compose.overview.graphs.CobUiState
@@ -17,17 +17,32 @@ fun IobCobChipsRow(
     modifier: Modifier = Modifier
 ) {
     val spacingDp = 4.dp
-    Layout(
-        content = {
-            IobChip(state = iobUiState)
-            CobChip(state = cobUiState)
-        },
+    SubcomposeLayout(
         modifier = modifier.fillMaxWidth()
-    ) { measurables, constraints ->
+    ) { constraints ->
         val spacingPx = spacingDp.roundToPx()
         val availableWidth = constraints.maxWidth - spacingPx
 
-        // Measure intrinsic widths to learn each chip's preferred size
+        // First pass: measure intrinsic widths with icons
+        val withIcons = subcompose("withIcons") {
+            IobChip(state = iobUiState, showIcon = true)
+            CobChip(state = cobUiState, showIcon = true)
+        }
+        val intrinsicsWithIcons = withIcons.map { it.minIntrinsicWidth(constraints.maxHeight) }
+        val totalWithIcons = intrinsicsWithIcons.sum()
+
+        // If chips with icons don't fit, hide icons to free up space
+        val showIcons = totalWithIcons <= availableWidth
+
+        val measurables = if (showIcons) {
+            withIcons
+        } else {
+            subcompose("withoutIcons") {
+                IobChip(state = iobUiState, showIcon = false)
+                CobChip(state = cobUiState, showIcon = false)
+            }
+        }
+
         val intrinsics = measurables.map { it.minIntrinsicWidth(constraints.maxHeight) }
         val totalIntrinsic = intrinsics.sum()
 
