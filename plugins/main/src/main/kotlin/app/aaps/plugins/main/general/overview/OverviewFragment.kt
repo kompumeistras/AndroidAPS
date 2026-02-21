@@ -42,6 +42,8 @@ import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.notifications.AapsNotification
+import app.aaps.core.interfaces.notifications.NotificationLevel
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.LastBgData
@@ -105,15 +107,15 @@ import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.extensions.toVisibilityKeepSpace
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.databinding.OverviewFragmentBinding
+import app.aaps.plugins.main.databinding.OverviewNotificationItemBinding
 import app.aaps.plugins.main.general.overview.graphData.GraphData
-import app.aaps.plugins.main.general.overview.notifications.NotificationStore
-import app.aaps.plugins.main.general.overview.notifications.events.EventUpdateOverviewNotification
 import app.aaps.plugins.main.general.overview.ui.StatusLightHandler
 import app.aaps.plugins.main.skins.SkinProvider
 import com.jjoe64.graphview.GraphView
 import dagger.android.support.DaggerFragment
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.Locale
@@ -122,6 +124,7 @@ import javax.inject.Inject
 import javax.inject.Provider
 import kotlin.math.abs
 import kotlin.math.min
+import app.aaps.core.interfaces.notifications.NotificationManager as AapsNotificationManager
 
 class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickListener {
 
@@ -141,7 +144,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     @Inject lateinit var iobCobCalculator: IobCobCalculator
     @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var xDripSource: XDripSource
-    @Inject lateinit var notificationStore: NotificationStore
+    @Inject lateinit var notificationManager: AapsNotificationManager
     @Inject lateinit var quickWizard: QuickWizard
     @Inject lateinit var config: Config
     @Inject lateinit var protectionCheck: ProtectionCheck
@@ -292,10 +295,9 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             .debounce(1L, TimeUnit.SECONDS)
             .observeOn(aapsSchedulers.main)
             .subscribe({ updateGraph() }, fabricPrivacy::logException)
-        disposable += activePlugin.activeOverview.overviewBus
-            .toObservable(EventUpdateOverviewNotification::class.java)
-            .observeOn(aapsSchedulers.main)
-            .subscribe({ updateNotification() }, fabricPrivacy::logException)
+        viewLifecycleOwner.lifecycleScope.launch {
+            notificationManager.notifications.collectLatest { updateNotification() }
+        }
         disposable += rxBus
             .toObservable(EventScale::class.java)
             .observeOn(aapsSchedulers.main)
@@ -1248,7 +1250,54 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun updateNotification() {
         _binding ?: return
-        binding.notifications.let { notificationStore.updateNotifications(it) }
+        notificationManager.cleanUp()
+        val notifications = notificationManager.notifications.value
+        if (notifications.isNotEmpty()) {
+            binding.notifications.adapter = NotificationRecyclerViewAdapter(notifications)
+            binding.notifications.visibility = View.VISIBLE
+        } else {
+            binding.notifications.visibility = View.GONE
+        }
+    }
+
+    private inner class NotificationRecyclerViewAdapter(
+        private val notificationsList: List<AapsNotification>
+    ) : androidx.recyclerview.widget.RecyclerView.Adapter<NotificationRecyclerViewAdapter.NotificationsViewHolder>() {
+
+        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): NotificationsViewHolder =
+            NotificationsViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.overview_notification_item, viewGroup, false))
+
+        override fun onBindViewHolder(holder: NotificationsViewHolder, position: Int) {
+            val notification = notificationsList[position]
+            holder.binding.dismiss.tag = notification
+            val buttonTextRes = notification.actions.firstOrNull()?.buttonTextRes
+            if (buttonTextRes != null && buttonTextRes != 0) holder.binding.dismiss.setText(buttonTextRes)
+            else holder.binding.dismiss.setText(app.aaps.core.ui.R.string.snooze)
+            @Suppress("SetTextI18n")
+            holder.binding.text.text = dateUtil.timeString(notification.date) + " " + notification.text
+            when (notification.level) {
+                NotificationLevel.URGENT       -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationUrgent))
+                NotificationLevel.NORMAL       -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationNormal))
+                NotificationLevel.LOW          -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationLow))
+                NotificationLevel.INFO         -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationInfo))
+                NotificationLevel.ANNOUNCEMENT -> holder.binding.cv.setBackgroundColor(rh.gac(app.aaps.core.ui.R.attr.notificationAnnouncement))
+            }
+        }
+
+        override fun getItemCount(): Int = notificationsList.size
+
+        inner class NotificationsViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+
+            val binding = OverviewNotificationItemBinding.bind(itemView)
+
+            init {
+                binding.dismiss.setOnClickListener {
+                    val notification = it.tag as AapsNotification
+                    notification.actions.firstOrNull()?.action?.invoke()
+                    notificationManager.dismiss(notification.id)
+                }
+            }
+        }
     }
 
     fun popupBolusDialogIfRunning(onClick: Boolean) {

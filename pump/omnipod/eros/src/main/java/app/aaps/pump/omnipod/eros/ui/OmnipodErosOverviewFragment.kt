@@ -8,7 +8,8 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.pump.defs.determineCorrectBasalSize
@@ -18,7 +19,6 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.rx.events.EventQueueChanged
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -70,6 +70,7 @@ class OmnipodErosOverviewFragment : DaggerFragment() {
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var commandQueue: CommandQueue
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var omnipodErosPumpPlugin: OmnipodErosPumpPlugin
@@ -156,7 +157,7 @@ class OmnipodErosOverviewFragment : DaggerFragment() {
                 CommandSilenceAlerts(),
                 DisplayResultDialogCallback(rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_error_failed_to_silence_alerts), false)
                     .messageOnSuccess(rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_confirmation_silenced_alerts))
-                    .actionOnSuccess { rxBus.send(EventDismissNotification(Notification.OMNIPOD_POD_ALERTS)) })
+                    .actionOnSuccess { notificationManager.dismiss(NotificationId.OMNIPOD_POD_ALERTS) })
         }
 
         buttonBinding.buttonSuspendDelivery.setOnClickListener {

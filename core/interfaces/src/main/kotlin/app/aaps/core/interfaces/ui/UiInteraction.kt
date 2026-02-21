@@ -7,7 +7,6 @@ import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import app.aaps.core.interfaces.R
-import app.aaps.core.interfaces.nsclient.NSAlarm
 
 /**
  * Interface to use activities located in different modules
@@ -201,7 +200,6 @@ interface UiInteraction {
 
     /**
      * Shows the profile viewer dialog.
-     * @param fragmentManager The fragment manager to use.
      * @param time The time for which to view the profile.
      * @param mode The viewing mode.
      * @param customProfile The first custom profile JSON string (for applicable modes).
@@ -251,97 +249,6 @@ interface UiInteraction {
      * @param pluginSimpleName The simple class name of the plugin. If null, no activity started
      */
     fun runPreferencesForPlugin(activity: FragmentActivity, pluginSimpleName: String?)
-
-    /**
-     * Remove notification
-     * @param id if of notification
-     */
-    fun dismissNotification(id: Int)
-
-    /**
-     * Adds a simple notification.
-     * @param id The notification ID.
-     * @param text The notification text.
-     * @param level The urgency level.
-     */
-    fun addNotification(id: Int, text: String, level: Int)
-
-    /**
-     * Adds a notification that is valid for a specific duration.
-     * @param id The notification ID.
-     * @param text The notification text.
-     * @param level The urgency level.
-     * @param validMinutes The duration in minutes for which the notification is valid.
-     */
-    fun addNotificationValidFor(id: Int, text: String, level: Int, validMinutes: Int)
-
-    /**
-     * Adds a notification with a custom sound.
-     * @param id The notification ID.
-     * @param text The notification text.
-     * @param level The urgency level.
-     * @param soundId The raw resource ID of the sound to play.
-     */
-    fun addNotificationWithSound(id: Int, text: String, level: Int, @RawRes soundId: Int?)
-
-    /**
-     * Adds a notification that is valid until a specific time.
-     * @param id The notification ID.
-     * @param date The timestamp of the notification.
-     * @param text The notification text.
-     * @param level The urgency level.
-     * @param validTo The timestamp until which the notification is valid.
-     */
-    fun addNotificationValidTo(id: Int, date: Long, text: String, level: Int, validTo: Long)
-
-    /**
-     * Adds a notification based on a Nightscout alarm object.
-     * @param nsAlarm The alarm object containing notification details.
-     */
-    fun addNotificationWithAction(nsAlarm: NSAlarm)
-
-    /**
-     * Adds a notification with a custom action button.
-     * @param id The notification ID.
-     * @param text The notification text.
-     * @param level The urgency level.
-     * @param buttonText The string resource for the action button's text.
-     * @param action The action to perform when the button is clicked.
-     * @param validityCheck An optional lambda to check if the notification is still valid.
-     * @param soundId Optional raw resource ID for a custom sound.
-     * @param date The timestamp of the notification.
-     * @param validTo The timestamp until which the notification is valid.
-     */
-    fun addNotificationWithAction(id: Int, text: String, level: Int, @StringRes buttonText: Int, action: Runnable, validityCheck: (() -> Boolean)?, @RawRes soundId: Int? = null, date: Long = System.currentTimeMillis(), validTo: Long = 0)
-
-    /**
-     * Add notification that shows dialog after clicking button
-     * @param id if of notification
-     * @param text text of notification
-     * @param level urgency level of notification
-     * @param buttonText label of button
-     * @param title Dialog title
-     * @param message Dialog body
-     */
-    fun addNotificationWithDialogResponse(id: Int, text: String, level: Int, @StringRes buttonText: Int, title: String, message: String, validityCheck: (() -> Boolean)?)
-
-    /**
-     * Add notification that executes [Runnable] after clicking button
-     * @param id if of notification
-     * @param text text of notification
-     * @param level urgency level of notification
-     * @param actionButtonId label of button
-     * @param action Runnable to be run
-     */
-    fun addNotification(id: Int, text: String, level: Int, @StringRes actionButtonId: Int, action: Runnable, validityCheck: (() -> Boolean)?)
-
-    /**
-     * Shows a toast message and also posts a notification.
-     * @param ctx The context.
-     * @param string The message to display.
-     * @param soundID The raw resource ID of a sound to play with the notification.
-     */
-    fun showToastAndNotification(ctx: Context, string: String, @RawRes soundID: Int)
 
     /**
      * Starts a repeating alarm sound.

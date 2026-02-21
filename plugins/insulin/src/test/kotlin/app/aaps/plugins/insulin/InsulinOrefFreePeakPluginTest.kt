@@ -1,14 +1,12 @@
 package app.aaps.plugins.insulin
 
 import app.aaps.core.interfaces.insulin.Insulin
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.IntKey
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mock
 import org.mockito.kotlin.whenever
 
 /**
@@ -19,11 +17,9 @@ class InsulinOrefFreePeakPluginTest : TestBaseWithProfile() {
 
     private lateinit var sut: InsulinOrefFreePeakPlugin
 
-    @Mock lateinit var uiInteraction: UiInteraction
-
     @BeforeEach
     fun setup() {
-        sut = InsulinOrefFreePeakPlugin(preferences, rh, profileFunction, rxBus, aapsLogger, config, hardLimits, uiInteraction)
+        sut = InsulinOrefFreePeakPlugin(preferences, rh, profileFunction, rxBus, aapsLogger, config, hardLimits, notificationManager)
     }
 
     @Test

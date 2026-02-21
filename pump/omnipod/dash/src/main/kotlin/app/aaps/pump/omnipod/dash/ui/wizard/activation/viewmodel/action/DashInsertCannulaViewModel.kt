@@ -6,14 +6,13 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.omnipod.common.definition.OmnipodCommandType
@@ -41,7 +40,7 @@ class DashInsertCannulaViewModel @Inject constructor(
     private val profileFunction: ProfileFunction,
     private val pumpSync: PumpSync,
     private val podStateManager: OmnipodDashPodStateManager,
-    private val rxBus: RxBus,
+    private val notificationManager: NotificationManager,
     private val preferences: Preferences,
     private val rh: ResourceHelper,
     private val fabricPrivacy: FabricPrivacy,
@@ -128,7 +127,7 @@ class DashInsertCannulaViewModel @Inject constructor(
                             pumpType = PumpType.OMNIPOD_DASH,
                             pumpSerial = podStateManager.uniqueId?.toString() ?: "n/a"
                         )
-                        rxBus.send(EventDismissNotification(Notification.OMNIPOD_POD_NOT_ATTACHED))
+                        notificationManager.dismiss(NotificationId.OMNIPOD_POD_NOT_ATTACHED)
                         fabricPrivacy.logCustom("OmnipodDashPodActivated")
                         source.onSuccess(pumpEnactResultProvider.get().success(true))
                     }

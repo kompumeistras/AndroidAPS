@@ -5,7 +5,6 @@ import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.nsclient.NSClientMvvmRepository
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.source.NSClientSource
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.LongNonKey
@@ -45,7 +44,6 @@ class NsIncomingDataProcessorTest : TestBaseWithProfile() {
     // Mock all dependencies
     @Mock lateinit var nsClientSource: NSClientSource
     @Mock lateinit var storeDataForDb: StoreDataForDb
-    @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var nsClientMvvmRepository: NSClientMvvmRepository
 
     @BeforeEach
@@ -62,14 +60,13 @@ class NsIncomingDataProcessorTest : TestBaseWithProfile() {
             aapsLogger = aapsLogger,
             nsClientSource = nsClientSource,
             preferences = preferences,
-            rxBus = rxBus,
             dateUtil = dateUtil,
             activePlugin = activePlugin,
             localProfileManager = localProfileManager,
             storeDataForDb = storeDataForDb,
             config = config,
             profileStoreProvider = profileStoreProvider,
-            uiInteraction = uiInteraction,
+            notificationManager = notificationManager,
             nsClientMvvmRepository = nsClientMvvmRepository
         )
     }

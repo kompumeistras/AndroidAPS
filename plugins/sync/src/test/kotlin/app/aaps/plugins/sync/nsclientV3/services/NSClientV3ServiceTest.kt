@@ -3,7 +3,6 @@ package app.aaps.plugins.sync.nsclientV3.services
 import android.content.Intent
 import android.os.IBinder
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringKey
 import app.aaps.plugins.sync.nsShared.NsIncomingDataProcessor
@@ -21,7 +20,8 @@ class NSClientV3ServiceTest : TestBaseWithProfile() {
 
     @Mock lateinit var nsIncomingDataProcessor: NsIncomingDataProcessor
     @Mock lateinit var storeDataForDb: StoreDataForDb
-    @Mock lateinit var uiInteraction: UiInteraction
+
+    // notificationManager from TestBaseWithProfile
     @Mock lateinit var nsDeviceStatusHandler: NSDeviceStatusHandler
     @Mock lateinit var nsClientV3Plugin: NSClientV3Plugin
 
@@ -33,15 +33,13 @@ class NSClientV3ServiceTest : TestBaseWithProfile() {
         nsClientMvvmRepository = app.aaps.plugins.sync.nsShared.mvvm.NSClientMvvmRepositoryImpl(rxBus, aapsLogger)
         sut = NSClientV3Service().also {
             it.aapsLogger = aapsLogger
-            it.rxBus = rxBus
-            it.rh = rh
             it.preferences = preferences
             it.fabricPrivacy = fabricPrivacy
             it.nsClientV3Plugin = nsClientV3Plugin
             it.config = config
             it.nsIncomingDataProcessor = nsIncomingDataProcessor
             it.storeDataForDb = storeDataForDb
-            it.uiInteraction = uiInteraction
+            it.notificationManager = notificationManager
             it.nsDeviceStatusHandler = nsDeviceStatusHandler
             it.nsClientMvvmRepository = nsClientMvvmRepository
         }

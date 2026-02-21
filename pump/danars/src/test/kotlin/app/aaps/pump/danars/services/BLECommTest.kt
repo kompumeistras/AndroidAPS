@@ -6,9 +6,9 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import app.aaps.core.interfaces.configuration.ConfigBuilder
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.dana.DanaPump
@@ -36,7 +36,7 @@ class BLECommTest : TestBase() {
     @Mock lateinit var bleEncryption: BleEncryption
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var dateUtil: DateUtil
-    @Mock lateinit var uiInteraction: UiInteraction
+    @Mock lateinit var notificationManager: NotificationManager
     @Mock lateinit var preferences: Preferences
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var bluetoothAdapter: BluetoothAdapter
@@ -60,9 +60,9 @@ class BLECommTest : TestBase() {
             bleEncryption,
             pumpSync,
             dateUtil,
-            uiInteraction,
             preferences,
-            configBuilder
+            configBuilder,
+            notificationManager
         )
 
         `when`(rh.gs(anyInt())).thenReturn("test")

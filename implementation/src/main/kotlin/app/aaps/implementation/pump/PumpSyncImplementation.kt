@@ -17,14 +17,12 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.VirtualPump
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.LongNonKey
 import app.aaps.core.keys.StringNonKey
@@ -41,8 +39,7 @@ class PumpSyncImplementation @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val dateUtil: DateUtil,
     private val preferences: Preferences,
-    private val rxBus: RxBus,
-    private val rh: ResourceHelper,
+    private val notificationManager: NotificationManager,
     private val profileFunction: ProfileFunction,
     private val persistenceLayer: PersistenceLayer,
     private val activePlugin: ActivePlugin,
@@ -76,8 +73,8 @@ class PumpSyncImplementation @Inject constructor(
      * Check if data is coming from currently active pump to prevent overlapping pump histories
      *
      * @param timestamp     timestamp of data coming from pump
-     * @param type          timestamp of of pump
-     * @param serialNumber  serial number  of of pump
+     * @param type          timestamp of pump
+     * @param serialNumber  serial number of pump
      * @return true if data is allowed
      */
     private fun confirmActivePump(timestamp: Long, type: PumpType, serialNumber: String, showNotification: Boolean = true): Boolean {
@@ -100,7 +97,7 @@ class PumpSyncImplementation @Inject constructor(
         }
 
         if (showNotification && (type.description != storedType || serialNumber != storedSerial) && timestamp >= storedTimestamp)
-            rxBus.send(EventNewNotification(Notification(Notification.WRONG_PUMP_DATA, rh.gs(R.string.wrong_pump_data), Notification.URGENT)))
+            notificationManager.post(NotificationId.WRONG_PUMP_DATA, R.string.wrong_pump_data)
         aapsLogger.error(
             LTag.PUMP,
             "Ignoring pump history record  Allowed: ${dateUtil.dateAndTimeAndSecondsString(storedTimestamp)} $storedType $storedSerial Received: $timestamp ${

@@ -22,13 +22,13 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
-import app.aaps.core.interfaces.ui.UiInteraction
+
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.extensions.scanForActivity
@@ -66,9 +66,9 @@ class BLEComm @Inject internal constructor(
     private val bleEncryption: BleEncryption,
     private val pumpSync: PumpSync,
     private val dateUtil: DateUtil,
-    private val uiInteraction: UiInteraction,
     private val preferences: Preferences,
-    private val configBuilder: ConfigBuilder
+    private val configBuilder: ConfigBuilder,
+    private val notificationManager: NotificationManager
 ) {
 
     companion object {
@@ -549,7 +549,7 @@ class BLEComm @Inject internal constructor(
 
         val deviceName = connectDeviceName
         if (deviceName == null || deviceName == "") {
-            uiInteraction.addNotification(Notification.DEVICE_NOT_PAIRED, rh.gs(R.string.pairfirst), Notification.URGENT)
+            notificationManager.post(NotificationId.DEVICE_NOT_PAIRED, R.string.pairfirst)
             return
         }
 
@@ -623,7 +623,7 @@ class BLEComm @Inject internal constructor(
             mSendQueue.clear()
             rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.DISCONNECTED, rh.gs(R.string.pumperror)))
             pumpSync.insertAnnouncement(rh.gs(R.string.pumperror), null, danaPump.pumpType(), danaPump.serialNumber)
-            uiInteraction.addNotification(Notification.PUMP_ERROR, rh.gs(R.string.pumperror), Notification.URGENT)
+            notificationManager.post(NotificationId.PUMP_ERROR, R.string.pumperror)
             // response BUSY: error status
         } else if (decryptedBuffer.size == 6 && decryptedBuffer[2] == 'B'.code.toByte() && decryptedBuffer[3] == 'U'.code.toByte() && decryptedBuffer[4] == 'S'.code.toByte() && decryptedBuffer[5] == 'Y'.code.toByte()) {
             aapsLogger.debug(LTag.PUMPBTCOMM, "<<<<< " + "ENCRYPTION__PUMP_CHECK (BUSY)" + " " + DanaRSPacket.toHexString(decryptedBuffer))
@@ -635,7 +635,7 @@ class BLEComm @Inject internal constructor(
             mSendQueue.clear()
             rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.DISCONNECTED, rh.gs(app.aaps.core.ui.R.string.connection_error)))
             danaRSPlugin.clearPairing()
-            uiInteraction.addNotification(Notification.WRONG_SERIAL_NUMBER, rh.gs(app.aaps.core.ui.R.string.password_cleared), Notification.URGENT)
+            notificationManager.post(NotificationId.WRONG_SERIAL_NUMBER, app.aaps.core.ui.R.string.password_cleared)
         }
     }
 
@@ -725,11 +725,11 @@ class BLEComm @Inject internal constructor(
             aapsLogger.debug(LTag.PUMPBTCOMM, "Pump user password: " + danaPump.rsPassword)
             if (!danaPump.isRSPasswordOK) {
                 aapsLogger.error(LTag.PUMPBTCOMM, "Wrong pump password")
-                uiInteraction.addNotification(Notification.WRONG_PUMP_PASSWORD, rh.gs(R.string.wrongpumppassword), Notification.URGENT)
+                notificationManager.post(NotificationId.WRONG_PUMP_PASSWORD, R.string.wrongpumppassword)
                 disconnect("WrongPassword")
                 SystemClock.sleep(T.mins(1).msecs())
             } else {
-                rxBus.send(EventDismissNotification(Notification.WRONG_PUMP_PASSWORD))
+                notificationManager.dismiss(NotificationId.WRONG_PUMP_PASSWORD)
                 rxBus.send(EventPumpStatusChanged(EventPumpStatusChanged.Status.CONNECTED))
                 isConnected = true
                 isConnecting = false

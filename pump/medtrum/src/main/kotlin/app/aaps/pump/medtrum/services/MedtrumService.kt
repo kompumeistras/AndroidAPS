@@ -10,7 +10,9 @@ import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -24,7 +26,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAppExit
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
@@ -90,6 +91,7 @@ class MedtrumService : DaggerService(), BLECommCallback {
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var constraintChecker: ConstraintsChecker
     @Inject lateinit var uiInteraction: UiInteraction
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var bleComm: BLEComm
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var pumpSync: PumpSync
@@ -153,10 +155,9 @@ class MedtrumService : DaggerService(), BLECommCallback {
                                commandQueue.setUserOptions(object : Callback() {
                                    override fun run() {
                                        if (medtrumPlugin.isInitialized() && !this.result.success) {
-                                           uiInteraction.addNotification(
-                                               Notification.PUMP_SETTINGS_FAILED,
-                                               rh.gs(R.string.pump_setting_failed),
-                                               Notification.NORMAL,
+                                           notificationManager.post(
+                                               NotificationId.PUMP_SETTINGS_FAILED,
+                                               R.string.pump_setting_failed,
                                            )
                                        }
                                    }
@@ -202,7 +203,7 @@ class MedtrumService : DaggerService(), BLECommCallback {
 
             is ReadyState -> {
                 aapsLogger.error(LTag.PUMPCOMM, "Connect attempt when in ReadyState from: $from")
-                return if (isConnected) {
+                if (isConnected) {
                     aapsLogger.debug(LTag.PUMP, "connect: already connected")
                     true
                 } else {
@@ -273,17 +274,16 @@ class MedtrumService : DaggerService(), BLECommCallback {
     fun timeUpdateNotification(updateSuccess: Boolean) {
         if (updateSuccess) {
             aapsLogger.debug(LTag.PUMPCOMM, "Pump time updated")
-            uiInteraction.addNotification(
-                Notification.INSIGHT_DATE_TIME_UPDATED, // :---)
+            notificationManager.post(
+                NotificationId.INSIGHT_DATE_TIME_UPDATED, // :---)
                 rh.gs(app.aaps.core.ui.R.string.pump_time_updated),
-                Notification.INFO,
             )
         } else {
             aapsLogger.error(LTag.PUMPCOMM, "Failed to update pump time")
-            uiInteraction.addNotification(
-                Notification.PUMP_TIMEZONE_UPDATE_FAILED,
-                rh.gs(R.string.pump_time_update_failed),
-                Notification.URGENT,
+            notificationManager.post(
+                NotificationId.PUMP_TIMEZONE_UPDATE_FAILED,
+                R.string.pump_time_update_failed,
+                level = NotificationLevel.URGENT,
             )
         }
     }
@@ -571,11 +571,11 @@ class MedtrumService : DaggerService(), BLECommCallback {
                     aapsLogger.error(LTag.PUMPCOMM, "Failed to sync record $sequence, failureCount: $failureCount")
                     if (failureCount == 1) {
                         // Show notification to alert user of failure
-                        uiInteraction.addNotificationWithSound(
-                            Notification.PUMP_SYNC_ERROR,
-                            rh.gs(R.string.pump_sync_error),
-                            Notification.URGENT,
-                            app.aaps.core.ui.R.raw.alarm
+                        notificationManager.post(
+                            NotificationId.PUMP_SYNC_ERROR,
+                            R.string.pump_sync_error,
+                            level = NotificationLevel.URGENT,
+                            soundRes = app.aaps.core.ui.R.raw.alarm
                         )
                     } else if (failureCount >= 2) {
                         break
@@ -624,13 +624,13 @@ class MedtrumService : DaggerService(), BLECommCallback {
         when (state) {
             MedtrumPumpState.NONE,
             MedtrumPumpState.STOPPED              -> {
-                rxBus.send(EventDismissNotification(Notification.PUMP_WARNING))
-                rxBus.send(EventDismissNotification(Notification.PUMP_ERROR))
-                rxBus.send(EventDismissNotification(Notification.PUMP_SUSPENDED))
-                uiInteraction.addNotification(
-                    Notification.PATCH_NOT_ACTIVE,
-                    rh.gs(R.string.patch_not_active),
-                    Notification.URGENT,
+                notificationManager.dismiss(NotificationId.PUMP_WARNING)
+                notificationManager.dismiss(NotificationId.PUMP_ERROR)
+                notificationManager.dismiss(NotificationId.PUMP_SUSPENDED)
+                notificationManager.post(
+                    NotificationId.PATCH_NOT_ACTIVE,
+                    R.string.patch_not_active,
+                    level = NotificationLevel.URGENT,
                 )
                 medtrumPump.setFakeTBRIfNotSet()
                 medtrumPump.clearAlarmState()
@@ -645,16 +645,16 @@ class MedtrumService : DaggerService(), BLECommCallback {
             MedtrumPumpState.PRIMED,
             MedtrumPumpState.EJECTING,
             MedtrumPumpState.EJECTED              -> {
-                rxBus.send(EventDismissNotification(Notification.PUMP_ERROR))
-                rxBus.send(EventDismissNotification(Notification.PUMP_SUSPENDED))
+                notificationManager.dismiss(NotificationId.PUMP_ERROR)
+                notificationManager.dismiss(NotificationId.PUMP_SUSPENDED)
                 medtrumPump.setFakeTBRIfNotSet()
                 medtrumPump.clearAlarmState()
             }
 
             MedtrumPumpState.ACTIVE,
             MedtrumPumpState.ACTIVE_ALT           -> {
-                rxBus.send(EventDismissNotification(Notification.PATCH_NOT_ACTIVE))
-                rxBus.send(EventDismissNotification(Notification.PUMP_SUSPENDED))
+                notificationManager.dismiss(NotificationId.PATCH_NOT_ACTIVE)
+                notificationManager.dismiss(NotificationId.PUMP_SUSPENDED)
             }
 
             MedtrumPumpState.LOW_BG_SUSPENDED,
@@ -662,32 +662,31 @@ class MedtrumService : DaggerService(), BLECommCallback {
             MedtrumPumpState.AUTO_SUSPENDED,
             MedtrumPumpState.SUSPENDED,
             MedtrumPumpState.PAUSED               -> {
-                uiInteraction.addNotification(
-                    Notification.PUMP_SUSPENDED,
-                    rh.gs(R.string.pump_is_suspended),
-                    Notification.NORMAL,
+                notificationManager.post(
+                    NotificationId.PUMP_SUSPENDED,
+                    R.string.pump_is_suspended,
                 )
                 // Pump will report proper TBR for this from loadEvents()
                 commandQueue.loadEvents(null)
             }
 
             MedtrumPumpState.HOURLY_MAX_SUSPENDED -> {
-                uiInteraction.addNotificationWithSound(
-                    Notification.PUMP_SUSPENDED,
-                    rh.gs(R.string.pump_is_suspended_hour_max),
-                    Notification.URGENT,
-                    app.aaps.core.ui.R.raw.alarm
+                notificationManager.post(
+                    NotificationId.PUMP_SUSPENDED,
+                    R.string.pump_is_suspended_hour_max,
+                    level = NotificationLevel.URGENT,
+                    soundRes = app.aaps.core.ui.R.raw.alarm
                 )
                 // Pump will report proper TBR for this from loadEvents()
                 commandQueue.loadEvents(null)
             }
 
             MedtrumPumpState.DAILY_MAX_SUSPENDED  -> {
-                uiInteraction.addNotificationWithSound(
-                    Notification.PUMP_SUSPENDED,
-                    rh.gs(R.string.pump_is_suspended_day_max),
-                    Notification.URGENT,
-                    app.aaps.core.ui.R.raw.alarm
+                notificationManager.post(
+                    NotificationId.PUMP_SUSPENDED,
+                    R.string.pump_is_suspended_day_max,
+                    level = NotificationLevel.URGENT,
+                    soundRes = app.aaps.core.ui.R.raw.alarm
                 )
                 // Pump will report proper TBR for this from loadEvents()
                 commandQueue.loadEvents(null)
@@ -701,14 +700,13 @@ class MedtrumService : DaggerService(), BLECommCallback {
             MedtrumPumpState.BASE_FAULT,
             MedtrumPumpState.BATTERY_OUT,
             MedtrumPumpState.NO_CALIBRATION       -> {
-                rxBus.send(EventDismissNotification(Notification.PATCH_NOT_ACTIVE))
-                rxBus.send(EventDismissNotification(Notification.PUMP_SUSPENDED))
+                notificationManager.dismiss(NotificationId.PATCH_NOT_ACTIVE)
+                notificationManager.dismiss(NotificationId.PUMP_SUSPENDED)
                 // Pump suspended due to error, show error!
-                uiInteraction.addNotificationWithSound(
-                    Notification.PUMP_ERROR,
-                    rh.gs(R.string.pump_error, alarmState?.let { medtrumPump.alarmStateToString(it) }),
-                    Notification.URGENT,
-                    app.aaps.core.ui.R.raw.alarm
+                notificationManager.post(
+                    NotificationId.PUMP_ERROR,
+                    R.string.pump_error, alarmState?.let { medtrumPump.alarmStateToString(it) },
+                    soundRes = app.aaps.core.ui.R.raw.alarm
                 )
                 // Get pump status, use readStatus here as for loadEvents() we cannot be sure callback is executed
                 commandQueue.readStatus(rh.gs(app.aaps.core.ui.R.string.device_changed), object : Callback() {
@@ -735,10 +733,10 @@ class MedtrumService : DaggerService(), BLECommCallback {
     private fun notifyPumpWarning(alarmState: AlarmState) {
         // Notification on pump warning
         if (medtrumPump.desiredPumpWarning && alarmState != AlarmState.NONE) {
-            uiInteraction.addNotification(
-                Notification.PUMP_WARNING,
-                rh.gs(R.string.pump_warning, medtrumPump.alarmStateToString(alarmState)),
-                Notification.ANNOUNCEMENT,
+            notificationManager.post(
+                NotificationId.PUMP_WARNING,
+                R.string.pump_warning, medtrumPump.alarmStateToString(alarmState),
+                level = NotificationLevel.ANNOUNCEMENT,
             )
             pumpSync.insertAnnouncement(
                 medtrumPump.alarmStateToString(alarmState),
@@ -753,10 +751,10 @@ class MedtrumService : DaggerService(), BLECommCallback {
         if (medtrumPump.desiredPatchExpiration && medtrumPump.desiredPumpWarning) {
             val warningAt = medtrumPump.patchStartTime + T.hours(medtrumPump.desiredPumpWarningExpiryThresholdHours.toLong()).msecs()
             if (dateUtil.now() >= warningAt && dateUtil.now() <= warningAt + CHECK_EXPIRY_WARNING_TIME_MS) {
-                uiInteraction.addNotification(
-                    Notification.PUMP_WARNING,
-                    rh.gs(R.string.alarm_pump_expires_soon),
-                    Notification.ANNOUNCEMENT,
+                notificationManager.post(
+                    NotificationId.PUMP_WARNING,
+                    R.string.alarm_pump_expires_soon,
+                    level = NotificationLevel.ANNOUNCEMENT,
                 )
                 pumpSync.insertAnnouncement(
                     rh.gs(R.string.alarm_pump_expires_soon),

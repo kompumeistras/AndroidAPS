@@ -8,15 +8,16 @@ import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.asAnnouncement
+import app.aaps.core.ui.toast.ToastUtils
 import dagger.Reusable
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,7 +27,7 @@ import kotlin.math.min
 @Reusable
 class HardLimitsImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
-    private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val preferences: Preferences,
     private val rh: ResourceHelper,
     private val context: Context,
@@ -34,8 +35,6 @@ class HardLimitsImpl @Inject constructor(
     private val dateUtil: DateUtil,
     @ApplicationScope private val appScope: CoroutineScope
 ) : HardLimits {
-
-    private val disposable = CompositeDisposable()
 
     private fun loadAge(): Int = when (preferences.get(StringKey.SafetyAge)) {
         ageEntryValues()[HardLimits.AgeType.CHILD.ordinal]           -> HardLimits.AgeType.CHILD.ordinal
@@ -64,7 +63,7 @@ class HardLimitsImpl @Inject constructor(
 
     override fun verifyHardLimits(value: Double, valueName: Int, lowLimit: Double, highLimit: Double): Double {
         var newValue = value
-        if (newValue < lowLimit || newValue > highLimit) {
+        if (newValue !in lowLimit..highLimit) {
             newValue = max(newValue, lowLimit)
             newValue = min(newValue, highLimit)
             var msg = rh.gs(app.aaps.core.ui.R.string.valueoutofrange, rh.gs(valueName))
@@ -81,7 +80,8 @@ class HardLimitsImpl @Inject constructor(
                     listValues = listOf(ValueWithUnit.TEType(TE.Type.ANNOUNCEMENT))
                 )
             }
-            uiInteraction.showToastAndNotification(context, msg, app.aaps.core.ui.R.raw.error)
+            ToastUtils.errorToast(context, msg)
+            notificationManager.post(NotificationId.TOAST_ALARM, msg, soundRes = app.aaps.core.ui.R.raw.error)
         }
         return newValue
     }

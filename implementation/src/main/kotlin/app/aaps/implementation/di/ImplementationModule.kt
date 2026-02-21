@@ -9,6 +9,7 @@ import app.aaps.core.interfaces.local.LocaleDependentSetting
 import app.aaps.core.interfaces.logging.LoggerUtils
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.notifications.NotificationHolder
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.overview.LastBgData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.LocalProfileManager
@@ -51,6 +52,7 @@ import app.aaps.implementation.iob.GlucoseStatusProviderImpl
 import app.aaps.implementation.locale.LocaleDependentSettingImpl
 import app.aaps.implementation.logging.LoggerUtilsImpl
 import app.aaps.implementation.logging.UserEntryLoggerImpl
+import app.aaps.implementation.notifications.NotificationManagerImpl
 import app.aaps.implementation.overview.LastBgDataImpl
 import app.aaps.implementation.plugin.PluginStore
 import app.aaps.implementation.preference.PreferenceVisibilityContextImpl
@@ -135,6 +137,7 @@ class ImplementationModule {
         @Binds fun bindLocalAlertUtilsInterface(localAlertUtils: LocalAlertUtilsImpl): LocalAlertUtils
         @Binds fun bindIconsProviderInterface(iconsProvider: IconsProviderImplementation): IconsProvider
         @Binds fun bindNotificationHolderInterface(notificationHolder: NotificationHolderImpl): NotificationHolder
+        @Binds fun bindNotificationManager(notificationManagerImpl: NotificationManagerImpl): NotificationManager
         @Binds fun bindsProfileFunction(profileFunctionImpl: ProfileFunctionImpl): ProfileFunction
         @Binds fun bindsProfileUtil(profileUtilImpl: ProfileUtilImpl): ProfileUtil
         @Binds fun bindsLocalProfileManager(localProfileManagerImpl: LocalProfileManagerImpl): LocalProfileManager

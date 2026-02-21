@@ -4,11 +4,11 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.pump.PumpSync
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.interfaces.LongNonPreferenceKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.utils.DateTimeUtil
@@ -57,13 +57,12 @@ import javax.inject.Singleton
 class MedtronicHistoryData @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val preferences: Preferences,
-    private val rh: ResourceHelper,
     private val medtronicUtil: MedtronicUtil,
     private val medtronicPumpHistoryDecoder: MedtronicPumpHistoryDecoder,
     private val medtronicPumpStatus: MedtronicPumpStatus,
     private val pumpSync: PumpSync,
     private val pumpSyncStorage: PumpSyncStorage,
-    private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val profileUtil: ProfileUtil
 ) {
 
@@ -247,11 +246,11 @@ class MedtronicHistoryData @Inject constructor(
     }
 
     private fun isCollectionEmpty(col: List<*>?): Boolean {
-        return col == null || col.isEmpty()
+        return col.isNullOrEmpty()
     }
 
     private fun isCollectionNotEmpty(col: List<*>?): Boolean {
-        return col != null && col.isNotEmpty()
+        return !col.isNullOrEmpty()
     }
 
     fun isPumpSuspended(): Boolean {
@@ -767,7 +766,7 @@ class MedtronicHistoryData @Inject constructor(
                         )
 
                         if (tempBasalProcessDTO.durationAsSeconds <= 0) {
-                            uiInteraction.addNotification(Notification.MDT_INVALID_HISTORY_DATA, rh.gs(R.string.invalid_history_data), Notification.URGENT)
+                            notificationManager.post(NotificationId.MDT_INVALID_HISTORY_DATA, R.string.invalid_history_data, level = NotificationLevel.URGENT)
                             aapsLogger.debug(LTag.PUMP, "syncTemporaryBasalWithPumpId - Skipped")
                         } else {
                             val result = pumpSync.syncTemporaryBasalWithTempId(
@@ -809,7 +808,7 @@ class MedtronicHistoryData @Inject constructor(
                         )
 
                         if (tempBasalProcessDTO.durationAsSeconds <= 0) {
-                            uiInteraction.addNotification(Notification.MDT_INVALID_HISTORY_DATA, rh.gs(R.string.invalid_history_data), Notification.URGENT)
+                            notificationManager.post(NotificationId.MDT_INVALID_HISTORY_DATA, R.string.invalid_history_data, level = NotificationLevel.URGENT)
                             aapsLogger.debug(LTag.PUMP, "syncTemporaryBasalWithPumpId - Skipped")
                         } else {
                             val result = pumpSync.syncTemporaryBasalWithPumpId(
@@ -1079,7 +1078,7 @@ class MedtronicHistoryData @Inject constructor(
             )
 
             if (tempBasalProcess.durationAsSeconds <= 0) {
-                uiInteraction.addNotification(Notification.MDT_INVALID_HISTORY_DATA, rh.gs(R.string.invalid_history_data), Notification.URGENT)
+                notificationManager.post(NotificationId.MDT_INVALID_HISTORY_DATA, R.string.invalid_history_data, level = NotificationLevel.URGENT)
                 aapsLogger.debug(LTag.PUMP, "syncTemporaryBasalWithPumpId - Skipped")
             } else {
                 val result = pumpSync.syncTemporaryBasalWithPumpId(

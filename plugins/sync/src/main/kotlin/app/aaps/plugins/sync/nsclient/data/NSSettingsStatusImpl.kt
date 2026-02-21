@@ -5,14 +5,11 @@ package app.aaps.plugins.sync.nsclient.data
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.overview.Overview
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.utils.JsonHelper
 import app.aaps.plugins.sync.R
 import dagger.Lazy
@@ -114,11 +111,8 @@ import javax.inject.Singleton
 @Singleton
 class NSSettingsStatusImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
-    private val rh: ResourceHelper,
-    private val rxBus: RxBus,
+    private val notificationManager: NotificationManager,
     private val config: Config,
-    private val uel: UserEntryLogger,
-    private val uiInteraction: UiInteraction,
     private val overview: Lazy<Overview>
 ) : NSSettingsStatus {
 
@@ -146,9 +140,9 @@ class NSSettingsStatusImpl @Inject constructor(
         data = status
         aapsLogger.debug(LTag.NSCLIENT, "Got versions: Nightscout: ${getVersion()}")
         if (getVersionNum() < config.SUPPORTED_NS_VERSION) {
-            uiInteraction.addNotification(Notification.OLD_NS, rh.gs(R.string.unsupported_ns_version), Notification.NORMAL)
+            notificationManager.post(NotificationId.OLD_NS, R.string.unsupported_ns_version, level = NotificationLevel.NORMAL)
         } else {
-            rxBus.send(EventDismissNotification(Notification.OLD_NS))
+            notificationManager.dismiss(NotificationId.OLD_NS)
         }
         data = status
         aapsLogger.debug(LTag.NSCLIENT, "Received status: $status")

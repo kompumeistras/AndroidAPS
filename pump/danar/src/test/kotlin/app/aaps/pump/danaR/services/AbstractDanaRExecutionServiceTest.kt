@@ -7,7 +7,6 @@ import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.dana.keys.DanaStringKey
@@ -18,19 +17,16 @@ import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.mockingDetails
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
 
 class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
 
     @Mock lateinit var pumpSync: PumpSync
-    @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var pumpEnactResult: PumpEnactResult
@@ -48,10 +44,11 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     private lateinit var testService: TestDanaRExecutionService
 
     inner class TestDanaRExecutionService : AbstractDanaRExecutionService() {
+
         override fun messageHashTable(): MessageHashTableBase = messageHashTable
         override fun updateBasalsInPump(profile: Profile): Boolean = true
         override fun getPumpStatus() {}
-        override fun loadEvents(): PumpEnactResult? = pumpEnactResult
+        override fun loadEvents(): PumpEnactResult = pumpEnactResult
         override fun bolus(detailedBolusInfo: DetailedBolusInfo): Boolean = true
         override fun highTempBasal(percent: Int, durationInMinutes: Int): Boolean = false
         override fun tempBasalShortDuration(percent: Int, durationInMinutes: Int): Boolean = false
@@ -59,7 +56,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         override fun tempBasalStop(): Boolean = true
         override fun extendedBolus(insulin: Double, durationInHalfHours: Int): Boolean = true
         override fun extendedBolusStop(): Boolean = true
-        override fun setUserOptions(): PumpEnactResult? = pumpEnactResult
+        override fun setUserOptions(): PumpEnactResult = pumpEnactResult
     }
 
     @BeforeEach
@@ -80,7 +77,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.aapsSchedulers = aapsSchedulers
         testService.pumpSync = pumpSync
         testService.activePlugin = activePlugin
-        testService.uiInteraction = uiInteraction
+        testService.notificationManager = notificationManager
         testService.pumpEnactResultProvider = pumpEnactResultProvider
         testService.injector = injector
     }
@@ -167,7 +164,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.doSanityCheck()
 
         // Verify that synchronization was attempted
-        verify(uiInteraction).addNotification(anyInt(), anyString(), anyInt())
+        assertThat(mockingDetails(notificationManager).invocations.any { it.method.name == "post" }).isTrue()
     }
 
     @Test
@@ -190,7 +187,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.doSanityCheck()
 
         // Verify notification was added
-        verify(uiInteraction).addNotification(anyInt(), anyString(), anyInt())
+        assertThat(mockingDetails(notificationManager).invocations.any { it.method.name == "post" }).isTrue()
     }
 
     @Test
@@ -217,7 +214,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.doSanityCheck()
 
         // Verify synchronization
-        verify(uiInteraction).addNotification(anyInt(), anyString(), anyInt())
+        assertThat(mockingDetails(notificationManager).invocations.any { it.method.name == "post" }).isTrue()
     }
 
     @Test
@@ -249,7 +246,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.doSanityCheck()
 
         // Verify notification
-        verify(uiInteraction).addNotification(anyInt(), anyString(), anyInt())
+        assertThat(mockingDetails(notificationManager).invocations.any { it.method.name == "post" }).isTrue()
     }
 
     @Test
@@ -265,7 +262,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.doSanityCheck()
 
         // Verify no notifications when everything matches
-        verify(uiInteraction, never()).addNotification(anyInt(), anyString(), anyInt())
+        assertThat(mockingDetails(notificationManager).invocations.none { it.method.name == "post" }).isTrue()
     }
 
     @Test

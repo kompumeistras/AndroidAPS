@@ -11,6 +11,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.LocalProfileManager
@@ -40,7 +41,7 @@ import javax.inject.Singleton
 class ProfileFunctionImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val preferences: Preferences,
-    private val rxBus: RxBus,
+    rxBus: RxBus,
     private val rh: ResourceHelper,
     private val activePlugin: ActivePlugin,
     private val localProfileManager: LocalProfileManager,
@@ -48,6 +49,7 @@ class ProfileFunctionImpl @Inject constructor(
     private val dateUtil: DateUtil,
     private val config: Config,
     private val hardLimits: HardLimits,
+    private val notificationManager: NotificationManager,
     aapsSchedulers: AapsSchedulers,
     private val fabricPrivacy: FabricPrivacy,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
@@ -192,7 +194,7 @@ class ProfileFunctionImpl @Inject constructor(
             activePlugin.activePump,
             config,
             rh,
-            rxBus,
+            notificationManager,
             hardLimits,
             false
         )

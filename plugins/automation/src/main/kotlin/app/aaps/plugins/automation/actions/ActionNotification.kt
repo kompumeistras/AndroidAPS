@@ -6,11 +6,10 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
-import app.aaps.core.interfaces.notifications.Notification
-import app.aaps.core.interfaces.notifications.NotificationUserMessage
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.objects.extensions.asAnnouncement
@@ -20,7 +19,6 @@ import app.aaps.plugins.automation.elements.InputString
 import app.aaps.plugins.automation.elements.LabelWithElement
 import app.aaps.plugins.automation.elements.LayoutBuilder
 import dagger.android.HasAndroidInjector
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -29,11 +27,10 @@ import javax.inject.Inject
 class ActionNotification(injector: HasAndroidInjector) : Action(injector) {
 
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var dateUtil: DateUtil
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
-
-    private val disposable = CompositeDisposable()
 
     var text = InputString()
 
@@ -42,8 +39,7 @@ class ActionNotification(injector: HasAndroidInjector) : Action(injector) {
     @DrawableRes override fun icon(): Int = R.drawable.ic_notifications
 
     override fun doAction(callback: Callback) {
-        val notification = NotificationUserMessage(text.value, Notification.URGENT)
-        rxBus.send(EventNewNotification(notification))
+        notificationManager.post(NotificationId.AUTOMATION_MESSAGE, text.value)
         appScope.launch {
             persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
                 therapyEvent = TE.asAnnouncement(text.value),

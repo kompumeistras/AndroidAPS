@@ -11,13 +11,11 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.smsCommunicator.SmsCommunicator
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
@@ -40,7 +38,6 @@ import kotlin.math.min
 class LocalAlertUtilsImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val preferences: Preferences,
-    private val rxBus: RxBus,
     private val rh: ResourceHelper,
     private val activePlugin: ActivePlugin,
     private val profileFunction: ProfileFunction,
@@ -48,6 +45,7 @@ class LocalAlertUtilsImpl @Inject constructor(
     private val config: Config,
     private val persistenceLayer: PersistenceLayer,
     private val dateUtil: DateUtil,
+    private val notificationManager: NotificationManager,
     @ApplicationScope private val appScope: CoroutineScope
 ) : LocalAlertUtils {
 
@@ -70,7 +68,7 @@ class LocalAlertUtilsImpl @Inject constructor(
             if (preferences.get(BooleanKey.AlertPumpUnreachable)) {
                 aapsLogger.debug(LTag.CORE, "Generating pump unreachable alarm. lastConnection: " + dateUtil.dateAndTimeString(lastConnection) + " isStatusOutdated: true")
                 preferences.put(LocalAlertLongKey.NextPumpDisconnectedAlarm, dateUtil.now() + pumpUnreachableThreshold())
-                rxBus.send(EventNewNotification(Notification(Notification.PUMP_UNREACHABLE, rh.gs(R.string.pump_unreachable), Notification.URGENT).also { it.soundId = R.raw.alarm }))
+                notificationManager.post(NotificationId.PUMP_UNREACHABLE, R.string.pump_unreachable, soundRes = R.raw.alarm)
                 if (preferences.get(BooleanKey.NsClientCreateAnnouncementsFromErrors) && config.APS)
                     appScope.launch {
                         persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
@@ -86,7 +84,7 @@ class LocalAlertUtilsImpl @Inject constructor(
             if (preferences.get(BooleanKey.SmsReportPumpUnreachable))
                 smsCommunicator.sendNotificationToAllNumbers(rh.gs(R.string.pump_unreachable))
         }
-        if (!isStatusOutdated && !alarmTimeoutExpired) rxBus.send(EventDismissNotification(Notification.PUMP_UNREACHABLE))
+        if (!isStatusOutdated && !alarmTimeoutExpired) notificationManager.dismiss(NotificationId.PUMP_UNREACHABLE)
     }
 
     private fun isAlarmTimeoutExpired(lastConnection: Long, unreachableThreshold: Long): Boolean {
@@ -136,14 +134,12 @@ class LocalAlertUtilsImpl @Inject constructor(
             && bgReading.timestamp + missedReadingsThreshold() < dateUtil.now()
             && preferences.get(LocalAlertLongKey.NextMissedReadingsAlarm) < dateUtil.now()
         ) {
-            val n = Notification(Notification.BG_READINGS_MISSED, rh.gs(R.string.missed_bg_readings), Notification.URGENT)
-            n.soundId = R.raw.alarm
             preferences.put(LocalAlertLongKey.NextMissedReadingsAlarm, dateUtil.now() + missedReadingsThreshold())
-            rxBus.send(EventNewNotification(n))
+            notificationManager.post(NotificationId.BG_READINGS_MISSED, R.string.missed_bg_readings, soundRes = R.raw.alarm)
             if (preferences.get(BooleanKey.NsClientCreateAnnouncementsFromErrors) && config.APS) {
                 appScope.launch {
                     persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
-                        therapyEvent = TE.asAnnouncement(n.text),
+                        therapyEvent = TE.asAnnouncement(rh.gs(R.string.missed_bg_readings)),
                         timestamp = dateUtil.now(),
                         action = Action.CAREPORTAL,
                         source = Sources.Aaps,
@@ -153,7 +149,7 @@ class LocalAlertUtilsImpl @Inject constructor(
                 }
             }
         } else if (dateUtil.isOlderThan(bgReading.timestamp, 5).not()) {
-            rxBus.send(EventDismissNotification(Notification.BG_READINGS_MISSED))
+            notificationManager.dismiss(NotificationId.BG_READINGS_MISSED)
         }
     }
 }

@@ -8,7 +8,8 @@ import app.aaps.core.data.model.data.TargetBlock
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
@@ -16,8 +17,6 @@ import app.aaps.core.interfaces.profile.Profile.ProfileValue
 import app.aaps.core.interfaces.profile.PureProfile
 import app.aaps.core.interfaces.pump.Pump
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.objects.extensions.blockValueBySeconds
@@ -120,7 +119,7 @@ sealed class ProfileSealed(
         activePlugin?.activeAPS
     )
 
-    override fun isValid(from: String, pump: Pump, config: Config, rh: ResourceHelper, rxBus: RxBus, hardLimits: HardLimits, sendNotifications: Boolean): Profile.ValidityCheck {
+    override fun isValid(from: String, pump: Pump, config: Config, rh: ResourceHelper, notificationManager: NotificationManager, hardLimits: HardLimits, sendNotifications: Boolean): Profile.ValidityCheck {
         val validityCheck = Profile.ValidityCheck()
         val description = pump.pumpDescription
 
@@ -131,12 +130,7 @@ sealed class ProfileSealed(
                 val duration: Long = basal.duration
                 if (duration % 3600000 != 0L) {
                     if (sendNotifications && config.APS) {
-                        val notification = Notification(
-                            Notification.BASAL_PROFILE_NOT_ALIGNED_TO_HOURS,
-                            rh.gs(R.string.basalprofilenotaligned, from),
-                            Notification.NORMAL
-                        )
-                        rxBus.send(EventNewNotification(notification))
+                        notificationManager.post(NotificationId.BASAL_PROFILE_NOT_ALIGNED_TO_HOURS, R.string.basalprofilenotaligned, from)
                     }
                     validityCheck.isValid = false
                     validityCheck.reasons.add(
@@ -153,13 +147,13 @@ sealed class ProfileSealed(
             // Check for minimal basal value
             if (basalAmount < description.basalMinimumRate) {
                 basal.amount = description.basalMinimumRate
-                if (sendNotifications) sendBelowMinimumNotification(from, rxBus, rh)
+                if (sendNotifications) sendBelowMinimumNotification(from, notificationManager, rh)
                 validityCheck.isValid = false
                 validityCheck.reasons.add(rh.gs(R.string.minimalbasalvaluereplaced, from))
                 break
             } else if (basalAmount > description.basalMaximumRate) {
                 basal.amount = description.basalMaximumRate
-                if (sendNotifications) sendAboveMaximumNotification(from, rxBus, rh)
+                if (sendNotifications) sendAboveMaximumNotification(from, notificationManager, rh)
                 validityCheck.isValid = false
                 validityCheck.reasons.add(rh.gs(R.string.maximumbasalvaluereplaced, from))
                 break
@@ -219,12 +213,12 @@ sealed class ProfileSealed(
         return validityCheck
     }
 
-    protected open fun sendBelowMinimumNotification(from: String, rxBus: RxBus, rh: ResourceHelper) {
-        rxBus.send(EventNewNotification(Notification(Notification.MINIMAL_BASAL_VALUE_REPLACED, rh.gs(R.string.minimalbasalvaluereplaced, from), Notification.NORMAL)))
+    protected open fun sendBelowMinimumNotification(from: String, notificationManager: NotificationManager, rh: ResourceHelper) {
+        notificationManager.post(NotificationId.MINIMAL_BASAL_VALUE_REPLACED, R.string.minimalbasalvaluereplaced, from)
     }
 
-    protected open fun sendAboveMaximumNotification(from: String, rxBus: RxBus, rh: ResourceHelper) {
-        rxBus.send(EventNewNotification(Notification(Notification.MAXIMUM_BASAL_VALUE_REPLACED, rh.gs(R.string.maximumbasalvaluereplaced, from), Notification.NORMAL)))
+    protected open fun sendAboveMaximumNotification(from: String, notificationManager: NotificationManager, rh: ResourceHelper) {
+        notificationManager.post(NotificationId.MAXIMUM_BASAL_VALUE_REPLACED, R.string.maximumbasalvaluereplaced, from)
     }
 
     override val units: GlucoseUnit
@@ -284,7 +278,6 @@ sealed class ProfileSealed(
                 aps.getAverageIsfMgdl(timestamp, caller) ?: toMgdl(isfBlocks.blockValueBySeconds(MidnightUtils.secondsFromMidnight(timestamp), 100.0 / percentage, timeshift), units)
             else toMgdl(isfBlocks.blockValueBySeconds(MidnightUtils.secondsFromMidnight(timestamp), 100.0 / percentage, timeshift), units)
         }
-
 
     override fun getTargetMgdl(): Double = toMgdl(targetBlocks.targetBlockValueBySeconds(MidnightUtils.secondsFromMidnight(), timeshift), units)
     override fun getTargetLowMgdl(): Double = toMgdl(targetBlocks.lowTargetBlockValueBySeconds(MidnightUtils.secondsFromMidnight(), timeshift), units)

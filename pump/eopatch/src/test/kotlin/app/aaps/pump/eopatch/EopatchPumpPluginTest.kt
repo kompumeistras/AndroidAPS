@@ -7,7 +7,6 @@ import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.pump.eopatch.core.scan.BleConnectionState
 import app.aaps.pump.eopatch.vo.PatchLifecycleEvent
 import com.google.common.truth.Truth.assertThat
@@ -21,7 +20,6 @@ class EopatchPumpPluginTest : EopatchTestBase() {
 
     @Mock lateinit var commandQueue: CommandQueue
     @Mock lateinit var pumpSync: PumpSync
-    @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var bleConnectionState: BleConnectionState
     @Mock lateinit var profile: Profile
 
@@ -47,8 +45,8 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         whenever(profile.getBasal(org.mockito.kotlin.any())).thenReturn(1.0)
 
         plugin = EopatchPumpPlugin(
-            aapsLogger, rh, preferences, config, commandQueue, aapsSchedulers, rxBus, fabricPrivacy, dateUtil, pumpSync, patchManager, patchManagerExecutor,
-            alarmManager, eopatchPreferenceManager, uiInteraction, pumpEnactResultProvider, patchConfig, normalBasalManager
+            aapsLogger, rh, preferences, commandQueue, aapsSchedulers, rxBus, fabricPrivacy, dateUtil, pumpSync, patchManager, patchManagerExecutor,
+            alarmManager, eopatchPreferenceManager, notificationManager, pumpEnactResultProvider, patchConfig, normalBasalManager
         )
     }
 

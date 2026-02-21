@@ -12,7 +12,8 @@ import android.os.SystemClock
 import androidx.core.app.ActivityCompat
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.BolusProgressData
@@ -25,7 +26,6 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAppExit
 import app.aaps.core.interfaces.rx.events.EventBTChange
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
@@ -77,7 +77,7 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
     @Inject lateinit var aapsSchedulers: AapsSchedulers
     @Inject lateinit var pumpSync: PumpSync
     @Inject lateinit var activePlugin: ActivePlugin
-    @Inject lateinit var uiInteraction: UiInteraction
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
 
     private val disposable = CompositeDisposable()
@@ -254,7 +254,7 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
         while (true) {
             val time = dateUtil.now()
             val timeToWholeMinute = 60000 - time % 60000
-            if (timeToWholeMinute > 59800 || timeToWholeMinute < 3000) break
+            if (timeToWholeMinute !in 3000..59800) break
             rxBus.send(EventPumpStatusChanged(rh.gs(R.string.waitingfortimesynchronization, (timeToWholeMinute / 1000).toInt())))
             SystemClock.sleep(min(timeToWholeMinute, 100))
         }
@@ -269,7 +269,7 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
                 if (temporaryBasal.rate != danaPump.tempBasalPercent.toDouble()
                     || abs(temporaryBasal.timestamp - danaPump.tempBasalStart) > 10000
                 ) { // Close current temp basal
-                    uiInteraction.addNotification(Notification.UNSUPPORTED_ACTION_IN_PUMP, rh.gs(app.aaps.pump.danar.R.string.unsupported_action_in_pump), Notification.URGENT)
+                    notificationManager.post(NotificationId.UNSUPPORTED_ACTION_IN_PUMP, app.aaps.pump.danar.R.string.unsupported_action_in_pump)
                     aapsLogger.error(LTag.PUMP, "Different temporary basal found running AAPS: " + (temporaryBasal.toString() + " DanaPump " + danaPump.temporaryBasalToString()))
                     pumpSync.syncTemporaryBasalWithPumpId(
                         danaPump.tempBasalStart,
@@ -288,7 +288,7 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
                     activePlugin.activePump.model(),
                     activePlugin.activePump.serialNumber()
                 )
-                uiInteraction.addNotification(Notification.UNSUPPORTED_ACTION_IN_PUMP, rh.gs(app.aaps.pump.danar.R.string.unsupported_action_in_pump), Notification.URGENT)
+                notificationManager.post(NotificationId.UNSUPPORTED_ACTION_IN_PUMP, app.aaps.pump.danar.R.string.unsupported_action_in_pump)
                 aapsLogger.error(LTag.PUMP, "Temporary basal should not be running. Sending stop to AAPS")
             }
         } else {
@@ -302,7 +302,7 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
                     activePlugin.activePump.model(),
                     activePlugin.activePump.serialNumber()
                 )
-                uiInteraction.addNotification(Notification.UNSUPPORTED_ACTION_IN_PUMP, rh.gs(app.aaps.pump.danar.R.string.unsupported_action_in_pump), Notification.URGENT)
+                notificationManager.post(NotificationId.UNSUPPORTED_ACTION_IN_PUMP, app.aaps.pump.danar.R.string.unsupported_action_in_pump)
                 aapsLogger.error(LTag.PUMP, "Temporary basal should be running: DanaPump " + danaPump.temporaryBasalToString())
             }
         }
@@ -312,7 +312,7 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
                 if (extendedBolus.rate != danaPump.extendedBolusAbsoluteRate
                     || abs(extendedBolus.timestamp - danaPump.extendedBolusStart) > 10000
                 ) { // Close current extended
-                    uiInteraction.addNotification(Notification.UNSUPPORTED_ACTION_IN_PUMP, rh.gs(app.aaps.pump.danar.R.string.unsupported_action_in_pump), Notification.URGENT)
+                    notificationManager.post(NotificationId.UNSUPPORTED_ACTION_IN_PUMP, app.aaps.pump.danar.R.string.unsupported_action_in_pump)
                     aapsLogger.error(LTag.PUMP, "Different extended bolus found running AAPS: " + (extendedBolus.toString() + " DanaPump " + danaPump.extendedBolusToString()))
                     pumpSync.syncExtendedBolusWithPumpId(
                         danaPump.extendedBolusStart,
@@ -331,12 +331,12 @@ abstract class AbstractDanaRExecutionService : DaggerService() {
                     activePlugin.activePump.model(),
                     activePlugin.activePump.serialNumber()
                 )
-                uiInteraction.addNotification(Notification.UNSUPPORTED_ACTION_IN_PUMP, rh.gs(app.aaps.pump.danar.R.string.unsupported_action_in_pump), Notification.URGENT)
+                notificationManager.post(NotificationId.UNSUPPORTED_ACTION_IN_PUMP, app.aaps.pump.danar.R.string.unsupported_action_in_pump)
                 aapsLogger.error(LTag.PUMP, "Extended bolus should not be running. Sending stop to AAPS")
             }
         } else {
             if (danaPump.isExtendedInProgress) { // Create new
-                uiInteraction.addNotification(Notification.UNSUPPORTED_ACTION_IN_PUMP, rh.gs(app.aaps.pump.danar.R.string.unsupported_action_in_pump), Notification.URGENT)
+                notificationManager.post(NotificationId.UNSUPPORTED_ACTION_IN_PUMP, app.aaps.pump.danar.R.string.unsupported_action_in_pump)
                 aapsLogger.error(LTag.PUMP, "Extended bolus should not be running:  DanaPump " + danaPump.extendedBolusToString())
                 pumpSync.syncExtendedBolusWithPumpId(
                     danaPump.extendedBolusStart,

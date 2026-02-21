@@ -10,14 +10,13 @@ import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSClientMvvmRepository
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.defs.fillFor
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.smoothing.Smoothing
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.nssdk.interfaces.RunningConfiguration
@@ -35,9 +34,8 @@ class RunningConfigurationImpl @Inject constructor(
     private val preferences: Preferences,
     private val aapsLogger: AAPSLogger,
     private val config: Config,
-    private val rh: ResourceHelper,
     private val pumpSync: PumpSync,
-    private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val nsClientMvvmRepository: NSClientMvvmRepository
 ) : RunningConfiguration {
 
@@ -84,7 +82,7 @@ class RunningConfigurationImpl @Inject constructor(
         configuration.version?.let {
             nsClientMvvmRepository.addLog("◄ VERSION", "Received AAPS version  $it")
             if (config.VERSION_NAME.startsWith(it).not())
-                uiInteraction.addNotification(Notification.NSCLIENT_VERSION_DOES_NOT_MATCH, rh.gs(R.string.nsclient_version_does_not_match), Notification.NORMAL)
+                notificationManager.post(NotificationId.NSCLIENT_VERSION_DOES_NOT_MATCH, R.string.nsclient_version_does_not_match)
         }
         configuration.insulin?.let {
             val insulin = Insulin.InsulinType.fromInt(it)

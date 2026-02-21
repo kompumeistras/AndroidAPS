@@ -29,6 +29,7 @@ class ActionNotificationTest : TestBaseWithProfile() {
             if (it is ActionNotification) {
                 it.rh = rh
                 it.rxBus = rxBus
+                it.notificationManager = notificationManager
                 it.persistenceLayer = persistenceLayer
                 it.dateUtil = dateUtil
                 it.pumpEnactResultProvider = pumpEnactResultProvider

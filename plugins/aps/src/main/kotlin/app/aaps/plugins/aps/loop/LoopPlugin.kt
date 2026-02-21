@@ -2,7 +2,6 @@ package app.aaps.plugins.aps.loop
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Context
@@ -41,7 +40,8 @@ import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
@@ -60,10 +60,8 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAcceptOpenLoopChange
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventLoopUpdateGui
 import app.aaps.core.interfaces.rx.events.EventMobileToWear
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventNewOpenLoopNotification
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.rx.events.EventTempTargetChange
@@ -100,6 +98,7 @@ import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.math.abs
+import android.app.NotificationManager as AndroidNotificationManager
 
 @Singleton
 class LoopPlugin @Inject constructor(
@@ -107,7 +106,6 @@ class LoopPlugin @Inject constructor(
     private val aapsSchedulers: AapsSchedulers,
     private val rxBus: RxBus,
     private val preferences: Preferences,
-    private val sp: app.aaps.core.interfaces.sharedPreferences.SP,
     private val config: Config,
     private val constraintChecker: ConstraintsChecker,
     rh: ResourceHelper,
@@ -125,6 +123,7 @@ class LoopPlugin @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val runningConfiguration: RunningConfiguration,
     private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
     private val pumpStatusProvider: PumpStatusProvider,
@@ -164,11 +163,11 @@ class LoopPlugin @Inject constructor(
     }
 
     private fun createNotificationChannel() {
-        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
         @SuppressLint("WrongConstant") val channel = NotificationChannel(
             CHANNEL_ID,
             CHANNEL_ID,
-            NotificationManager.IMPORTANCE_HIGH
+            AndroidNotificationManager.IMPORTANCE_HIGH
         )
         mNotificationManager.createNotificationChannel(channel)
     }
@@ -556,8 +555,7 @@ class LoopPlugin @Inject constructor(
                         ) {
                             if (preferences.get(BooleanKey.AlertCarbsRequired) && !preferences.get(BooleanKey.AlertUrgentAsAndroidNotification)
                             ) {
-                                val carbReqLocal = Notification(Notification.CARBS_REQUIRED, resultAfterConstraints.carbsRequiredText, Notification.NORMAL)
-                                rxBus.send(EventNewNotification(carbReqLocal))
+                                notificationManager.post(NotificationId.CARBS_REQUIRED, resultAfterConstraints.carbsRequiredText)
                             }
                             if (preferences.get(BooleanKey.NsClientCreateAnnouncementsFromCarbsReq) && config.APS) {
                                 appScope.launch {
@@ -590,14 +588,14 @@ class LoopPlugin @Inject constructor(
                                     .setContentTitle(rh.gs(R.string.carbs_suggestion))
                                     .setContentText(resultAfterConstraints.carbsRequiredText)
                                     .setAutoCancel(true)
-                                    .setPriority(Notification.IMPORTANCE_HIGH)
-                                    .setCategory(Notification.CATEGORY_ALARM)
+                                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                    .setCategory(NotificationCompat.CATEGORY_ALARM)
                                     .addAction(actionIgnore5m)
                                     .addAction(actionIgnore15m)
                                     .addAction(actionIgnore30m)
                                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                                     .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
-                                val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                                val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
 
                                 // mId allows you to update the notification later on.
                                 mNotificationManager.notify(Constants.notificationID, builder.build())
@@ -622,7 +620,7 @@ class LoopPlugin @Inject constructor(
                             //If carbs were required previously, but are no longer needed, dismiss notifications
                             if (prevCarbsreq > 0) {
                                 dismissSuggestion()
-                                rxBus.send(EventDismissNotification(Notification.CARBS_REQUIRED))
+                                notificationManager.dismiss(NotificationId.CARBS_REQUIRED)
                             }
                         }
                     }
@@ -686,8 +684,8 @@ class LoopPlugin @Inject constructor(
                             .setContentTitle(rh.gs(R.string.open_loop_new_suggestion))
                             .setContentText(resultAfterConstraints.resultAsString())
                             .setAutoCancel(true)
-                            .setPriority(Notification.IMPORTANCE_HIGH)
-                            .setCategory(Notification.CATEGORY_ALARM)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setCategory(NotificationCompat.CATEGORY_ALARM)
                             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         if (preferences.get(BooleanKey.WearControl)) {
                             builder.setLocalOnly(true)
@@ -725,7 +723,7 @@ class LoopPlugin @Inject constructor(
         val resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         builder.setContentIntent(resultPendingIntent)
         builder.setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
-        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
         // mId allows you to update the notification later on.
         mNotificationManager.notify(Constants.notificationID, builder.build())
         rxBus.send(EventNewOpenLoopNotification())
@@ -736,8 +734,8 @@ class LoopPlugin @Inject constructor(
 
     private fun dismissSuggestion() {
         // dismiss notifications
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(Constants.notificationID)
+        val mSystemNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
+        mSystemNotificationManager.cancel(Constants.notificationID)
         rxBus.send(EventMobileToWear(EventData.CancelNotification(dateUtil.now())))
     }
 

@@ -93,8 +93,6 @@ class QueueWorker internal constructor(
                             bluetoothAdapter.safeEnable(1000)
                         }
                         //start over again once after watchdog barked
-                        //Notification notification = new Notification(Notification.OLD_NSCLIENT, "Watchdog", Notification.URGENT);
-                        //rxBus.send(new EventNewNotification(notification));
                         lastCommandTime = System.currentTimeMillis()
                         connectionStartTime = lastCommandTime
                         pump.connect("watchdog")

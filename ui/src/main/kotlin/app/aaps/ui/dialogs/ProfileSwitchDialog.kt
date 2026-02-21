@@ -19,6 +19,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.LocalProfileManager
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -54,6 +55,7 @@ class ProfileSwitchDialog : DialogFragmentWithDate() {
     @Inject lateinit var config: Config
     @Inject lateinit var hardLimits: HardLimits
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var ctx: Context
     @Inject lateinit var protectionCheck: ProtectionCheck
     @Inject lateinit var uiInteraction: UiInteraction
@@ -122,7 +124,7 @@ class ProfileSwitchDialog : DialogFragmentWithDate() {
             val profileList = ArrayList<CharSequence>()
             for (profileName in profileListToCheck) {
                 val profileToCheck = localProfileManager.profile?.getSpecificProfile(profileName.toString())
-                if (profileToCheck != null && ProfileSealed.Pure(profileToCheck, activePlugin).isValid("ProfileSwitch", activePlugin.activePump, config, rh, rxBus, hardLimits, false).isValid)
+                if (profileToCheck != null && ProfileSealed.Pure(profileToCheck, activePlugin).isValid("ProfileSwitch", activePlugin.activePump, config, rh, notificationManager, hardLimits, false).isValid)
                     profileList.add(profileName)
             }
             if (profileList.isEmpty()) {
@@ -193,7 +195,7 @@ class ProfileSwitchDialog : DialogFragmentWithDate() {
             actions.add(rh.gs(app.aaps.core.ui.R.string.temporary_target) + ": " + rh.gs(app.aaps.core.ui.R.string.activity))
 
         val ps = profileFunction.buildProfileSwitch(profileStore, profileName, duration, percent, timeShift, eventTime) ?: return false
-        val validity = ProfileSealed.PS(ps, activePlugin).isValid(rh.gs(app.aaps.core.ui.R.string.careportal_profileswitch), activePlugin.activePump, config, rh, rxBus, hardLimits, false)
+        val validity = ProfileSealed.PS(ps, activePlugin).isValid(rh.gs(app.aaps.core.ui.R.string.careportal_profileswitch), activePlugin.activePump, config, rh, notificationManager, hardLimits, false)
         if (validity.isValid)
             uiInteraction.showOkCancelDialog(
                 context = requireActivity(),

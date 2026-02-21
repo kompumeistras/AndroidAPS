@@ -5,7 +5,8 @@ import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.LocalProfileManager
 import app.aaps.core.interfaces.profile.Profile
@@ -19,7 +20,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventLocalProfileChanged
 import app.aaps.core.interfaces.rx.events.EventProfileStoreChanged
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.keys.LongNonKey
@@ -55,7 +55,7 @@ class LocalProfileManagerImpl @Inject constructor(
     private val dateUtil: DateUtil,
     private val config: Config,
     private val profileStoreProvider: Provider<ProfileStore>,
-    private val uiInteraction: UiInteraction
+    private val notificationManager: NotificationManager
 ) : LocalProfileManager {
 
     private var rawProfile: ProfileStore? = null
@@ -222,21 +222,16 @@ class LocalProfileManagerImpl @Inject constructor(
             for (p in store.getProfileList()) {
                 val profile = store.getSpecificProfile(p.toString())
                 val validityCheck = profile?.let {
-                    ProfileSealed.Pure(profile, activePlugin).isValid("NS", activePlugin.activePump, config, rh, rxBus, hardLimits, false)
+                    ProfileSealed.Pure(profile, activePlugin).isValid("NS", activePlugin.activePump, config, rh, notificationManager, hardLimits, false)
                 } ?: Profile.ValidityCheck()
                 if (profile != null && validityCheck.isValid) {
                     val sp = copyFrom(profile, p.toString())
                     sp.name = p.toString()
                     newProfiles.add(sp)
                 } else {
-                    uiInteraction.addNotificationWithDialogResponse(
-                        id = Notification.INVALID_PROFILE_NOT_ACCEPTED,
-                        text = rh.gs(R.string.invalid_profile_not_accepted, p.toString()),
-                        level = Notification.NORMAL,
-                        buttonText = R.string.view,
-                        title = rh.gs(R.string.errors),
-                        message = validityCheck.reasons.joinToString(separator = "\n"),
-                        validityCheck = null
+                    notificationManager.post(
+                        NotificationId.INVALID_PROFILE_NOT_ACCEPTED,
+                        R.string.invalid_profile_not_accepted, p.toString()
                     )
                 }
             }
@@ -301,7 +296,7 @@ class LocalProfileManagerImpl @Inject constructor(
 
     override fun cloneProfile() {
         val p = _profiles[currentProfileIndex].deepClone()
-        p.name = p.name + " copy"
+        p.name += " copy"
         _profiles.add(p)
         currentProfileIndex = _profiles.size - 1
         createAndStoreConvertedProfile()

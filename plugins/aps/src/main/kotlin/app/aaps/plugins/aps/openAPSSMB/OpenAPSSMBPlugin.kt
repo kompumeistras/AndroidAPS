@@ -32,7 +32,9 @@ import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
@@ -44,7 +46,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAPSCalculationFinished
 import app.aaps.core.interfaces.stats.TddCalculator
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.Round
@@ -105,7 +106,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
     private val glucoseStatusProvider: GlucoseStatusProvider,
     private val tddCalculator: TddCalculator,
     private val bgQualityCheck: BgQualityCheck,
-    private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val determineBasalSMB: DetermineBasalSMB,
     private val profiler: Profiler,
     private val glucoseStatusCalculatorSMB: GlucoseStatusCalculatorSMB,
@@ -153,12 +154,12 @@ open class OpenAPSSMBPlugin @Inject constructor(
         val multiplier = (profile as ProfileSealed.EPS).value.originalPercentage / 100.0
         val sensitivity = calculateVariableIsf(start, multiplier)
         if (sensitivity.second == null)
-            uiInteraction.addNotificationValidTo(
-                Notification.DYN_ISF_FALLBACK, start,
-                rh.gs(R.string.fallback_to_isf_no_tdd, sensitivity.first), Notification.INFO, dateUtil.now() + T.mins(1).msecs()
+            notificationManager.post(
+                NotificationId.DYN_ISF_FALLBACK,
+                R.string.fallback_to_isf_no_tdd, sensitivity.first, level = NotificationLevel.INFO, date = start, validTo = dateUtil.now() + T.mins(1).msecs()
             )
         else
-            uiInteraction.dismissNotification(Notification.DYN_ISF_FALLBACK)
+            notificationManager.dismiss(NotificationId.DYN_ISF_FALLBACK)
         profiler.log(LTag.APS, "getIsfMgdl() multiplier=${multiplier} reason=${sensitivity.first} sensitivity=${sensitivity.second} caller=$caller", start)
         return sensitivity.second
     }
@@ -380,9 +381,9 @@ open class OpenAPSSMBPlugin @Inject constructor(
         // var insulinDivisor = 0
         val dynIsfResult = calculateRawDynIsf((profile as ProfileSealed.EPS).value.originalPercentage / 100.0)
         if (dynIsfMode && !dynIsfResult.tddPartsCalculated()) {
-            uiInteraction.addNotificationValidTo(
-                Notification.SMB_FALLBACK, dateUtil.now(),
-                rh.gs(R.string.fallback_smb_no_tdd), Notification.INFO, dateUtil.now() + T.mins(1).msecs()
+            notificationManager.post(
+                NotificationId.SMB_FALLBACK,
+                R.string.fallback_smb_no_tdd, level = NotificationLevel.INFO, validTo = dateUtil.now() + T.mins(1).msecs()
             )
             inputConstraints.copyReasons(
                 ConstraintObject(false, aapsLogger).also {
@@ -396,7 +397,7 @@ open class OpenAPSSMBPlugin @Inject constructor(
             )
         }
         if (dynIsfMode && dynIsfResult.tddPartsCalculated()) {
-            uiInteraction.dismissNotification(Notification.SMB_FALLBACK)
+            notificationManager.dismiss(NotificationId.SMB_FALLBACK)
             // Compare insulin consumption of last 24h with last 7 days average
             val tddRatio = if (preferences.get(BooleanKey.ApsDynIsfAdjustSensitivity)) dynIsfResult.tddLast24H!! / dynIsfResult.tdd7D!! else 1.0
             // Because consumed carbs affects total amount of insulin compensate final ratio by consumed carbs ratio
@@ -423,11 +424,9 @@ open class OpenAPSSMBPlugin @Inject constructor(
             } else autosensResult.sensResult = "autosens disabled"
         }
 
-        @Suppress("KotlinConstantConditions")
         val iobArray = iobCobCalculator.calculateIobArrayForSMB(autosensResult, SMBDefaults.exercise_mode, SMBDefaults.half_basal_exercise_target, isTempTarget)
         val mealData = iobCobCalculator.getMealDataWithWaitingForCalculationFinish()
 
-        @Suppress("KotlinConstantConditions")
         val oapsProfile = OapsProfile(
             dia = 0.0, // not used
             min_5m_carbimpact = 0.0, // not used

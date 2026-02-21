@@ -10,11 +10,12 @@ import app.aaps.core.data.pump.defs.ManufacturerType
 import app.aaps.core.data.pump.defs.PumpDescription
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.data.pump.defs.TimeChangeType
-import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
@@ -32,7 +33,6 @@ import app.aaps.core.interfaces.queue.CustomCommand
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.DoubleKey
@@ -72,7 +72,6 @@ class EquilPumpPlugin @Inject constructor(
     aapsLogger: AAPSLogger,
     rh: ResourceHelper,
     preferences: Preferences,
-    private val config: Config,
     commandQueue: CommandQueue,
     private val aapsSchedulers: AapsSchedulers,
     private val rxBus: RxBus,
@@ -81,7 +80,8 @@ class EquilPumpPlugin @Inject constructor(
     private val pumpSync: PumpSync,
     private val equilManager: EquilManager,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>,
-    private val constraintsChecker: ConstraintsChecker
+    private val constraintsChecker: ConstraintsChecker,
+    private val notificationManager: NotificationManager
 ) : PumpPluginBase(
     pluginDescription = PluginDescription()
         .mainType(PluginType.PUMP)
@@ -122,12 +122,8 @@ class EquilPumpPlugin @Inject constructor(
                                        LTag.PUMPCOMM,
                                        "eventEquilError.tips====${eventEquilError.tips}"
                                    )
-                                   rxBus.send(EventDismissNotification(Notification.EQUIL_ALARM))
-                                   equilManager.showNotification(
-                                       Notification.EQUIL_ALARM,
-                                       eventEquilError.tips,
-                                       Notification.URGENT, app.aaps.core.ui.R.raw.alarm
-                                   )
+                                   notificationManager.dismiss(NotificationId.EQUIL_ALARM)
+                                   notificationManager.post(NotificationId.EQUIL_ALARM, eventEquilError.tips, soundRes = app.aaps.core.ui.R.raw.alarm)
                                    stopBolusDelivering()
                                }
                            }
@@ -391,20 +387,19 @@ class EquilPumpPlugin @Inject constructor(
         if (battery <= 10 && alarmBattery) {
             val alarmBattery10 = preferences.get(EquilBooleanKey.AlarmBattery10)
             if (!alarmBattery10) {
-                equilManager.showNotification(
-                    Notification.FAILED_UPDATE_PROFILE,
+                notificationManager.post(
+                    NotificationId.FAILED_UPDATE_PROFILE,
                     rh.gs(R.string.equil_low_battery) + battery + "%",
-                    Notification.NORMAL,
-                    app.aaps.core.ui.R.raw.alarm
+                    soundRes = app.aaps.core.ui.R.raw.alarm
                 )
                 preferences.put(EquilBooleanKey.AlarmBattery10, true)
             } else {
                 if (battery < 5) {
-                    equilManager.showNotification(
-                        Notification.FAILED_UPDATE_PROFILE,
+                    notificationManager.post(
+                        NotificationId.FAILED_UPDATE_PROFILE,
                         rh.gs(R.string.equil_low_battery) + battery + "%",
-                        Notification.URGENT,
-                        app.aaps.core.ui.R.raw.alarm
+                        NotificationLevel.URGENT,
+                        soundRes = app.aaps.core.ui.R.raw.alarm
                     )
                 }
             }
@@ -415,12 +410,11 @@ class EquilPumpPlugin @Inject constructor(
                     val alarmInsulin10 =
                         preferences.get(EquilBooleanKey.AlarmInsulin10)
                     if (!alarmInsulin10) {
-                        rxBus.send(EventDismissNotification(Notification.EQUIL_ALARM_INSULIN))
-                        equilManager.showNotification(
-                            Notification.EQUIL_ALARM_INSULIN,
+                        notificationManager.dismiss(NotificationId.EQUIL_ALARM_INSULIN)
+                        notificationManager.post(
+                            NotificationId.EQUIL_ALARM_INSULIN,
                             rh.gs(R.string.equil_low_insulin) + insulin + "U",
-                            Notification.NORMAL,
-                            app.aaps.core.ui.R.raw.alarm
+                            soundRes = app.aaps.core.ui.R.raw.alarm
                         )
                         preferences.put(EquilBooleanKey.AlarmInsulin10, true)
                     }
@@ -429,25 +423,22 @@ class EquilPumpPlugin @Inject constructor(
                 insulin in 3..5  -> {
                     val alarmInsulin5 = preferences.get(EquilBooleanKey.AlarmInsulin5)
                     if (!alarmInsulin5) {
-                        rxBus.send(EventDismissNotification(Notification.EQUIL_ALARM_INSULIN))
-
-                        equilManager.showNotification(
-                            Notification.EQUIL_ALARM_INSULIN,
+                        notificationManager.dismiss(NotificationId.EQUIL_ALARM_INSULIN)
+                        notificationManager.post(
+                            NotificationId.EQUIL_ALARM_INSULIN,
                             rh.gs(R.string.equil_low_insulin) + insulin + "U",
-                            Notification.NORMAL,
-                            app.aaps.core.ui.R.raw.alarm
+                            soundRes = app.aaps.core.ui.R.raw.alarm
                         )
                         preferences.put(EquilBooleanKey.AlarmInsulin5, true)
                     }
                 }
 
                 insulin <= 2     -> {
-                    rxBus.send(EventDismissNotification(Notification.EQUIL_ALARM_INSULIN))
-                    equilManager.showNotification(
-                        Notification.EQUIL_ALARM_INSULIN,
+                    notificationManager.dismiss(NotificationId.EQUIL_ALARM_INSULIN)
+                    notificationManager.post(
+                        NotificationId.EQUIL_ALARM_INSULIN,
                         rh.gs(R.string.equil_low_insulin) + insulin + "U",
-                        Notification.URGENT,
-                        app.aaps.core.ui.R.raw.alarm
+                        soundRes = app.aaps.core.ui.R.raw.alarm
                     )
                 }
             }

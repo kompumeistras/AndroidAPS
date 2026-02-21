@@ -11,16 +11,15 @@ import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSClientMvvmRepository
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.LocalProfileManager
 import app.aaps.core.interfaces.profile.ProfileStore
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.source.NSClientSource
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.BooleanNonKey
@@ -64,14 +63,13 @@ class NsIncomingDataProcessor @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val nsClientSource: NSClientSource,
     private val preferences: Preferences,
-    private val rxBus: RxBus,
     private val dateUtil: DateUtil,
     private val activePlugin: ActivePlugin,
     private val localProfileManager: LocalProfileManager,
     private val storeDataForDb: StoreDataForDb,
     private val config: Config,
     private val profileStoreProvider: Provider<ProfileStore>,
-    private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val nsClientMvvmRepository: NSClientMvvmRepository
 ) {
 
@@ -128,8 +126,8 @@ class NsIncomingDataProcessor @Inject constructor(
             activePlugin.activeNsClient?.updateLatestBgReceivedIfNewer(latestDateInReceivedData)
             // Was that sgv more less 5 mins ago ?
             if (T.msecs(dateUtil.now() - latestDateInReceivedData).mins() < 5L) {
-                rxBus.send(EventDismissNotification(Notification.NS_ALARM))
-                rxBus.send(EventDismissNotification(Notification.NS_URGENT_ALARM))
+                notificationManager.dismiss(NotificationId.NS_ALARM)
+                notificationManager.dismiss(NotificationId.NS_URGENT_ALARM)
             }
             storeDataForDb.addToGlucoseValues(glucoseValues)
         }
@@ -206,15 +204,12 @@ class NsIncomingDataProcessor @Inject constructor(
                                     preferences.get(BooleanKey.NsClientNotificationsFromAnnouncements) &&
                                     therapyEvent.timestamp + T.mins(60).msecs() > dateUtil.now()
                                 )
-                                    uiInteraction.addNotificationWithAction(
-                                        id = Notification.NS_ANNOUNCEMENT,
+                                    notificationManager.post(
+                                        id = NotificationId.NS_ANNOUNCEMENT,
                                         text = therapyEvent.note ?: "",
-                                        level = Notification.ANNOUNCEMENT,
-                                        buttonText = app.aaps.core.ui.R.string.snooze,
-                                        action = { },
-                                        validityCheck = null,
-                                        soundId = app.aaps.core.ui.R.raw.alarm,
-                                        validTo = dateUtil.now() + T.mins(60).msecs()
+                                        validTo = dateUtil.now() + T.mins(60).msecs(),
+                                        soundRes = app.aaps.core.ui.R.raw.alarm,
+                                        actions = listOf(NotificationAction(app.aaps.core.ui.R.string.snooze) { })
                                     )
                             }
 

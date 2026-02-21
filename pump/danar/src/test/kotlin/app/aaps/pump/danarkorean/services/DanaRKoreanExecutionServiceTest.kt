@@ -6,7 +6,6 @@ import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.danar.DanaRPlugin
 import app.aaps.pump.danarkorean.DanaRKoreanPlugin
@@ -31,7 +30,6 @@ class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var profile: Profile
     @Mock lateinit var danaPump: DanaPump
     @Mock lateinit var pumpSync: PumpSync
-    @Mock lateinit var uiInteraction: UiInteraction
 
     private lateinit var danaRKoreanExecutionService: DanaRKoreanExecutionService
 
@@ -49,7 +47,7 @@ class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
         danaRKoreanExecutionService.aapsSchedulers = aapsSchedulers
         danaRKoreanExecutionService.pumpSync = pumpSync
         danaRKoreanExecutionService.activePlugin = activePlugin
-        danaRKoreanExecutionService.uiInteraction = uiInteraction
+        danaRKoreanExecutionService.notificationManager = notificationManager
         danaRKoreanExecutionService.pumpEnactResultProvider = pumpEnactResultProvider
         danaRKoreanExecutionService.constraintChecker = constraintChecker
         danaRKoreanExecutionService.danaRPlugin = danaRPlugin

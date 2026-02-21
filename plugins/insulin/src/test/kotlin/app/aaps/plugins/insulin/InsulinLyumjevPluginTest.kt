@@ -2,9 +2,9 @@ package app.aaps.plugins.insulin
 
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.insulin.Insulin
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
@@ -22,11 +22,11 @@ class InsulinLyumjevPluginTest : TestBase() {
     @Mock lateinit var profileFunction: ProfileFunction
     @Mock lateinit var config: Config
     @Mock lateinit var hardLimits: HardLimits
-    @Mock lateinit var uiInteraction: UiInteraction
+    @Mock lateinit var notificationManager: NotificationManager
 
     @BeforeEach
     fun setup() {
-        sut = InsulinLyumjevPlugin(rh, profileFunction, rxBus, aapsLogger, config, hardLimits, uiInteraction)
+        sut = InsulinLyumjevPlugin(rh, profileFunction, rxBus, aapsLogger, config, hardLimits, notificationManager)
     }
 
     @Test

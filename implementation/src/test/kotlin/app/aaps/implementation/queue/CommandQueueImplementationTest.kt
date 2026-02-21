@@ -12,6 +12,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
@@ -88,6 +89,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         dateUtil: DateUtil,
         fabricPrivacy: FabricPrivacy,
         uiInteraction: UiInteraction,
+        notificationManager: NotificationManager,
         persistenceLayer: PersistenceLayer,
         decimalFormatter: DecimalFormatter,
         pumpEnactResultProvider: Provider<PumpEnactResult>,
@@ -97,7 +99,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
     ) : CommandQueueImplementation(
         injector, aapsLogger, rxBus, aapsSchedulers, rh, constraintChecker, profileFunction,
         activePlugin, context, config, dateUtil, fabricPrivacy,
-        uiInteraction, persistenceLayer, decimalFormatter, pumpEnactResultProvider, jobName, workManager, appScope
+        uiInteraction, notificationManager, persistenceLayer, decimalFormatter, pumpEnactResultProvider, jobName, workManager, appScope
     ) {
 
         override fun notifyAboutNewCommand(): Boolean = true
@@ -192,7 +194,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         runTest {
             commandQueue = CommandQueueMocked(
                 injector, aapsLogger, rxBus, aapsSchedulers, rh, constraintChecker, profileFunction, activePlugin, context,
-                config, dateUtil, fabricPrivacy, uiInteraction, persistenceLayer, decimalFormatter, pumpEnactResultProvider, jobName, workManager, testScope
+                config, dateUtil, fabricPrivacy, uiInteraction, notificationManager, persistenceLayer, decimalFormatter, pumpEnactResultProvider, jobName, workManager, testScope
             )
             testPumpPlugin.pumpDescription.basalMinimumRate = 0.1
             testPumpPlugin.connected = true
@@ -222,7 +224,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
             whenever(rh.gs(app.aaps.core.ui.R.string.format_insulin_units)).thenReturn("%1\$.2f U")
             whenever(rh.gs(app.aaps.core.ui.R.string.goingtodeliver)).thenReturn("Going to deliver %1\$.2f U")
             whenever(workManager.getWorkInfosForUniqueWork(anyOrNull())).thenReturn(infos)
-            doAnswer { invocation: InvocationOnMock ->
+            doAnswer { _: InvocationOnMock ->
                 CoroutineScope(Dispatchers.IO).launch {
                     val work = TestListenableWorkerBuilder<QueueWorker>(context).build()
                     work.doWorkAndLog()
@@ -238,7 +240,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         commandQueue = CommandQueueImplementation(
             injector, aapsLogger, rxBus, aapsSchedulers, rh,
             constraintChecker, profileFunction, activePlugin, context,
-            config, dateUtil, fabricPrivacy, uiInteraction, persistenceLayer, decimalFormatter, pumpEnactResultProvider, jobName, workManager, testScope
+            config, dateUtil, fabricPrivacy, uiInteraction, notificationManager, persistenceLayer, decimalFormatter, pumpEnactResultProvider, jobName, workManager, testScope
         )
         val handler: Handler = mock()
         whenever(handler.post(anyOrNull())).thenAnswer { invocation: InvocationOnMock ->

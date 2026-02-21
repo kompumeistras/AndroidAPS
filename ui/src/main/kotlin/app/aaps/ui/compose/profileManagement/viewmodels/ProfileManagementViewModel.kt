@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.profileManagement.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.EPS
@@ -16,6 +16,7 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.observeChanges
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.LocalProfileManager
 import app.aaps.core.interfaces.profile.Profile
@@ -67,6 +68,7 @@ class ProfileManagementViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val config: Config,
     private val hardLimits: HardLimits,
+    private val notificationManager: NotificationManager,
     private val preferences: Preferences
 ) : ViewModel() {
 
@@ -404,7 +406,7 @@ class ProfileManagementViewModel @Inject constructor(
             activePlugin.activePump,
             config,
             rh,
-            rxBus,
+            notificationManager,
             hardLimits,
             false
         )

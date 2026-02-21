@@ -9,6 +9,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -33,12 +35,10 @@ import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.ToolbarConfig
 import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.IcExtendedBolus
-import app.aaps.core.ui.compose.icons.IcProfile
-import androidx.compose.material.icons.filled.DirectionsRun
 import app.aaps.core.ui.compose.icons.IcNote
-import app.aaps.core.ui.compose.icons.TempBasal
+import app.aaps.core.ui.compose.icons.IcProfile
+import app.aaps.core.ui.compose.icons.IcTbrHigh
 import app.aaps.core.ui.compose.icons.IcTtHigh
-import app.aaps.core.ui.compose.icons.UserEntry
 import app.aaps.ui.R
 import app.aaps.ui.compose.treatments.viewmodels.TreatmentsViewModel
 import kotlinx.coroutines.launch
@@ -124,7 +124,7 @@ fun TreatmentsScreen(
             val pageIndex2 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = TempBasal,
+                    icon = IcTbrHigh,
                     titleRes = app.aaps.core.ui.R.string.tempbasal_label,
                     colorGetter = { iconColors.tempBasal },
                     content = {
@@ -203,7 +203,7 @@ fun TreatmentsScreen(
             val pageIndex6 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = Icons.Filled.DirectionsRun,
+                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
                     titleRes = app.aaps.core.ui.R.string.running_mode,
                     colorGetter = { iconColors.runningMode },
                     content = {
@@ -221,7 +221,7 @@ fun TreatmentsScreen(
             val pageIndex7 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = UserEntry,
+                    icon = Icons.AutoMirrored.Filled.Note,
                     titleRes = R.string.user_entry,
                     colorGetter = { iconColors.userEntry },
                     content = {

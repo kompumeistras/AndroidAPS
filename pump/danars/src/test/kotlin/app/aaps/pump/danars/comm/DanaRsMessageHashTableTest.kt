@@ -17,7 +17,7 @@ class DanaRsMessageHashTableTest : DanaRSTestBase() {
     @BeforeEach
     fun setupMock() {
         packetList = setOf(
-            DanaRSPacketNotifyAlarm(aapsLogger, rh, pumpSync, danaPump, uiInteraction),
+            DanaRSPacketNotifyAlarm(aapsLogger, rh, pumpSync, danaPump, notificationManager),
             DanaRSPacketNotifyDeliveryComplete(aapsLogger, rh, rxBus, danaPump),
             DanaRSPacketNotifyDeliveryRateDisplay(aapsLogger, rh, rxBus, danaPump),
             DanaRSPacketNotifyMissedBolusAlarm(aapsLogger)

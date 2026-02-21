@@ -34,7 +34,8 @@ import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PermissionGroup
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
@@ -51,9 +52,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventNSClientRestart
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
-import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.smsCommunicator.Sms
 import app.aaps.core.interfaces.smsCommunicator.SmsCommunicator
 import app.aaps.core.interfaces.sync.XDripBroadcast
@@ -108,7 +107,6 @@ class SmsCommunicatorPlugin @Inject constructor(
     private val smsManager: SmsManager?,
     private val aapsSchedulers: AapsSchedulers,
     preferences: Preferences,
-    private val sp: SP,
     private val constraintChecker: ConstraintsChecker,
     private val rxBus: RxBus,
     private val profileFunction: ProfileFunction,
@@ -130,6 +128,7 @@ class SmsCommunicatorPlugin @Inject constructor(
     private val configBuilder: ConfigBuilder,
     private val authRequestProvider: Provider<AuthRequest>,
     private val pumpStatusProvider: PumpStatusProvider,
+    private val notificationManager: NotificationManager,
     @ApplicationScope private val appScope: CoroutineScope
 ) : PluginBaseWithPreferences(
     PluginDescription()
@@ -194,9 +193,9 @@ class SmsCommunicatorPlugin @Inject constructor(
     // Kept for legacy XML preferences support
     override fun preprocessPreferences(preferenceFragment: PreferenceFragmentCompat) {
         super.preprocessPreferences(preferenceFragment)
-        val distance = preferenceFragment.findPreference(IntKey.SmsRemoteBolusDistance.key) as AdaptiveIntPreference?
+        val distance = preferenceFragment.findPreference(IntKey.SmsRemoteBolusDistance.key) as? AdaptiveIntPreference?
             ?: return
-        val allowedNumbers = preferenceFragment.findPreference(StringKey.SmsAllowedNumbers.key) as AdaptiveStringPreference?
+        val allowedNumbers = preferenceFragment.findPreference(StringKey.SmsAllowedNumbers.key) as? AdaptiveStringPreference?
             ?: return
         distance.isEnabled = areMoreNumbers(allowedNumbers.text)
         allowedNumbers.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
@@ -1277,12 +1276,10 @@ class SmsCommunicatorPlugin @Inject constructor(
             messages.add(sms)
         } catch (e: IllegalArgumentException) {
             return if (e.message == "Invalid message body") {
-                val notification = Notification(Notification.INVALID_MESSAGE_BODY, rh.gs(R.string.smscommunicator_message_body), Notification.NORMAL)
-                rxBus.send(EventNewNotification(notification))
+                notificationManager.post(NotificationId.INVALID_MESSAGE_BODY, R.string.smscommunicator_message_body)
                 false
             } else {
-                val notification = Notification(Notification.INVALID_PHONE_NUMBER, rh.gs(R.string.smscommunicator_invalid_phone_number), Notification.NORMAL)
-                rxBus.send(EventNewNotification(notification))
+                notificationManager.post(NotificationId.INVALID_PHONE_NUMBER, R.string.smscommunicator_invalid_phone_number)
                 false
             }
         } catch (_: SecurityException) {

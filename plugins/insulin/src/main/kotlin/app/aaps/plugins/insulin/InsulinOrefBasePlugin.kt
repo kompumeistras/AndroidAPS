@@ -8,13 +8,13 @@ import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.ui.compose.icons.IcPluginInsulin
 import kotlin.math.exp
@@ -33,7 +33,7 @@ abstract class InsulinOrefBasePlugin(
     aapsLogger: AAPSLogger,
     config: Config,
     val hardLimits: HardLimits,
-    val uiInteraction: UiInteraction
+    val notificationManager: NotificationManager
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.INSULIN)
@@ -61,7 +61,7 @@ abstract class InsulinOrefBasePlugin(
     open fun sendShortDiaNotification(dia: Double) {
         if (System.currentTimeMillis() - lastWarned > 60 * 1000) {
             lastWarned = System.currentTimeMillis()
-            uiInteraction.addNotification(Notification.SHORT_DIA, String.format(notificationPattern, dia, hardLimits.minDia()), Notification.URGENT)
+            notificationManager.post(NotificationId.SHORT_DIA, String.format(notificationPattern, dia, hardLimits.minDia()))
         }
     }
 

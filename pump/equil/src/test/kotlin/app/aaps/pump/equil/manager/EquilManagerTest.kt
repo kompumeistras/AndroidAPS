@@ -49,7 +49,8 @@ class EquilManagerTest : TestBaseWithProfile() {
             equilHistoryRecordDao,
             equilHistoryPumpDao,
             pumpEnactResultProvider,
-            dateUtil
+            dateUtil,
+            notificationManager
         )
     }
 
@@ -174,7 +175,8 @@ class EquilManagerTest : TestBaseWithProfile() {
             equilHistoryRecordDao,
             equilHistoryPumpDao,
             pumpEnactResultProvider,
-            dateUtil
+            dateUtil,
+            notificationManager
         )
 
         // List should be initialized but empty before init()

@@ -3,8 +3,6 @@ package app.aaps.plugins.main.general.overview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.os.Build
 import android.widget.TextView
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
@@ -16,6 +14,7 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.overview.Overview
 import app.aaps.core.interfaces.overview.OverviewData
@@ -23,14 +22,11 @@ import app.aaps.core.interfaces.overview.OverviewMenus
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBaseWithPreferences
 import app.aaps.core.interfaces.plugin.PluginDescription
-import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
 import app.aaps.core.interfaces.rx.events.EventNewHistoryData
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventUpdateOverviewCalcProgress
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -43,13 +39,10 @@ import app.aaps.core.keys.LongComposedKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.StringNonKey
 import app.aaps.core.keys.UnitDoubleKey
-import app.aaps.core.keys.interfaces.PreferenceVisibilityContext
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.keys.interfaces.withActivity
 import app.aaps.core.objects.extensions.put
 import app.aaps.core.objects.extensions.store
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
-import app.aaps.core.ui.compose.preference.withDialog
 import app.aaps.core.validators.preferences.AdaptiveClickPreference
 import app.aaps.core.validators.preferences.AdaptiveDoublePreference
 import app.aaps.core.validators.preferences.AdaptiveIntPreference
@@ -59,9 +52,6 @@ import app.aaps.core.validators.preferences.AdaptiveUnitPreference
 import app.aaps.plugins.main.R
 import app.aaps.plugins.main.general.overview.keys.OverviewIntentKey
 import app.aaps.plugins.main.general.overview.keys.OverviewStringKey
-import app.aaps.plugins.main.general.overview.notifications.NotificationStore
-import app.aaps.plugins.main.general.overview.notifications.events.EventUpdateOverviewNotification
-import app.aaps.plugins.main.general.overview.notifications.receivers.DismissNotificationReceiver
 import app.aaps.shared.impl.rx.bus.RxBusImpl
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -74,7 +64,6 @@ class OverviewPlugin @Inject constructor(
     aapsLogger: AAPSLogger,
     rh: ResourceHelper,
     preferences: Preferences,
-    private val notificationStore: NotificationStore,
     private val fabricPrivacy: FabricPrivacy,
     private val rxBus: RxBus,
     private val aapsSchedulers: AapsSchedulers,
@@ -86,9 +75,8 @@ class OverviewPlugin @Inject constructor(
     private val nsSettingStatus: NSSettingsStatus,
     private val config: Config,
     private val activePlugin: ActivePlugin,
-    private val profileUtil: ProfileUtil,
-    private val visibilityContext: PreferenceVisibilityContext,
     private val uel: UserEntryLogger,
+    private val notificationManager: NotificationManager,
 ) : PluginBaseWithPreferences(
     pluginDescription = PluginDescription()
         .mainType(PluginType.GENERAL)
@@ -111,25 +99,11 @@ class OverviewPlugin @Inject constructor(
 
     override fun onStart() {
         super.onStart()
-        registerLocalBroadcastReceiver()
         overviewMenus.loadGraphConfig()
         overviewData.initRange()
 
-        notificationStore.createNotificationChannel()
-        disposable += rxBus
-            .toObservable(EventNewNotification::class.java)
-            .observeOn(aapsSchedulers.io)
-            .subscribe({ n ->
-                           if (notificationStore.add(n.notification))
-                               overviewBus.send(EventUpdateOverviewNotification("EventNewNotification"))
-                       }, fabricPrivacy::logException)
-        disposable += rxBus
-            .toObservable(EventDismissNotification::class.java)
-            .observeOn(aapsSchedulers.io)
-            .subscribe({ n ->
-                           if (notificationStore.remove(n.id))
-                               overviewBus.send(EventUpdateOverviewNotification("EventDismissNotification"))
-                       }, fabricPrivacy::logException)
+        notificationManager.createNotificationChannel()
+
         disposable += rxBus
             .toObservable(EventIobCalculationProgress::class.java)
             .observeOn(aapsSchedulers.io)
@@ -148,7 +122,6 @@ class OverviewPlugin @Inject constructor(
 
     override fun onStop() {
         disposable.clear()
-        unregisterLocalBroadcastReceiver()
         super.onStop()
     }
 
@@ -450,18 +423,4 @@ class OverviewPlugin @Inject constructor(
         uel.log(Action.NS_SETTINGS_COPIED, Sources.NSClient)
     }
 
-    private val dismissReceiver = DismissNotificationReceiver()
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun registerLocalBroadcastReceiver() {
-        val filter = IntentFilter().apply { addAction(DismissNotificationReceiver.ACTION) }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            context.registerReceiver(dismissReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        else
-            context.registerReceiver(dismissReceiver, filter)
-    }
-
-    private fun unregisterLocalBroadcastReceiver() {
-        context.unregisterReceiver(dismissReceiver)
-    }
 }

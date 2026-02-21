@@ -11,17 +11,11 @@ import app.aaps.MainActivity
 import app.aaps.activities.HistoryBrowseActivity
 import app.aaps.activities.MyPreferenceFragment
 import app.aaps.activities.PreferencesActivity
-import app.aaps.core.interfaces.notifications.Notification
-import app.aaps.core.interfaces.nsclient.NSAlarm
 import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
-import app.aaps.plugins.main.general.overview.notifications.NotificationWithAction
 import app.aaps.ui.activities.BolusProgressHelperActivity
 import app.aaps.ui.activities.ErrorActivity
 import app.aaps.ui.activities.ProfileViewerActivity
@@ -48,14 +42,13 @@ import app.aaps.ui.widget.Widget
 import dagger.Lazy
 import dagger.Reusable
 import javax.inject.Inject
-import javax.inject.Provider
 
+@Suppress("DEPRECATION")
 @Reusable
 class UiInteractionImpl @Inject constructor(
     private val context: Context,
-    private val rxBus: RxBus,
+    rxBus: RxBus,
     private val alarmSoundServiceHelper: AlarmSoundServiceHelper,
-    private val notificationWithActionProvider: Provider<NotificationWithAction>,
     private val protectionCheck: Lazy<ProtectionCheck>,
     preferences: Preferences
 ) : UiInteraction {
@@ -195,70 +188,6 @@ class UiInteractionImpl @Inject constructor(
         } catch (_: Exception) {
             // do nothing
         }
-    }
-
-    override fun dismissNotification(id: Int) {
-        rxBus.send(EventDismissNotification(id))
-    }
-
-    override fun addNotification(id: Int, text: String, level: Int) {
-        rxBus.send(EventNewNotification(Notification(id, text, level)))
-    }
-
-    override fun addNotificationValidFor(id: Int, text: String, level: Int, validMinutes: Int) {
-        rxBus.send(EventNewNotification(Notification(id, text, level, validMinutes)))
-    }
-
-    override fun addNotificationWithSound(id: Int, text: String, level: Int, soundId: Int?) {
-        rxBus.send(EventNewNotification(Notification(id, text, level).also { it.soundId = soundId }))
-    }
-
-    override fun addNotificationValidTo(id: Int, date: Long, text: String, level: Int, validTo: Long) {
-        rxBus.send(EventNewNotification(Notification(id, System.currentTimeMillis(), text, level, validTo)))
-    }
-
-    override fun addNotificationWithAction(nsAlarm: NSAlarm) {
-        rxBus.send(EventNewNotification(notificationWithActionProvider.get().with(nsAlarm)))
-    }
-
-    override fun addNotificationWithAction(id: Int, text: String, level: Int, buttonText: Int, action: Runnable, validityCheck: (() -> Boolean)?, @RawRes soundId: Int?, date: Long, validTo: Long) {
-        rxBus.send(
-            EventNewNotification(
-                notificationWithActionProvider.get().with(id = id, text = text, level = level, validityCheck = validityCheck)
-                    .action(buttonText, action)
-                    .also {
-                        it.date = date
-                        it.soundId = soundId
-                    }
-            )
-        )
-    }
-
-    override fun addNotificationWithDialogResponse(id: Int, text: String, level: Int, @StringRes buttonText: Int, title: String, message: String, validityCheck: (() -> Boolean)?) {
-        rxBus.send(
-            EventNewNotification(
-                notificationWithActionProvider.get().with(id, text, level, validityCheck)
-                    .also { n ->
-                        n.action(buttonText) {
-                            n.contextForAction?.let { showOkDialog(context = it, title = title, message = message) }
-                        }
-                    })
-        )
-    }
-
-    override fun addNotification(id: Int, text: String, level: Int, @StringRes actionButtonId: Int, action: Runnable, validityCheck: (() -> Boolean)?) {
-        rxBus.send(
-            EventNewNotification(
-                notificationWithActionProvider.get().with(id, text, level, validityCheck).apply {
-                    action(actionButtonId, action)
-                })
-        )
-    }
-
-    override fun showToastAndNotification(ctx: Context, string: String, soundID: Int) {
-        ToastUtils.showToastInUiThread(ctx, string)
-        ToastUtils.playSound(ctx, soundID)
-        addNotification(Notification.TOAST_ALARM, string, Notification.URGENT)
     }
 
     override fun startAlarm(@RawRes sound: Int, reason: String) {

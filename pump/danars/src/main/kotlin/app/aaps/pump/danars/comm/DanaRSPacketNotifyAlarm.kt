@@ -2,10 +2,10 @@ package app.aaps.pump.danars.comm
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.danars.encryption.BleEncryption
 import javax.inject.Inject
@@ -15,7 +15,7 @@ class DanaRSPacketNotifyAlarm @Inject constructor(
     private val rh: ResourceHelper,
     private val pumpSync: PumpSync,
     private val danaPump: DanaPump,
-    private val uiInteraction: UiInteraction
+    private val notificationManager: NotificationManager
 ) : DanaRSPacket() {
 
     init {
@@ -73,7 +73,7 @@ class DanaRSPacketNotifyAlarm @Inject constructor(
             aapsLogger.debug(LTag.PUMPCOMM, "Error detected: $errorString")
             return
         }
-        uiInteraction.addNotification(Notification.USER_MESSAGE, errorString, Notification.URGENT)
+        notificationManager.post(NotificationId.DANA_PUMP_ALARM, errorString)
         pumpSync.insertAnnouncement(errorString, null, danaPump.pumpType(), danaPump.serialNumber)
     }
 

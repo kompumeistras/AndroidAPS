@@ -5,10 +5,10 @@ import app.aaps.core.data.model.BS
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
@@ -31,7 +31,7 @@ class InsulinOrefBasePluginTest : TestBase() {
         aapsLogger: AAPSLogger,
         config: Config,
         hardLimits: HardLimits
-    ) : InsulinOrefBasePlugin(rh, profileFunction, rxBus, aapsLogger, config, hardLimits, uiInteraction) {
+    ) : InsulinOrefBasePlugin(rh, profileFunction, rxBus, aapsLogger, config, hardLimits, notificationManager) {
 
         override fun sendShortDiaNotification(dia: Double) {
             shortDiaNotificationSend = true
@@ -56,7 +56,7 @@ class InsulinOrefBasePluginTest : TestBase() {
     @Mock lateinit var profileFunction: ProfileFunction
     @Mock lateinit var config: Config
     @Mock lateinit var hardLimits: HardLimits
-    @Mock lateinit var uiInteraction: UiInteraction
+    @Mock lateinit var notificationManager: NotificationManager
 
     @BeforeEach
     fun setUp() {

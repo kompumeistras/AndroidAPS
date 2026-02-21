@@ -23,7 +23,9 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
@@ -35,7 +37,6 @@ import app.aaps.core.interfaces.pump.defs.fillFor
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventInitializationChanged
 import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
@@ -128,6 +129,7 @@ class ComboV2Plugin @Inject constructor(
     private val pumpSync: PumpSync,
     private val dateUtil: DateUtil,
     private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val config: Config,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>
 ) :
@@ -314,7 +316,7 @@ class ComboV2Plugin @Inject constructor(
                     try {
                         newBluetoothInterface.setup()
 
-                        rxBus.send(EventDismissNotification(Notification.BLUETOOTH_NOT_ENABLED))
+                        notificationManager.dismiss(NotificationId.BLUETOOTH_NOT_ENABLED)
 
                         aapsLogger.debug(LTag.PUMP, "Setting up pump manager")
                         val newPumpManager = ComboCtlPumpManager(newBluetoothInterface, pumpStateStore)
@@ -335,11 +337,7 @@ class ComboV2Plugin @Inject constructor(
 
                         pumpManager = newPumpManager
                     } catch (_: BluetoothNotAvailableException) {
-                        uiInteraction.addNotification(
-                            Notification.BLUETOOTH_NOT_SUPPORTED,
-                            text = rh.gs(R.string.combov2_bluetooth_not_supported),
-                            level = Notification.URGENT
-                        )
+                        notificationManager.post(NotificationId.BLUETOOTH_NOT_SUPPORTED, R.string.combov2_bluetooth_not_supported)
 
                         // Deliberately _not_ setting the driver state here before
                         // exiting this scope. We are essentially aborting the start
@@ -349,11 +347,7 @@ class ComboV2Plugin @Inject constructor(
                         aapsLogger.error(LTag.PUMP, "combov2 driver start cannot be completed since the hardware does not support Bluetooth")
                         return@runWithPermissionCheck
                     } catch (_: BluetoothNotEnabledException) {
-                        uiInteraction.addNotification(
-                            Notification.BLUETOOTH_NOT_ENABLED,
-                            text = rh.gs(R.string.combov2_bluetooth_disabled),
-                            level = Notification.INFO
-                        )
+                        notificationManager.post(NotificationId.BLUETOOTH_NOT_ENABLED, R.string.combov2_bluetooth_disabled)
 
                         // If the user currently has Bluetooth disabled, retry until
                         // the user turns it on. AAPS will automatically show a dialog
@@ -533,11 +527,7 @@ class ComboV2Plugin @Inject constructor(
 
         if (pumpErrorObserved) {
             aapsLogger.debug(LTag.PUMP, "Aborting connect attempt since the pumpErrorObserved flag is set")
-            uiInteraction.addNotification(
-                Notification.COMBO_PUMP_ALARM,
-                text = rh.gs(R.string.combov2_cannot_connect_pump_error_observed),
-                level = Notification.NORMAL
-            )
+            notificationManager.post(NotificationId.COMBO_PUMP_ALARM, R.string.combov2_cannot_connect_pump_error_observed, level = NotificationLevel.NORMAL)
             return
         }
 
@@ -592,7 +582,7 @@ class ComboV2Plugin @Inject constructor(
             _bluetoothAddressUIFlow.value = bluetoothAddress.toString()
             _serialNumberUIFlow.value = curPumpManager.getPumpID(bluetoothAddress)
 
-            rxBus.send(EventDismissNotification(Notification.BLUETOOTH_NOT_ENABLED))
+            notificationManager.dismiss(NotificationId.BLUETOOTH_NOT_ENABLED)
 
             // Erase any display frame that may be left over from a previous connection.
             @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -704,10 +694,9 @@ class ComboV2Plugin @Inject constructor(
                             val activeBasalProfileNumber = it.statusFlow.value?.activeBasalProfileNumber
                             aapsLogger.debug(LTag.PUMP, "Active basal profile number: $activeBasalProfileNumber")
                             if ((activeBasalProfileNumber != null) && (activeBasalProfileNumber != 1)) {
-                                uiInteraction.addNotification(
-                                    Notification.COMBO_PUMP_ALARM,
-                                    text = rh.gs(R.string.combov2_incorrect_active_basal_profile, activeBasalProfileNumber),
-                                    level = Notification.URGENT
+                                notificationManager.post(
+                                    NotificationId.COMBO_PUMP_ALARM,
+                                    R.string.combov2_incorrect_active_basal_profile, activeBasalProfileNumber
                                 )
                             }
                             lastActiveBasalProfileNumber = activeBasalProfileNumber
@@ -738,10 +727,9 @@ class ComboV2Plugin @Inject constructor(
                     notifyAboutComboAlert(e.alertScreenContent)
                     forciblyDisconnectDueToError = true
                 } catch (e: Exception) {
-                    uiInteraction.addNotification(
-                        Notification.COMBO_PUMP_ALARM,
-                        text = rh.gs(R.string.combov2_connection_error, e.message),
-                        level = Notification.URGENT
+                    notificationManager.post(
+                        NotificationId.COMBO_PUMP_ALARM,
+                        R.string.combov2_connection_error, e.message
                     )
 
                     aapsLogger.error(LTag.PUMP, "Exception while connecting: ${e.stackTraceToString()}")
@@ -778,11 +766,7 @@ class ComboV2Plugin @Inject constructor(
                 }
             }
         } catch (_: BluetoothNotEnabledException) {
-            uiInteraction.addNotification(
-                Notification.BLUETOOTH_NOT_ENABLED,
-                text = rh.gs(R.string.combov2_bluetooth_disabled),
-                level = Notification.INFO
-            )
+            notificationManager.post(NotificationId.BLUETOOTH_NOT_ENABLED, R.string.combov2_bluetooth_disabled)
         } catch (e: Exception) {
             aapsLogger.error(LTag.PUMP, "Connection failure: $e")
             ToastUtils.showToastInUiThread(context, rh.gs(R.string.combov2_could_not_connect))
@@ -835,11 +819,7 @@ class ComboV2Plugin @Inject constructor(
         if (!isInitialized()) {
             aapsLogger.error(LTag.PUMP, "Cannot set profile since driver is not initialized")
 
-            uiInteraction.addNotification(
-                Notification.PROFILE_NOT_SET_NOT_INITIALIZED,
-                rh.gs(app.aaps.core.ui.R.string.pump_not_initialized_profile_not_set),
-                Notification.URGENT
-            )
+            notificationManager.post(NotificationId.PROFILE_NOT_SET_NOT_INITIALIZED, app.aaps.core.ui.R.string.pump_not_initialized_profile_not_set, level = NotificationLevel.URGENT)
 
             return pumpEnactResultProvider.get().apply {
                 success = false
@@ -850,8 +830,8 @@ class ComboV2Plugin @Inject constructor(
 
         val acquiredPump = getAcquiredPump()
 
-        rxBus.send(EventDismissNotification(Notification.PROFILE_NOT_SET_NOT_INITIALIZED))
-        rxBus.send(EventDismissNotification(Notification.FAILED_UPDATE_PROFILE))
+        notificationManager.dismiss(NotificationId.PROFILE_NOT_SET_NOT_INITIALIZED)
+        notificationManager.dismiss(NotificationId.FAILED_UPDATE_PROFILE)
 
         val pumpEnactResult = pumpEnactResultProvider.get()
 
@@ -866,12 +846,7 @@ class ComboV2Plugin @Inject constructor(
                         activeBasalProfile = requestedBasalProfile
                         updateBaseBasalRateUI()
 
-                        uiInteraction.addNotificationValidFor(
-                            Notification.PROFILE_SET_OK,
-                            rh.gs(app.aaps.core.ui.R.string.profile_set_ok),
-                            Notification.INFO,
-                            60
-                        )
+                        notificationManager.post(NotificationId.PROFILE_SET_OK, app.aaps.core.ui.R.string.profile_set_ok, validMinutes = 60)
                     } else {
                         aapsLogger.debug(LTag.PUMP, "Basal profiles are equal; did not have to set anything")
                         // Treat this as if the command had been enacted. Setting a basal profile is
@@ -904,11 +879,7 @@ class ComboV2Plugin @Inject constructor(
             } catch (e: Exception) {
                 aapsLogger.error("Exception thrown during basal profile update: $e")
 
-                uiInteraction.addNotification(
-                    Notification.FAILED_UPDATE_PROFILE,
-                    rh.gs(app.aaps.core.ui.R.string.failed_update_basal_profile),
-                    Notification.URGENT
-                )
+                notificationManager.post(NotificationId.FAILED_UPDATE_PROFILE, app.aaps.core.ui.R.string.failed_update_basal_profile, level = NotificationLevel.URGENT)
 
                 pumpEnactResult.apply {
                     success = false
@@ -1845,19 +1816,11 @@ class ComboV2Plugin @Inject constructor(
 
         when (event) {
             is ComboCtlPump.Event.BatteryLow           -> {
-                uiInteraction.addNotification(
-                    Notification.COMBO_PUMP_ALARM,
-                    text = rh.gs(R.string.combov2_battery_low_warning),
-                    level = Notification.NORMAL
-                )
+                notificationManager.post(NotificationId.COMBO_PUMP_ALARM, R.string.combov2_battery_low_warning, level = NotificationLevel.NORMAL)
             }
 
             is ComboCtlPump.Event.ReservoirLow         -> {
-                uiInteraction.addNotification(
-                    Notification.COMBO_PUMP_ALARM,
-                    text = rh.gs(R.string.combov2_reservoir_low_warning),
-                    level = Notification.NORMAL
-                )
+                notificationManager.post(NotificationId.COMBO_PUMP_ALARM, R.string.combov2_reservoir_low_warning, level = NotificationLevel.NORMAL)
             }
 
             is ComboCtlPump.Event.QuickBolusInfused    -> {
@@ -1949,14 +1912,12 @@ class ComboV2Plugin @Inject constructor(
                     event.remainingTbrDurationInMinutes / 60,
                     event.remainingTbrDurationInMinutes % 60
                 )
-                uiInteraction.addNotification(
-                    Notification.COMBO_UNKNOWN_TBR,
-                    text = rh.gs(
-                        R.string.combov2_unknown_tbr_detected,
-                        event.tbrPercentage,
-                        remainingDurationString
-                    ),
-                    level = Notification.URGENT
+                notificationManager.post(
+                    NotificationId.COMBO_UNKNOWN_TBR,
+                    R.string.combov2_unknown_tbr_detected,
+                    event.tbrPercentage,
+                    remainingDurationString,
+                    level = NotificationLevel.URGENT
                 )
             }
 
@@ -2107,11 +2068,7 @@ class ComboV2Plugin @Inject constructor(
             // that the Combo is currently suspended, otherwise this
             // only shows up in the Combo fragment.
             if (newState == DriverState.Suspended) {
-                uiInteraction.addNotification(
-                    Notification.PUMP_SUSPENDED,
-                    text = rh.gs(R.string.combov2_pump_is_suspended),
-                    level = Notification.NORMAL
-                )
+                notificationManager.post(NotificationId.PUMP_SUSPENDED, R.string.combov2_pump_is_suspended)
             }
         }
 
@@ -2150,13 +2107,7 @@ class ComboV2Plugin @Inject constructor(
 
     private fun unpairDueToPumpDataError() {
         disconnectInternal(forceDisconnect = true)
-        uiInteraction.addNotificationValidTo(
-            id = Notification.PUMP_ERROR,
-            date = dateUtil.now(),
-            text = rh.gs(R.string.combov2_cannot_access_pump_data),
-            level = Notification.URGENT,
-            validTo = 0
-        )
+        notificationManager.post(NotificationId.PUMP_ERROR, R.string.combov2_cannot_access_pump_data, date = dateUtil.now(), validTo = 0)
         unpair()
     }
 
@@ -2242,10 +2193,10 @@ class ComboV2Plugin @Inject constructor(
             startPumpErrorTimeout()
         }
 
-        uiInteraction.addNotification(
-            Notification.COMBO_PUMP_ALARM,
+        notificationManager.post(
+            NotificationId.COMBO_PUMP_ALARM,
             text = "${rh.gs(R.string.combov2_combo_alert)}: ${getAlertDescription(alert)}",
-            level = if (alert is AlertScreenContent.Warning) Notification.NORMAL else Notification.URGENT
+            level = if (alert is AlertScreenContent.Warning) NotificationLevel.NORMAL else NotificationLevel.URGENT
         )
     }
 

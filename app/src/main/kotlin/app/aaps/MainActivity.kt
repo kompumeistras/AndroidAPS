@@ -30,7 +30,10 @@ import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.maintenance.FileListProvider
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -86,6 +89,7 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var cryptoUtil: CryptoUtil
     @Inject lateinit var exportPasswordDataStore: ExportPasswordDataStore
     @Inject lateinit var configBuilder: ConfigBuilder
+    @Inject lateinit var notificationManager: NotificationManager
 
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     private var pluginPreferencesMenuItem: MenuItem? = null
@@ -206,38 +210,37 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
 
         // check if identification is set
         if (config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank())
-            uiInteraction.addNotificationWithAction(
-                id = Notification.IDENTIFICATION_NOT_SET,
-                text = rh.gs(R.string.identification_not_set),
-                level = Notification.INFO,
-                buttonText = R.string.set,
-                action = {
+            notificationManager.post(
+                id = NotificationId.IDENTIFICATION_NOT_SET,
+                R.string.identification_not_set,
+                level = NotificationLevel.INFO,
+                actions = listOf(NotificationAction(R.string.set) {
                     preferences.put(BooleanKey.GeneralSimpleMode, false)
                     startActivity(
                         Intent(this@MainActivity, PreferencesActivity::class.java)
                             .setAction("info.nightscout.androidaps.MainActivity")
                             .putExtra(UiInteraction.PLUGIN_NAME, MaintenancePlugin::class.java.simpleName)
                     )
-                },
+                }),
                 validityCheck = { config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank() }
             )
 
         if (preferences.get(StringKey.ProtectionMasterPassword) == "")
-            uiInteraction.addNotificationWithAction(
-                id = Notification.MASTER_PASSWORD_NOT_SET,
-                text = rh.gs(app.aaps.core.ui.R.string.master_password_not_set),
-                level = Notification.NORMAL,
-                buttonText = R.string.set,
-                action = { startActivity(Intent(this@MainActivity, PreferencesActivity::class.java).setAction("info.nightscout.androidaps.MainActivity").putExtra(UiInteraction.PREFERENCE, UiInteraction.Preferences.PROTECTION)) },
+            notificationManager.post(
+                id = NotificationId.MASTER_PASSWORD_NOT_SET,
+                app.aaps.core.ui.R.string.master_password_not_set,
+                level = NotificationLevel.NORMAL,
+                actions = listOf(NotificationAction(R.string.set) {
+                    startActivity(Intent(this@MainActivity, PreferencesActivity::class.java).setAction("info.nightscout.androidaps.MainActivity").putExtra(UiInteraction.PREFERENCE, UiInteraction.Preferences.PROTECTION))
+                }),
                 validityCheck = { preferences.get(StringKey.ProtectionMasterPassword) == "" }
             )
         if (preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty())
-            uiInteraction.addNotificationWithAction(
-                id = Notification.AAPS_DIR_NOT_SELECTED,
-                text = rh.gs(app.aaps.core.ui.R.string.aaps_directory_not_selected),
-                level = Notification.IMPORTANCE_HIGH,
-                buttonText = R.string.select,
-                action = { maintenancePlugin.selectAapsDirectory(this) },
+            notificationManager.post(
+                id = NotificationId.AAPS_DIR_NOT_SELECTED,
+                app.aaps.core.ui.R.string.aaps_directory_not_selected,
+                level = NotificationLevel.LOW,
+                actions = listOf(NotificationAction(R.string.select) { maintenancePlugin.selectAapsDirectory(this) }),
                 validityCheck = { preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty() }
             )
     }

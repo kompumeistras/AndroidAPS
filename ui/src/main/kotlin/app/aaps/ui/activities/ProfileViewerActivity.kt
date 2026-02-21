@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
-import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -45,12 +45,12 @@ import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.core.ui.compose.LocalRxBus
 import app.aaps.ui.compose.profileManagement.ProfileCompareContent
 import app.aaps.ui.compose.profileManagement.ProfileSingleContent
+import app.aaps.ui.compose.profileManagement.ProfileViewerData
+import app.aaps.ui.compose.profileManagement.ProfileViewerScreen
 import app.aaps.ui.compose.profileManagement.buildBasalRows
 import app.aaps.ui.compose.profileManagement.buildIcRows
 import app.aaps.ui.compose.profileManagement.buildIsfRows
 import app.aaps.ui.compose.profileManagement.buildTargetRows
-import app.aaps.ui.compose.profileManagement.ProfileViewerData
-import app.aaps.ui.compose.profileManagement.ProfileViewerScreen
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -82,6 +82,7 @@ class ProfileViewerActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var profileFunction: ProfileFunction
@@ -268,7 +269,7 @@ class ProfileViewerActivity : DaggerAppCompatActivity() {
                     )
                 } else {
                     val profile = ProfileSealed.EPS(eps, activePlugin)
-                    val validity = profile.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, rxBus, hardLimits, false)
+                    val validity = profile.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, notificationManager, hardLimits, false)
                     ProfileViewerData(
                         profile = profile,
                         profileName = eps.originalCustomizedName,
@@ -284,7 +285,7 @@ class ProfileViewerActivity : DaggerAppCompatActivity() {
 
             UiInteraction.Mode.CUSTOM_PROFILE  -> {
                 val profile = pureProfileFromJson(JSONObject(customProfileJson), dateUtil)?.let { ProfileSealed.Pure(it, activePlugin) }
-                val validity = profile?.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, rxBus, hardLimits, false)
+                val validity = profile?.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, notificationManager, hardLimits, false)
                 ProfileViewerData(
                     profile = profile,
                     profileName = customProfileName,
@@ -299,7 +300,7 @@ class ProfileViewerActivity : DaggerAppCompatActivity() {
                 val profile1 = pureProfileFromJson(JSONObject(customProfileJson), dateUtil)?.let { ProfileSealed.Pure(it, activePlugin) }
                 val profile2 = pureProfileFromJson(JSONObject(customProfileJson2), dateUtil)?.let { ProfileSealed.Pure(it, activePlugin) }
                 val names = customProfileName.split("\n")
-                val validity = profile1?.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, rxBus, hardLimits, false)
+                val validity = profile1?.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, notificationManager, hardLimits, false)
                 ProfileViewerData(
                     profile = profile1,
                     profile2 = profile2,
@@ -316,7 +317,7 @@ class ProfileViewerActivity : DaggerAppCompatActivity() {
             UiInteraction.Mode.DB_PROFILE      -> {
                 val profileList = runBlocking { persistenceLayer.getProfileSwitches() }
                 val profile = if (profileList.isNotEmpty()) ProfileSealed.PS(profileList[0], activePlugin) else null
-                val validity = profile?.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, rxBus, hardLimits, false)
+                val validity = profile?.isValid("ProfileViewDialog", activePlugin.activePump, config, rh, notificationManager, hardLimits, false)
                 ProfileViewerData(
                     profile = profile,
                     profileName = if (profileList.isNotEmpty()) profileList[0].getCustomizedName(decimalFormatter) else null,

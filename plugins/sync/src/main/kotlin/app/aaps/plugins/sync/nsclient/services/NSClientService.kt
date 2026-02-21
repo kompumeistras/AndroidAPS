@@ -13,27 +13,28 @@ import app.aaps.core.data.time.T.Companion.mins
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSClientMvvmRepository
 import app.aaps.core.interfaces.nsclient.NSSettingsStatus
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
+import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAppExit
 import app.aaps.core.interfaces.rx.events.EventConfigBuilderChange
 import app.aaps.core.interfaces.rx.events.EventDeviceStatusChange
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventNSClientRestart
 import app.aaps.core.interfaces.rx.events.EventNewHistoryData
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.rx.events.EventProfileStoreChanged
 import app.aaps.core.interfaces.rx.events.EventProfileSwitchChanged
 import app.aaps.core.interfaces.rx.events.EventRunningModeChange
 import app.aaps.core.interfaces.rx.events.EventTempTargetChange
 import app.aaps.core.interfaces.rx.events.EventTherapyEventChange
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
@@ -96,7 +97,8 @@ class NSClientService : DaggerService() {
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var dataWorkerStorage: DataWorkerStorage
     @Inject lateinit var dataSyncSelectorV1: DataSyncSelectorV1
-    @Inject lateinit var uiInteraction: UiInteraction
+    @Inject lateinit var activePlugin: ActivePlugin
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var nsIncomingDataProcessor: NsIncomingDataProcessor
     @Inject lateinit var storeDataForDb: StoreDataForDb
     @Inject lateinit var nsClientMvvmRepository: NSClientMvvmRepository
@@ -242,10 +244,9 @@ class NSClientService : DaggerService() {
             nsClientMvvmRepository.addLog("◄ ERROR", "Write treatment permission not granted ")
         }
         if (!hasWriteAuth) {
-            val noWritePerm = Notification(Notification.NSCLIENT_NO_WRITE_PERMISSION, rh.gs(R.string.no_write_permission), Notification.URGENT)
-            rxBus.send(EventNewNotification(noWritePerm))
+            notificationManager.post(NotificationId.NSCLIENT_NO_WRITE_PERMISSION, R.string.no_write_permission, level = NotificationLevel.URGENT)
         } else {
-            rxBus.send(EventDismissNotification(Notification.NSCLIENT_NO_WRITE_PERMISSION))
+            notificationManager.dismiss(NotificationId.NSCLIENT_NO_WRITE_PERMISSION)
         }
     }
 
@@ -324,8 +325,7 @@ class NSClientService : DaggerService() {
             }
             nsClientMvvmRepository.addLog("● WATCHDOG", "connections in last " + WATCHDOG_INTERVAL_MINUTES + " minutes: " + reconnections.size + "/" + WATCHDOG_MAX_CONNECTIONS)
             if (reconnections.size >= WATCHDOG_MAX_CONNECTIONS) {
-                val n = Notification(Notification.NS_MALFUNCTION, rh.gs(R.string.ns_malfunction), Notification.URGENT)
-                rxBus.send(EventNewNotification(n))
+                notificationManager.post(NotificationId.NS_MALFUNCTION, R.string.ns_malfunction)
                 nsClientMvvmRepository.addLog("● WATCHDOG", "pausing for $WATCHDOG_RECONNECT_IN minutes")
                 nsClientPlugin.pause(true)
                 nsClientMvvmRepository.updateStatus(nsClientPlugin.status)
@@ -448,8 +448,8 @@ class NSClientService : DaggerService() {
         try {
             data = args[0] as JSONObject
             nsClientMvvmRepository.addLog("◄ CLEARALARM", "received")
-            rxBus.send(EventDismissNotification(Notification.NS_ALARM))
-            rxBus.send(EventDismissNotification(Notification.NS_URGENT_ALARM))
+            notificationManager.dismiss(NotificationId.NS_ALARM)
+            notificationManager.dismiss(NotificationId.NS_URGENT_ALARM)
             aapsLogger.debug(LTag.NSCLIENT, data.toString())
         } catch (e: Exception) {
             aapsLogger.error("Unhandled exception", e)
@@ -649,7 +649,7 @@ class NSClientService : DaggerService() {
     private fun handleAnnouncement(announcement: JSONObject) {
         if (preferences.get(BooleanKey.NsClientNotificationsFromAnnouncements)) {
             val nsAlarm = NSAlarmObject(announcement)
-            uiInteraction.addNotificationWithAction(nsAlarm)
+            postNsAlarm(nsAlarm)
             nsClientMvvmRepository.addLog("◄ ANNOUNCEMENT", safeGetString(announcement, "message", "received"))
             aapsLogger.debug(LTag.NSCLIENT, announcement.toString())
         }
@@ -660,7 +660,7 @@ class NSClientService : DaggerService() {
             val snoozedTo = preferences.get(LongComposedKey.NotificationSnoozedTo, alarm.optString("level"))
             if (snoozedTo == 0L || System.currentTimeMillis() > snoozedTo) {
                 val nsAlarm = NSAlarmObject(alarm)
-                uiInteraction.addNotificationWithAction(nsAlarm)
+                postNsAlarm(nsAlarm)
             }
             nsClientMvvmRepository.addLog("◄ ALARM", safeGetString(alarm, "message", "received"))
             aapsLogger.debug(LTag.NSCLIENT, alarm.toString())
@@ -672,10 +672,53 @@ class NSClientService : DaggerService() {
             val snoozedTo = preferences.get(LongComposedKey.NotificationSnoozedTo, alarm.optString("level"))
             if (snoozedTo == 0L || System.currentTimeMillis() > snoozedTo) {
                 val nsAlarm = NSAlarmObject(alarm)
-                uiInteraction.addNotificationWithAction(nsAlarm)
+                postNsAlarm(nsAlarm)
             }
             nsClientMvvmRepository.addLog("◄ URGENTALARM", safeGetString(alarm, "message", "received"))
             aapsLogger.debug(LTag.NSCLIENT, alarm.toString())
+        }
+    }
+
+    private fun snoozeActions(nsAlarm: NSAlarmObject): List<NotificationAction> =
+        listOf(15, 30, 60).map { minutes ->
+            val labelRes = when (minutes) {
+                15   -> app.aaps.core.ui.R.string.snooze_15m
+                30   -> app.aaps.core.ui.R.string.snooze_30m
+                else -> app.aaps.core.ui.R.string.snooze_60m
+            }
+            NotificationAction(labelRes) {
+                activePlugin.activeNsClient?.handleClearAlarm(nsAlarm, minutes * 60 * 1000L)
+                preferences.put(LongComposedKey.NotificationSnoozedTo, nsAlarm.level.toString(), value = System.currentTimeMillis() + minutes * 60 * 1000L)
+            }
+        }
+
+    private fun postNsAlarm(nsAlarm: NSAlarmObject) {
+        when (nsAlarm.level) {
+            0    -> notificationManager.post(
+                id = NotificationId.NS_ANNOUNCEMENT,
+                text = nsAlarm.message,
+                level = NotificationLevel.ANNOUNCEMENT,
+                validTo = System.currentTimeMillis() + mins(60).msecs(),
+                actions = snoozeActions(nsAlarm)
+            )
+
+            1    -> notificationManager.post(
+                id = NotificationId.NS_ALARM,
+                text = nsAlarm.title,
+                level = NotificationLevel.NORMAL,
+                soundRes = app.aaps.core.ui.R.raw.alarm,
+                actions = snoozeActions(nsAlarm)
+            )
+
+            2    -> notificationManager.post(
+                id = NotificationId.NS_URGENT_ALARM,
+                text = nsAlarm.title,
+                level = NotificationLevel.URGENT,
+                soundRes = app.aaps.core.ui.R.raw.urgentalarm,
+                actions = snoozeActions(nsAlarm)
+            )
+
+            else -> return
         }
     }
 }

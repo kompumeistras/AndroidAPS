@@ -22,7 +22,8 @@ import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
@@ -39,9 +40,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventDismissBolusProgressIfRunning
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.rx.events.EventMobileToWear
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventProfileSwitchChanged
 import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -101,6 +100,7 @@ class CommandQueueImplementation @Inject constructor(
     private val dateUtil: DateUtil,
     private val fabricPrivacy: FabricPrivacy,
     private val uiInteraction: UiInteraction,
+    private val notificationManager: NotificationManager,
     private val persistenceLayer: PersistenceLayer,
     private val decimalFormatter: DecimalFormatter,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>,
@@ -189,7 +189,7 @@ class CommandQueueImplementation @Inject constructor(
     @Synchronized
     fun isReadStatusScheduled(): Boolean {
         /*
-         * Cancel all works if ReadStatus is scheduled for more that 15 min
+         * Cancel all works if ReadStatus is scheduled for more than 15 min
          */
         readScheduledDetected?.let {
             if (dateUtil.isOlderThan(it, minutes = 15)) {
@@ -308,7 +308,7 @@ class CommandQueueImplementation @Inject constructor(
                             source = Sources.Database
                         )
                         callback?.result(pumpEnactResultProvider.get().enacted(false).success(true))?.run()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         callback?.result(pumpEnactResultProvider.get().enacted(false).success(false))?.run()
                     }
                 }
@@ -478,13 +478,12 @@ class CommandQueueImplementation @Inject constructor(
         val basalValues = profile.getBasalValues()
         for (basalValue in basalValues) {
             if (basalValue.value < activePlugin.activePump.pumpDescription.basalMinimumRate) {
-                val notification = Notification(Notification.BASAL_VALUE_BELOW_MINIMUM, rh.gs(R.string.basal_value_below_minimum), Notification.URGENT)
-                rxBus.send(EventNewNotification(notification))
+                notificationManager.post(NotificationId.BASAL_VALUE_BELOW_MINIMUM, R.string.basal_value_below_minimum)
                 callback?.result(pumpEnactResultProvider.get().success(false).enacted(false).comment(R.string.basal_value_below_minimum))?.run()
                 return false
             }
         }
-        rxBus.send(EventDismissNotification(Notification.BASAL_VALUE_BELOW_MINIMUM))
+        notificationManager.dismiss(NotificationId.BASAL_VALUE_BELOW_MINIMUM)
         // remove all unfinished
         removeAll(CommandType.BASAL_PROFILE)
         // add new command to queue

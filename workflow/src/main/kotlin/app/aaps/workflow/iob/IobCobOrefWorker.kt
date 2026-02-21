@@ -64,7 +64,7 @@ class IobCobOrefWorker @Inject internal constructor(
     )
 
     override suspend fun doWorkAndLog(): Result {
-        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as IobCobOrefWorkerData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as? IobCobOrefWorkerData?
             ?: return Result.success(workDataOf("Error" to "missing input data"))
 
         val start = dateUtil.now()
@@ -87,7 +87,7 @@ class IobCobOrefWorker @Inject internal constructor(
             val prevDataTime = ads.roundUpTime(bucketedData[bucketedData.size - 3].timestamp)
             aapsLogger.debug(LTag.AUTOSENS) { "Prev data time: " + dateUtil.dateAndTimeString(prevDataTime) }
             var previous = autosensDataTable[prevDataTime]
-            // start from oldest to be able sub cob
+            // start from oldest to be able to sub cob
             for (i in bucketedData.size - 4 downTo 0) {
                 rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.IOB_COB_OREF, 100 - (100.0 * i / bucketedData.size).toInt(), data.cause))
                 if (isStopped) {
@@ -149,13 +149,10 @@ class IobCobOrefWorker @Inject internal constructor(
                             // if (ad == null) {
                             //     aapsLogger.debug(LTag.AUTOSENS, autosensDataTable.toString())
                             //     aapsLogger.debug(LTag.AUTOSENS, bucketedData.toString())
-                            //     //aapsLogger.debug(LTag.AUTOSENS, data.iobCobCalculatorPlugin.getBgReadingsDataTable().toString())
-                            //     val notification = Notification(Notification.SEND_LOGFILES, rh.gs(R.string.send_logfiles), Notification.LOW)
-                            //     rxBus.send(EventNewNotification(notification))
                             //     sp.putBoolean("log_AUTOSENS", true)
                             //     break
                             // }
-                            // let it here crash on NPE to get more data as i cannot reproduce this bug
+                            // let it here crash on NPE to get more data as I cannot reproduce this bug
                             val deviationSlope = (ad.avgDeviation - avgDeviation) / (ad.time - bgTime) * 1000 * 60 * 5
                             if (ad.avgDeviation > maxDeviation) {
                                 slopeFromMaxDeviation = min(0.0, deviationSlope)
@@ -172,9 +169,6 @@ class IobCobOrefWorker @Inject internal constructor(
                         //     fabricPrivacy.logException(e)
                         //     aapsLogger.debug(autosensDataTable.toString())
                         //     aapsLogger.debug(bucketedData.toString())
-                        //     //aapsLogger.debug(data.iobCobCalculatorPlugin.getBgReadingsDataTable().toString())
-                        //     val notification = Notification(Notification.SEND_LOGFILES, rh.gs(R.string.send_logfiles), Notification.LOW)
-                        //     rxBus.send(EventNewNotification(notification))
                         //     sp.putBoolean("log_AUTOSENS", true)
                         //     break
                         // }

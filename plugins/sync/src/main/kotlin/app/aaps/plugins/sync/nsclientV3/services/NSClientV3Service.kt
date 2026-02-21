@@ -6,17 +6,18 @@ import android.os.Binder
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.annotation.OpenForTesting
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.nsclient.NSAlarm
 import app.aaps.core.interfaces.nsclient.NSClientMvvmRepository
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
-import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.LongComposedKey
@@ -46,15 +47,14 @@ import javax.inject.Inject
 class NSClientV3Service : DaggerService() {
 
     @Inject lateinit var aapsLogger: AAPSLogger
-    @Inject lateinit var rxBus: RxBus
-    @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var nsClientV3Plugin: NSClientV3Plugin
     @Inject lateinit var config: Config
     @Inject lateinit var nsIncomingDataProcessor: NsIncomingDataProcessor
     @Inject lateinit var storeDataForDb: StoreDataForDb
-    @Inject lateinit var uiInteraction: UiInteraction
+    @Inject lateinit var activePlugin: ActivePlugin
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var nsDeviceStatusHandler: NSDeviceStatusHandler
     @Inject lateinit var nsClientMvvmRepository: NSClientMvvmRepository
 
@@ -278,7 +278,7 @@ class NSClientV3Service : DaggerService() {
         nsClientMvvmRepository.addLog("◄ ANNOUNCEMENT", data.optString("message"))
         aapsLogger.debug(LTag.NSCLIENT, data.toString())
         if (preferences.get(BooleanKey.NsClientNotificationsFromAnnouncements))
-            uiInteraction.addNotificationWithAction(NSAlarmObject(data))
+            postNsAlarm(NSAlarmObject(data))
     }
     private val onAlarm = Emitter.Listener { args ->
 
@@ -301,7 +301,7 @@ class NSClientV3Service : DaggerService() {
         if (preferences.get(BooleanKey.NsClientNotificationsFromAlarms)) {
             val snoozedTo = preferences.get(LongComposedKey.NotificationSnoozedTo, data.optString("level"))
             if (snoozedTo == 0L || System.currentTimeMillis() > snoozedTo)
-                uiInteraction.addNotificationWithAction(NSAlarmObject(data))
+                postNsAlarm(NSAlarmObject(data))
         }
     }
 
@@ -312,7 +312,7 @@ class NSClientV3Service : DaggerService() {
         if (preferences.get(BooleanKey.NsClientNotificationsFromAlarms)) {
             val snoozedTo = preferences.get(LongComposedKey.NotificationSnoozedTo, data.optString("level"))
             if (snoozedTo == 0L || System.currentTimeMillis() > snoozedTo)
-                uiInteraction.addNotificationWithAction(NSAlarmObject(data))
+                postNsAlarm(NSAlarmObject(data))
         }
     }
 
@@ -329,12 +329,55 @@ class NSClientV3Service : DaggerService() {
         val data = args[0] as JSONObject
         nsClientMvvmRepository.addLog("◄ CLEARALARM", data.optString("title"))
         aapsLogger.debug(LTag.NSCLIENT, data.toString())
-        rxBus.send(EventDismissNotification(Notification.NS_ALARM))
-        rxBus.send(EventDismissNotification(Notification.NS_URGENT_ALARM))
+        notificationManager.dismiss(NotificationId.NS_ALARM)
+        notificationManager.dismiss(NotificationId.NS_URGENT_ALARM)
     }
 
     fun handleClearAlarm(originalAlarm: NSAlarm, silenceTimeInMilliseconds: Long) {
         alarmSocket?.emit("ack", originalAlarm.level, originalAlarm.group, silenceTimeInMilliseconds)
         nsClientMvvmRepository.addLog("► ALARMACK ", "${originalAlarm.level} ${originalAlarm.group} $silenceTimeInMilliseconds")
+    }
+
+    private fun snoozeActions(nsAlarm: NSAlarmObject): List<NotificationAction> =
+        listOf(15, 30, 60).map { minutes ->
+            val labelRes = when (minutes) {
+                15   -> app.aaps.core.ui.R.string.snooze_15m
+                30   -> app.aaps.core.ui.R.string.snooze_30m
+                else -> app.aaps.core.ui.R.string.snooze_60m
+            }
+            NotificationAction(labelRes) {
+                activePlugin.activeNsClient?.handleClearAlarm(nsAlarm, minutes * 60 * 1000L)
+                preferences.put(LongComposedKey.NotificationSnoozedTo, nsAlarm.level.toString(), value = System.currentTimeMillis() + minutes * 60 * 1000L)
+            }
+        }
+
+    private fun postNsAlarm(nsAlarm: NSAlarmObject) {
+        when (nsAlarm.level) {
+            0    -> notificationManager.post(
+                id = NotificationId.NS_ANNOUNCEMENT,
+                text = nsAlarm.message,
+                level = NotificationLevel.ANNOUNCEMENT,
+                validTo = System.currentTimeMillis() + T.mins(60).msecs(),
+                actions = snoozeActions(nsAlarm)
+            )
+
+            1    -> notificationManager.post(
+                id = NotificationId.NS_ALARM,
+                text = nsAlarm.title,
+                level = NotificationLevel.NORMAL,
+                soundRes = app.aaps.core.ui.R.raw.alarm,
+                actions = snoozeActions(nsAlarm)
+            )
+
+            2    -> notificationManager.post(
+                id = NotificationId.NS_URGENT_ALARM,
+                text = nsAlarm.title,
+                level = NotificationLevel.URGENT,
+                soundRes = app.aaps.core.ui.R.raw.urgentalarm,
+                actions = snoozeActions(nsAlarm)
+            )
+
+            else -> return
+        }
     }
 }

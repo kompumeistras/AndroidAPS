@@ -5,14 +5,13 @@ import android.text.TextUtils
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.Event
-import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
@@ -81,7 +80,8 @@ class EquilManager @Inject constructor(
     private val equilHistoryRecordDao: EquilHistoryRecordDao,
     private val equilHistoryPumpDao: EquilHistoryPumpDao,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>,
-    private val dateUtil: DateUtil
+    private val dateUtil: DateUtil,
+    private val notificationManager: NotificationManager
 ) {
 
     private val gsonInstance: Gson = createGson()
@@ -456,18 +456,6 @@ class EquilManager @Inject constructor(
         return result
     }
 
-    fun showNotification(id: Int, message: String, urgency: Int, sound: Int?) {
-        val notification = Notification(id, message, urgency)
-        if (sound != null) {
-            notification.soundId = sound
-        }
-        sendEvent(EventNewNotification(notification))
-    }
-
-    private fun sendEvent(event: Event) {
-        rxBus.send(event)
-    }
-
     fun readPodState(): String {
         return preferences.get(EquilStringKey.State)
     }
@@ -735,11 +723,7 @@ class EquilManager @Inject constructor(
         val parm = data[27].toInt() and 0xff
         val errorTips = getEquilError(port, level, parm)
         if (!TextUtils.isEmpty(errorTips) && currentIndex != historyIndex) {
-            showNotification(
-                Notification.FAILED_UPDATE_PROFILE,
-                errorTips,
-                Notification.NORMAL, app.aaps.core.ui.R.raw.alarm
-            )
+            notificationManager.post(NotificationId.FAILED_UPDATE_PROFILE, errorTips, soundRes = app.aaps.core.ui.R.raw.alarm)
             if (saveData) {
                 val time = System.currentTimeMillis()
                 val equilHistoryRecord = EquilHistoryRecord(EquilHistoryRecord.EventType.EQUIL_ALARM, time, getSerialNumber())

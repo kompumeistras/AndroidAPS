@@ -3,13 +3,12 @@ package app.aaps.pump.omnipod.dash.ui.wizard.deactivation.viewmodel.action
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.rx.AapsSchedulers
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.pump.omnipod.common.R
 import app.aaps.pump.omnipod.common.queue.command.CommandDeactivatePod
 import app.aaps.pump.omnipod.common.ui.wizard.deactivation.viewmodel.action.DeactivatePodViewModel
@@ -22,7 +21,7 @@ import javax.inject.Provider
 class DashDeactivatePodViewModel @Inject constructor(
     private val podStateManager: OmnipodDashPodStateManager,
     private val commandQueue: CommandQueue,
-    private val rxBus: RxBus,
+    private val notificationManager: NotificationManager,
     pumpEnactResultProvider: Provider<PumpEnactResult>,
     logger: AAPSLogger,
     aapsSchedulers: AapsSchedulers
@@ -41,7 +40,7 @@ class DashDeactivatePodViewModel @Inject constructor(
 
     override fun discardPod() {
         podStateManager.reset()
-        rxBus.send(EventDismissNotification(Notification.OMNIPOD_POD_FAULT))
+        notificationManager.dismiss(NotificationId.OMNIPOD_POD_FAULT)
     }
 
     @StringRes

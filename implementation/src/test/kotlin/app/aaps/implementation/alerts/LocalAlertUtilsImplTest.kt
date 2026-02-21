@@ -4,6 +4,7 @@ import app.aaps.core.data.pump.defs.PumpDescription
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.Pump
@@ -37,6 +38,7 @@ class LocalAlertUtilsImplTest : TestBase() {
     @Mock lateinit var config: Config
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var dateUtil: DateUtil
+    @Mock lateinit var notificationManager: NotificationManager
     @Mock lateinit var pump: Pump
     @Mock lateinit var pumpDescription: PumpDescription
 
@@ -69,7 +71,6 @@ class LocalAlertUtilsImplTest : TestBase() {
         localAlertUtils = LocalAlertUtilsImpl(
             aapsLogger,
             preferences,
-            rxBus,
             rh,
             activePlugin,
             profileFunction,
@@ -77,6 +78,7 @@ class LocalAlertUtilsImplTest : TestBase() {
             config,
             persistenceLayer,
             dateUtil,
+            notificationManager,
             testScope
         )
         whenever(dateUtil.now()).thenReturn(now)

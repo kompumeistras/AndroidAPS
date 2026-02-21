@@ -5,13 +5,14 @@ import android.content.Intent
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.notifications.Notification
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.pump.eopatch.EoPatchRxBus
@@ -53,7 +54,7 @@ class AlarmManager @Inject constructor() : IAlarmManager {
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var context: Context
     @Inject lateinit var aapsSchedulers: AapsSchedulers
-    @Inject lateinit var uiInteraction: UiInteraction
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var pm: PreferenceManager
     @Inject lateinit var patchManagerExecutor: PatchManagerExecutor
     @Inject lateinit var mAlarmRegistry: IAlarmRegistry
@@ -158,12 +159,12 @@ class AlarmManager @Inject constructor() : IAlarmManager {
             val expireTimeString = SimpleDateFormat(resourceHelper.gs(R.string.date_format_yyyy_m_d_e_a_hh_mm_comma), Locale.US).format(expireTimeValue)
             alarmMsg = resourceHelper.gs(alarmCode.resId, expireTimeString)
         }
-        uiInteraction.addNotificationWithAction(
-            id = Notification.EOFLOW_PATCH_ALERTS + (alarmCode.aeCode + 10000),
+        notificationManager.post(
+            id = NotificationId.EOFLOW_PATCH_ALERT,
             text = alarmMsg,
-            level = Notification.URGENT,
-            buttonText = (alarmCode == B001).takeOne(R.string.string_resume, R.string.confirm),
-            action = {
+            date = alarms.getOccuredAlarmTimestamp(alarmCode),
+            soundRes = app.aaps.core.ui.R.raw.error,
+            actions = listOf(NotificationAction((alarmCode == B001).takeOne(R.string.string_resume, R.string.confirm)) {
                 compositeDisposable.add(
                     Single.just(isValid(alarmCode))
                         .observeOn(aapsSchedulers.main)  //don't remove
@@ -194,10 +195,7 @@ class AlarmManager @Inject constructor() : IAlarmManager {
                             }
                         }
                 )
-            },
-            validityCheck = null,
-            soundId = app.aaps.core.ui.R.raw.error,
-            date = alarms.getOccuredAlarmTimestamp(alarmCode)
+            })
         )
 
     }
