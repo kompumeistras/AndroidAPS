@@ -150,6 +150,11 @@ class TddCalculatorImpl @Inject constructor(
             }
         runBlocking { persistenceLayer.getCarbsFromTimeToTimeExpanded(startTime, endTime, true) }.forEach { t ->
             tdd.carbs += t.amount
+            val profile = profileFunction.getProfile(t.timestamp)
+            if (profile != null) {
+                val ic = profile.getIc(t.timestamp)
+                if (ic > 0) tdd.carbInsulin += t.amount / ic
+            }
         }
         val calculationStep = T.mins(5).msecs()
         for (t in startTimeAligned until endTimeAligned step calculationStep) {
@@ -183,12 +188,14 @@ class TddCalculatorImpl @Inject constructor(
             totalTdd.bolusAmount += tdd.bolusAmount
             totalTdd.totalAmount += tdd.totalAmount
             totalTdd.carbs += tdd.carbs
+            totalTdd.carbInsulin += tdd.carbInsulin
             if (tdd.carbs == 0.0) hasCarbs = false
         }
         totalTdd.basalAmount /= tdds.size().toDouble()
         totalTdd.bolusAmount /= tdds.size().toDouble()
         totalTdd.totalAmount /= tdds.size().toDouble()
         totalTdd.carbs /= tdds.size().toDouble()
+        totalTdd.carbInsulin /= tdds.size().toDouble()
         return AverageTDD(data = totalTdd, allDaysHaveCarbs = hasCarbs)
     }
 }

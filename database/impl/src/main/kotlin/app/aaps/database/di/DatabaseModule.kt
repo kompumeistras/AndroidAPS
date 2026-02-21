@@ -9,6 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import app.aaps.database.AppDatabase
 import app.aaps.database.entities.TABLE_APS_RESULTS
 import app.aaps.database.entities.TABLE_HEART_RATE
+import app.aaps.database.entities.TABLE_TOTAL_DAILY_DOSES
 import app.aaps.database.entities.TABLE_PREFERENCE_CHANGES
 import app.aaps.database.entities.TABLE_RUNNING_MODE
 import app.aaps.database.entities.TABLE_STEPS_COUNT
@@ -202,7 +203,17 @@ open class DatabaseModule {
         }
     }
 
+    internal val migration31to32 = object : Migration(31, 32) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add carbInsulin column to TDD table — cached data, old rows get default 0 and will be recalculated
+            db.execSQL("DELETE FROM $TABLE_TOTAL_DAILY_DOSES")
+            db.execSQL("ALTER TABLE `$TABLE_TOTAL_DAILY_DOSES` ADD COLUMN `carbInsulin` REAL NOT NULL DEFAULT 0")
+            // Custom indexes must be dropped on migration to pass room schema checking after upgrade
+            dropCustomIndexes(db)
+        }
+    }
+
     /** List of all migrations for easy reply in tests. */
     @VisibleForTesting
-    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31)
+    internal val migrations = arrayOf(migration20to21, migration21to22, migration22to23, migration23to24, migration24to25, migration25to26, migration26to27, migration27to28, migration28to29, migration29to30, migration30to31, migration31to32)
 }

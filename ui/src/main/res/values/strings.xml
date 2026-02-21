@@ -233,6 +233,19 @@
     <string name="permission_directory_picker_error">Unable to launch directory picker. Usually Android or Family Link issue.</string>
     <string name="permission_nav_label">Permissions</string>
 
+    <!--    TDD Cycle Pattern -->
+    <string name="tdd_cycle_pattern">TDD Cycle Pattern</string>
+    <string name="tdd_cycle_pattern_desc">Overlay daily insulin totals in 28-day cycles to spot recurring patterns</string>
+    <string name="cycle_offset">Cycle offset</string>
+    <string name="raw_tdd">Raw TDD</string>
+    <string name="cleaned_tdd">Cleaned TDD</string>
+    <string name="cleaned_tdd_explanation">TDD minus insulin for carbs.</string>
+    <string name="cycle_lines_legend">Individual cycles</string>
+    <string name="cycles_found">%1$d cycles (%2$d days)</string>
+    <string name="cycle_day1_date">Day 1 = %1$s</string>
+    <string name="calculation_in_progress_percent">Calculating… %1$d%%</string>
+    <string name="not_enough_data_for_cycles">Not enough data (need at least 56 days for 2 cycles)</string>
+
     <string-array name="yes_no_positiveonly_negativeonly">
         <item>Both</item>
         <item>Positive only</item>
