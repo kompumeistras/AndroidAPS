@@ -93,7 +93,14 @@ data class GeneralColors(
     val versionWarning: Color,
     val versionUncommitted: Color,
     // Chart colors
-    val cycleAverage: Color
+    val cycleAverage: Color,
+    // Notification colors
+    val notificationUrgent: Color,
+    val notificationNormal: Color,
+    val notificationLow: Color,
+    val notificationInfo: Color,
+    val notificationAnnouncement: Color,
+    val onNotification: Color
 )
 
 /**
@@ -140,7 +147,14 @@ internal val LightGeneralColors = GeneralColors(
     versionCommitted = Color(0xFFB2B2B2),    // gray for official/committed builds (matches omniGrayColor)
     versionWarning = Color(0xFFFF8C00),      // orange for newer version available (matches metadataTextWarningColor)
     versionUncommitted = Color(0xFFFF4444),  // red for uncommitted dev builds (matches urgentColor/alarm)
-    cycleAverage = Color(0xFF2E7D32)         // dark green for cycle pattern average line
+    cycleAverage = Color(0xFF2E7D32),         // dark green for cycle pattern average line
+    // Notification colors (same in both modes — high contrast on any background)
+    notificationUrgent = Color(0xFFFF0400),       // red for urgent notifications
+    notificationNormal = Color(0xFFFF5E55),       // salmon for normal notifications
+    notificationLow = Color(0xFFFF827C),          // pink-red for low priority
+    notificationInfo = Color(0xFF009705),         // green for info notifications
+    notificationAnnouncement = Color(0xFFFF8C00), // orange for announcements
+    onNotification = Color(0xFFFFFFFF)            // white text on notification backgrounds
 )
 
 /**
@@ -187,7 +201,14 @@ internal val DarkGeneralColors = GeneralColors(
     versionCommitted = Color(0xFFB2B2B2),    // gray for official/committed builds
     versionWarning = Color(0xFFFF8C00),      // orange for newer version available
     versionUncommitted = Color(0xFFFF4444),  // red for uncommitted dev builds
-    cycleAverage = Color(0xFF66BB6A)         // lighter green for cycle pattern average line (dark mode)
+    cycleAverage = Color(0xFF66BB6A),         // lighter green for cycle pattern average line (dark mode)
+    // Notification colors (same values — high contrast on dark background)
+    notificationUrgent = Color(0xFFFF0400),
+    notificationNormal = Color(0xFFFF5E55),
+    notificationLow = Color(0xFFFF827C),
+    notificationInfo = Color(0xFF009705),
+    notificationAnnouncement = Color(0xFFFF8C00),
+    onNotification = Color(0xFFFFFFFF)
 )
 
 /**

@@ -207,42 +207,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
         }
         passwordResetCheck(this)
         exportPasswordResetCheck(this)
-
-        // check if identification is set
-        if (config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank())
-            notificationManager.post(
-                id = NotificationId.IDENTIFICATION_NOT_SET,
-                R.string.identification_not_set,
-                level = NotificationLevel.INFO,
-                actions = listOf(NotificationAction(R.string.set) {
-                    preferences.put(BooleanKey.GeneralSimpleMode, false)
-                    startActivity(
-                        Intent(this@MainActivity, PreferencesActivity::class.java)
-                            .setAction("info.nightscout.androidaps.MainActivity")
-                            .putExtra(UiInteraction.PLUGIN_NAME, MaintenancePlugin::class.java.simpleName)
-                    )
-                }),
-                validityCheck = { config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank() }
-            )
-
-        if (preferences.get(StringKey.ProtectionMasterPassword) == "")
-            notificationManager.post(
-                id = NotificationId.MASTER_PASSWORD_NOT_SET,
-                app.aaps.core.ui.R.string.master_password_not_set,
-                level = NotificationLevel.NORMAL,
-                actions = listOf(NotificationAction(R.string.set) {
-                    startActivity(Intent(this@MainActivity, PreferencesActivity::class.java).setAction("info.nightscout.androidaps.MainActivity").putExtra(UiInteraction.PREFERENCE, UiInteraction.Preferences.PROTECTION))
-                }),
-                validityCheck = { preferences.get(StringKey.ProtectionMasterPassword) == "" }
-            )
-        if (preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty())
-            notificationManager.post(
-                id = NotificationId.AAPS_DIR_NOT_SELECTED,
-                app.aaps.core.ui.R.string.aaps_directory_not_selected,
-                level = NotificationLevel.LOW,
-                actions = listOf(NotificationAction(R.string.select) { maintenancePlugin.selectAapsDirectory(this) }),
-                validityCheck = { preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty() }
-            )
     }
 
     private fun startWizard(): Boolean =

@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +37,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +57,9 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.interfaces.notifications.AapsNotification
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.icons.IcSettingsOff
@@ -65,6 +70,8 @@ import app.aaps.core.ui.compose.statusLevelToColor
 import app.aaps.ui.compose.main.TempTargetChipState
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.manage.ManageViewModel
+import app.aaps.ui.compose.overview.notifications.NotificationBottomSheet
+import app.aaps.ui.compose.overview.notifications.NotificationFab
 import app.aaps.ui.compose.overview.statusLights.StatusItem
 import app.aaps.ui.compose.overview.statusLights.StatusSectionContent
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
@@ -94,6 +101,12 @@ fun OverviewScreen(
     onFillClick: () -> Unit,
     onInsulinChangeClick: () -> Unit,
     onBatteryChangeClick: () -> Unit,
+    notifications: List<AapsNotification>,
+    onDismissNotification: (AapsNotification) -> Unit,
+    onNotificationActionClick: (AapsNotification) -> Unit,
+    autoShowNotificationSheet: Boolean,
+    onAutoShowConsumed: () -> Unit,
+    dateUtil: DateUtil,
     paddingValues: PaddingValues,
     preferences: Preferences,
     config: Config,
@@ -103,12 +116,24 @@ fun OverviewScreen(
     val bgInfoState by graphViewModel.bgInfoState.collectAsState()
     val statusState by statusViewModel.uiState.collectAsState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .verticalScroll(rememberScrollState())
-    ) {
+    // Notification bottom sheet state
+    var showNotificationSheet by remember { mutableStateOf(false) }
+
+    // Auto-show bottom sheet on resume when urgent notifications exist
+    LaunchedEffect(autoShowNotificationSheet) {
+        if (autoShowNotificationSheet) {
+            showNotificationSheet = true
+            onAutoShowConsumed()
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+        ) {
         // Calculation progress bar
         if (calcProgress < 100) {
             LinearProgressIndicator(
@@ -244,6 +269,29 @@ fun OverviewScreen(
 
         // Graph content - New Compose/Vico graphs
         OverviewGraphsSection(graphViewModel = graphViewModel)
+    }
+
+        // Notification FAB overlay
+        NotificationFab(
+            notificationCount = notifications.size,
+            highestLevel = notifications.minByOrNull { it.level.ordinal }?.level,
+            onClick = { showNotificationSheet = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(paddingValues)
+                .padding(end = 16.dp, bottom = 72.dp)
+        )
+    }
+
+    // Notification bottom sheet
+    if (showNotificationSheet && notifications.isNotEmpty()) {
+        NotificationBottomSheet(
+            notifications = notifications,
+            dateUtil = dateUtil,
+            onDismissSheet = { showNotificationSheet = false },
+            onDismissNotification = onDismissNotification,
+            onNotificationActionClick = onNotificationActionClick
+        )
     }
 }
 

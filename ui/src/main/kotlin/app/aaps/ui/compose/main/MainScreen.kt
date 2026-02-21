@@ -29,7 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.aaps.core.data.plugin.PluginType
+import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.LongComposedKey
 import app.aaps.core.ui.compose.AapsFab
 import app.aaps.core.ui.compose.AapsTheme
@@ -125,6 +127,13 @@ fun MainScreen(
     onCalibrationClick: (() -> Unit)?,
     onQuickWizardClick: ((String) -> Unit)? = null,
     onActionsError: (String, String) -> Unit,
+    // Notifications
+    notifications: List<AapsNotification>,
+    onDismissNotification: (AapsNotification) -> Unit,
+    onNotificationActionClick: (AapsNotification) -> Unit,
+    autoShowNotificationSheet: Boolean,
+    onAutoShowConsumed: () -> Unit,
+    dateUtil: DateUtil,
     // Permissions
     permissionsMissing: Boolean = false,
     onPermissionsClick: () -> Unit = {},
@@ -295,6 +304,12 @@ fun MainScreen(
                     onFillClick = onFillClick,
                     onInsulinChangeClick = onInsulinChangeClick,
                     onBatteryChangeClick = onBatteryChangeClick,
+                    notifications = notifications,
+                    onDismissNotification = onDismissNotification,
+                    onNotificationActionClick = onNotificationActionClick,
+                    autoShowNotificationSheet = autoShowNotificationSheet,
+                    onAutoShowConsumed = onAutoShowConsumed,
+                    dateUtil = dateUtil,
                     paddingValues = paddingValues,
                     preferences = preferences,
                     config = config

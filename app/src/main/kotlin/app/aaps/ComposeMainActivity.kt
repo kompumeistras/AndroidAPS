@@ -31,6 +31,9 @@ import app.aaps.compose.navigation.AppRoute
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.plugin.ActivePlugin
@@ -43,6 +46,7 @@ import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
 import app.aaps.core.interfaces.source.DexcomBoyda
 import app.aaps.core.interfaces.source.XDripSource
+import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
@@ -135,6 +139,8 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var iobCobCalculator: IobCobCalculator
     @Inject lateinit var prefFileList: FileListProvider
+    @Inject lateinit var notificationManager: NotificationManager
+    @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var builtInSearchables: BuiltInSearchables
 
     // ViewModels
@@ -162,6 +168,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var searchViewModel: SearchViewModel
     @Inject lateinit var permissionsViewModel: PermissionsViewModel
 
+    private val _autoShowNotifications = mutableStateOf(false)
     private val disposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -289,6 +296,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     composable(AppRoute.Main.route) {
                         val searchState by searchViewModel.uiState.collectAsState()
                         val calcProgress by mainViewModel.calcProgressFlow.collectAsState()
+                        val notifications by notificationManager.notifications.collectAsState()
 
                         MainScreen(
                             uiState = state,
@@ -509,6 +517,17 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onActionsError = { comment, title ->
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
                             },
+                            // Notifications
+                            notifications = notifications,
+                            onDismissNotification = { notification ->
+                                notificationManager.dismiss(notification.id)
+                            },
+                            onNotificationActionClick = { notification ->
+                                handleNotificationAction(notification.id, navController)
+                            },
+                            autoShowNotificationSheet = _autoShowNotifications.value,
+                            onAutoShowConsumed = { _autoShowNotifications.value = false },
+                            dateUtil = dateUtil,
                             permissionsMissing = permState.hasAnyMissing,
                             onPermissionsClick = {
                                 permissionsViewModel.showSheet()
@@ -838,6 +857,10 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
         // Profile and TempTarget state are now updated reactively via OverviewDataCache flows
         manageViewModel.refreshState()
         permissionsViewModel.refresh(this)
+        // Auto-show notification sheet if urgent notifications exist
+        if (notificationManager.notifications.value.any { it.level == NotificationLevel.URGENT }) {
+            _autoShowNotifications.value = true
+        }
     }
 
     override fun updateButtons() {
@@ -878,6 +901,23 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     private fun switchToClassicUi() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
+    }
+
+    private fun handleNotificationAction(notificationId: NotificationId, navController: NavController) {
+        when (notificationId) {
+            NotificationId.IDENTIFICATION_NOT_SET   ->
+                navController.navigate(AppRoute.PreferenceScreen.createRoute("data_choice_setting", StringKey.MaintenanceIdentification.key))
+
+            NotificationId.MASTER_PASSWORD_NOT_SET   ->
+                navController.navigate(AppRoute.PreferenceScreen.createRoute("protection", StringKey.ProtectionMasterPassword.key))
+
+            NotificationId.AAPS_DIR_NOT_SELECTED     ->
+                try {
+                    accessTree?.launch(null)
+                } catch (_: Exception) { }
+
+            else                                     -> Unit
+        }
     }
 
     private fun handleMenuItemClick(menuItem: MainMenuItem, navController: NavController) {

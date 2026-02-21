@@ -22,6 +22,10 @@ import app.aaps.core.interfaces.alerts.LocalAlertUtils
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
+import app.aaps.core.interfaces.notifications.NotificationAction
+import app.aaps.core.interfaces.notifications.NotificationId
+import app.aaps.core.interfaces.notifications.NotificationLevel
+import app.aaps.core.interfaces.notifications.NotificationManager
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -110,6 +114,7 @@ class MainApp : DaggerApplication() {
     @Inject lateinit var processLifecycleListener: Provider<ProcessLifecycleListener>
     @Inject lateinit var themeSwitcherPlugin: ThemeSwitcherPlugin
     @Inject lateinit var localAlertUtils: LocalAlertUtils
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var rh: Provider<ResourceHelper>
     @Inject lateinit var loop: Loop
     @Inject lateinit var profileFunction: ProfileFunction
@@ -192,6 +197,7 @@ class MainApp : DaggerApplication() {
                     }
             }, 10000
         )
+        postSetupNotifications()
         KeepAliveWorker.schedule(this@MainApp)
         localAlertUtils.shortenSnoozeInterval()
         localAlertUtils.preSnoozeAlarms()
@@ -204,6 +210,36 @@ class MainApp : DaggerApplication() {
         handler.postDelayed(refreshWidget, 60000)
         config.appInitialized = true
         aapsLogger.debug("doInit end")
+    }
+
+    private fun postSetupNotifications() {
+        // Identification not set (dev builds only)
+        if (config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank())
+            notificationManager.post(
+                id = NotificationId.IDENTIFICATION_NOT_SET,
+                R.string.identification_not_set,
+                level = NotificationLevel.INFO,
+                actions = listOf(NotificationAction(R.string.set) {}),
+                validityCheck = { config.isDev() && preferences.get(StringKey.MaintenanceIdentification).isBlank() }
+            )
+        // Master password not set
+        if (preferences.get(StringKey.ProtectionMasterPassword) == "")
+            notificationManager.post(
+                id = NotificationId.MASTER_PASSWORD_NOT_SET,
+                app.aaps.core.ui.R.string.master_password_not_set,
+                level = NotificationLevel.NORMAL,
+                actions = listOf(NotificationAction(R.string.set) {}),
+                validityCheck = { preferences.get(StringKey.ProtectionMasterPassword) == "" }
+            )
+        // AAPS directory not selected
+        if (preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty())
+            notificationManager.post(
+                id = NotificationId.AAPS_DIR_NOT_SELECTED,
+                app.aaps.core.ui.R.string.aaps_directory_not_selected,
+                level = NotificationLevel.LOW,
+                actions = listOf(NotificationAction(R.string.select) {}),
+                validityCheck = { preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty() }
+            )
     }
 
     private fun setRxErrorHandler() {
