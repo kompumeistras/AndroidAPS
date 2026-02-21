@@ -243,6 +243,7 @@
     <string name="wizard_result_bg_tt">ГК (ВЦ: %1$s)</string>
     <string name="wizard_result_trend">тренд 15\'</string>
     <string name="wizard_result_iob">IOB акт инс</string>
+    <string name="wizard_result_new_iob">Новый активный инсулин IOB %1$s ед</string>
     <string name="wizard_result_cob">акт угл COB (%1$.1f g)</string>
     <string name="wizard_result_carbs">Углеводы (%1$d g)</string>
     <string name="wizard_result_subtotal">Подытог</string>
