@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,7 +43,7 @@ import app.aaps.core.data.ue.Action
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.ui.R
 import app.aaps.ui.compose.overview.toColor
-import app.aaps.ui.compose.overview.toIconRes
+import app.aaps.ui.compose.overview.toIcon
 import kotlinx.coroutines.delay
 
 /**
@@ -75,7 +74,7 @@ fun RunningModeScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            painter = painterResource(state.currentMode.toIconRes()),
+                            imageVector = state.currentMode.toIcon(),
                             contentDescription = null,
                             tint = state.currentMode.toColor(),
                             modifier = Modifier.size(24.dp)
@@ -393,7 +392,7 @@ private fun CompactButton(
             modifier = Modifier.padding(horizontal = 2.dp, vertical = 4.dp)
         ) {
             Icon(
-                painter = painterResource(id = mode.toIconRes()),
+                imageVector = mode.toIcon(),
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
                 tint = iconColor

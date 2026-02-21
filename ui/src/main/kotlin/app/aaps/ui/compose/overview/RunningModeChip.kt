@@ -17,19 +17,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.IcLoopClosed
+import app.aaps.core.ui.compose.icons.IcLoopDisabled
+import app.aaps.core.ui.compose.icons.IcLoopDisconnected
+import app.aaps.core.ui.compose.icons.IcLoopLgs
+import app.aaps.core.ui.compose.icons.IcLoopOpen
+import app.aaps.core.ui.compose.icons.IcLoopPaused
+import app.aaps.core.ui.compose.icons.IcLoopSuperbolus
 
 @Composable
 fun RunningModeChip(
     mode: RM.Mode,
     text: String,
     progress: Float,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     val isTemporary = mode.mustBeTemporary()
     val iconColor = mode.toColor()
@@ -50,7 +57,7 @@ fun RunningModeChip(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(
-                    painter = painterResource(mode.toIconRes()),
+                    imageVector = mode.toIcon(),
                     contentDescription = null,
                     tint = iconColor,
                     modifier = Modifier.size(24.dp)
@@ -98,20 +105,20 @@ internal fun RM.Mode.toColor(): Color = when (this) {
 }
 
 /**
- * Extension to get icon resource for RM.Mode
+ * Extension to get Compose icon for RM.Mode
  */
-internal fun RM.Mode.toIconRes(): Int = when (this) {
-    RM.Mode.CLOSED_LOOP       -> app.aaps.core.objects.R.drawable.ic_loop_closed
-    RM.Mode.CLOSED_LOOP_LGS   -> app.aaps.core.ui.R.drawable.ic_loop_lgs
-    RM.Mode.OPEN_LOOP         -> app.aaps.core.ui.R.drawable.ic_loop_open
-    RM.Mode.DISABLED_LOOP     -> app.aaps.core.ui.R.drawable.ic_loop_disabled
-    RM.Mode.SUPER_BOLUS       -> app.aaps.core.ui.R.drawable.ic_loop_superbolus
-    RM.Mode.DISCONNECTED_PUMP -> app.aaps.core.ui.R.drawable.ic_loop_disconnected
+internal fun RM.Mode.toIcon(): ImageVector = when (this) {
+    RM.Mode.CLOSED_LOOP       -> IcLoopClosed
+    RM.Mode.CLOSED_LOOP_LGS   -> IcLoopLgs
+    RM.Mode.OPEN_LOOP         -> IcLoopOpen
+    RM.Mode.DISABLED_LOOP     -> IcLoopDisabled
+    RM.Mode.SUPER_BOLUS       -> IcLoopSuperbolus
+    RM.Mode.DISCONNECTED_PUMP -> IcLoopDisconnected
     RM.Mode.SUSPENDED_BY_PUMP,
     RM.Mode.SUSPENDED_BY_USER,
-    RM.Mode.SUSPENDED_BY_DST  -> app.aaps.core.ui.R.drawable.ic_loop_paused
+    RM.Mode.SUSPENDED_BY_DST  -> IcLoopPaused
 
-    RM.Mode.RESUME            -> app.aaps.core.objects.R.drawable.ic_loop_closed
+    RM.Mode.RESUME            -> IcLoopClosed
 }
 
 @Preview(showBackground = true)

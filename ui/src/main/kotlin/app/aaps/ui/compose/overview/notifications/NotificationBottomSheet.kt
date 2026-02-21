@@ -33,7 +33,7 @@ import app.aaps.core.ui.compose.icons.IcPluginMaintenance
 import app.aaps.core.ui.compose.icons.IcPluginNsClient
 import app.aaps.core.ui.compose.icons.IcPluginVirtualPump
 import app.aaps.core.ui.compose.icons.IcProfile
-import app.aaps.core.ui.compose.icons.library.IcLoopClosed
+import app.aaps.core.ui.compose.icons.IcLoopClosed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

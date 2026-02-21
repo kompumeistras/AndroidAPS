@@ -191,8 +191,8 @@ fun OverviewScreen(
                             mode = runningMode,
                             text = runningModeText,
                             progress = runningModeProgress,
-                            onClick = onRunningModeClick,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            onClick = onRunningModeClick
                         )
                         if (isSimpleMode) {
                             Icon(

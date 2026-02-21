@@ -2,7 +2,9 @@ package app.aaps.ui.compose.main
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.GppMaybe
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -13,11 +15,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.icons.IcAutomation
-import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.ui.R
 import app.aaps.core.ui.R as CoreUiR
 
@@ -25,12 +25,12 @@ import app.aaps.core.ui.R as CoreUiR
 fun MainNavigationBar(
     onManageClick: () -> Unit,
     onTreatmentClick: () -> Unit,
+    modifier: Modifier = Modifier,
     quickWizardCount: Int = 0,
     onAutomationClick: () -> Unit = {},
     automationCount: Int = 0,
     permissionsMissing: Boolean = false,
-    onPermissionsClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onPermissionsClick: () -> Unit = {}
 ) {
     val navColors = NavigationBarItemDefaults.colors(
         selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -45,20 +45,6 @@ fun MainNavigationBar(
         contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = modifier
     ) {
-        // Overview tab (always selected)
-        NavigationBarItem(
-            selected = true,
-            onClick = { },
-            icon = {
-                Icon(
-                    painter = painterResource(id = CoreUiR.drawable.ic_home),
-                    contentDescription = stringResource(CoreUiR.string.overview)
-                )
-            },
-            label = { Text(text = stringResource(CoreUiR.string.overview)) },
-            colors = navColors
-        )
-
         // Treatment action button (opens bottom sheet)
         NavigationBarItem(
             selected = false,
@@ -72,7 +58,7 @@ fun MainNavigationBar(
                     }
                 ) {
                     Icon(
-                        imageVector = IcBolus,
+                        imageVector = Icons.Default.Fastfood,
                         contentDescription = stringResource(CoreUiR.string.treatments),
                         modifier = Modifier.size(24.dp)
                     )
@@ -109,7 +95,7 @@ fun MainNavigationBar(
             onClick = onManageClick,
             icon = {
                 Icon(
-                    painter = painterResource(id = app.aaps.core.objects.R.drawable.ic_action),
+                    imageVector = Icons.Default.ManageAccounts,
                     contentDescription = stringResource(CoreUiR.string.manage)
                 )
             },
