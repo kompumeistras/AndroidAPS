@@ -214,16 +214,19 @@ fun BgGraphCompose(
                 }
             }
 
-            // Block 4 → EPS layer (layer 3, end axis — shares with basal, no visible axis)
+            // Block 4 → EPS layer (layer 3, end axis — Y-values normalized to basal coordinate space)
+            // EPS shares End axis with basal, so Y-values must fit within basalMaxY range.
+            // Place icons at 75% of chart height for 100% profile, scaled proportionally.
             lineSeries {
                 if (currentEpsPoints.isNotEmpty()) {
+                    val epsBaseline = currentBasalData.maxBasal * 4.0 * 0.75 // 75% of basalMaxY
                     val pts = currentEpsPoints
-                        .map { timestampToX(it.timestamp, minTimestamp) to it.originalPercentage.toDouble() }
+                        .map { timestampToX(it.timestamp, minTimestamp) to (it.originalPercentage / 100.0 * epsBaseline) }
                         .sortedBy { it.first }
                     series(x = pts.map { it.first }, y = pts.map { it.second })
                 } else {
-                    // Dummy series - invisible
-                    series(x = listOf(0.0, 1.0), y = listOf(100.0, 100.0))
+                    // Dummy series - invisible at y=0
+                    series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                 }
             }
         }
@@ -386,13 +389,8 @@ fun BgGraphCompose(
 
     val epsLines = remember(epsLine) { listOf(epsLine) }
 
-    // EPS Y-axis range: 0 to max(200, maxPercentage) so 100% is mid-chart
-    val epsMaxY = remember(epsPoints) {
-        val maxPct = epsPoints.maxOfOrNull { it.originalPercentage }?.toDouble() ?: 100.0
-        maxOf(200.0, maxPct * 1.5)
-    }
-
     // Basal Y-axis range: maxBasal * 4 so basal occupies ~25% of chart height
+    // EPS layer shares End axis with basal, so both must use the same Y-range (basalMaxY)
     val basalMaxY = remember(basalData.maxBasal) {
         if (basalData.maxBasal > 0.0) basalData.maxBasal * 4.0 else 1.0
     }
@@ -440,11 +438,11 @@ fun BgGraphCompose(
                 rangeProvider = remember(maxX) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX) },
                 verticalAxisPosition = Axis.Position.Vertical.Start
             ),
-            // Layer 3: EPS (end axis — percentage Y values, no visible axis)
+            // Layer 3: EPS (end axis — shares basalMaxY range, EPS Y-values normalized in rebuildChart)
             rememberLineCartesianLayer(
                 lineProvider = LineCartesianLayer.LineProvider.series(epsLines),
-                rangeProvider = remember(maxX, epsMaxY) {
-                    CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = 0.0, maxY = epsMaxY)
+                rangeProvider = remember(maxX, basalMaxY) {
+                    CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = 0.0, maxY = basalMaxY)
                 },
                 verticalAxisPosition = Axis.Position.Vertical.End
             ),

@@ -104,11 +104,11 @@ fun BgInfoSection(
                     val ringCenterX = topLeft.x + arcSize.width / 2
                     val ringCenterY = topLeft.y + arcSize.height / 2
                     val ringRadius = arcSize.width / 2
-                    val triHeight = strokeWidth * 1.3f
-                    val triHalfBase = strokeWidth * 0.7f
+                    val triHeight = strokeWidth * 1.2f
+                    val triHalfBase = strokeWidth * 1.6f
                     val n = indicator.triangleCount
                     val baseDist = ringRadius + strokeWidth * 0.2f
-                    val angularSpacing = Math.toDegrees((triHalfBase * 2.2 / ringRadius).toDouble()).toFloat()
+                    val angularSpacing = Math.toDegrees((triHalfBase * 1.6 / ringRadius)).toFloat()
 
                     for (i in 0 until n) {
                         val triAngle = indicator.centerAngle + (i - (n - 1) / 2f) * angularSpacing
