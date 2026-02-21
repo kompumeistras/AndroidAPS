@@ -112,7 +112,6 @@ fun MainScreen(
     onTempBasalClick: () -> Unit,
     onExtendedBolusClick: () -> Unit,
     onHistoryBrowserClick: () -> Unit,
-    onTddStatsClick: () -> Unit,
     onQuickWizardManagementClick: () -> Unit,
     onBgCheckClick: () -> Unit,
     onNoteClick: () -> Unit,
@@ -427,12 +426,12 @@ fun MainScreen(
         val manageState by manageViewModel.uiState.collectAsState()
         ManageBottomSheet(
             onDismiss = { showManageSheet = false },
+            isSimpleMode = uiState.isSimpleMode,
             showTempTarget = manageState.showTempTarget,
             showTempBasal = manageState.showTempBasal,
             showCancelTempBasal = manageState.showCancelTempBasal,
             showExtendedBolus = manageState.showExtendedBolus,
             showCancelExtendedBolus = manageState.showCancelExtendedBolus,
-            showTddStats = manageState.showTddStats,
             cancelTempBasalText = manageState.cancelTempBasalText,
             cancelExtendedBolusText = manageState.cancelExtendedBolusText,
             customActions = manageState.customActions,
@@ -460,7 +459,6 @@ fun MainScreen(
             onQuestionClick = onQuestionClick,
             onAnnouncementClick = onAnnouncementClick,
             onSiteRotationClick = onSiteRotationClick,
-            onTddStatsClick = onTddStatsClick,
             onQuickWizardClick = onQuickWizardManagementClick,
             onCustomActionClick = { manageViewModel.executeCustomAction(it.customActionType) }
         )

@@ -451,9 +451,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onHistoryBrowserClick = {
                                 startActivity(Intent(this@ComposeMainActivity, uiInteraction.historyBrowseActivity))
                             },
-                            onTddStatsClick = {
-                                startActivity(Intent(this@ComposeMainActivity, uiInteraction.tddStatsActivity))
-                            },
                             onQuickWizardManagementClick = {
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                                     if (result == ProtectionResult.GRANTED) {

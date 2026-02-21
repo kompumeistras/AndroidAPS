@@ -35,7 +35,6 @@ import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.core.ui.compose.icons.IcQuestion
 import app.aaps.core.ui.compose.icons.IcQuickwizard
 import app.aaps.core.ui.compose.icons.IcSiteRotation
-import app.aaps.core.ui.compose.icons.IcStats
 import app.aaps.core.ui.compose.icons.IcTbrCancel
 import app.aaps.core.ui.compose.icons.IcTbrHigh
 import app.aaps.core.ui.compose.icons.IcTtHigh
@@ -45,13 +44,13 @@ import app.aaps.core.ui.R as CoreUiR
 @Composable
 fun ManageBottomSheet(
     onDismiss: () -> Unit,
+    isSimpleMode: Boolean,
     // Visibility flags
     showTempTarget: Boolean,
     showTempBasal: Boolean,
     showCancelTempBasal: Boolean,
     showExtendedBolus: Boolean,
     showCancelExtendedBolus: Boolean,
-    showTddStats: Boolean,
     // Cancel text strings
     cancelTempBasalText: String,
     cancelExtendedBolusText: String,
@@ -70,7 +69,6 @@ fun ManageBottomSheet(
     onQuestionClick: () -> Unit,
     onAnnouncementClick: () -> Unit,
     onSiteRotationClick: () -> Unit,
-    onTddStatsClick: () -> Unit,
     onQuickWizardClick: () -> Unit,
     onCustomActionClick: (CustomAction) -> Unit
 ) {
@@ -82,12 +80,12 @@ fun ManageBottomSheet(
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         ManageBottomSheetContent(
+            isSimpleMode = isSimpleMode,
             showTempTarget = showTempTarget,
             showTempBasal = showTempBasal,
             showCancelTempBasal = showCancelTempBasal,
             showExtendedBolus = showExtendedBolus,
             showCancelExtendedBolus = showCancelExtendedBolus,
-            showTddStats = showTddStats,
             cancelTempBasalText = cancelTempBasalText,
             cancelExtendedBolusText = cancelExtendedBolusText,
             customActions = customActions,
@@ -104,7 +102,6 @@ fun ManageBottomSheet(
             onQuestionClick = onQuestionClick,
             onAnnouncementClick = onAnnouncementClick,
             onSiteRotationClick = onSiteRotationClick,
-            onTddStatsClick = onTddStatsClick,
             onQuickWizardClick = onQuickWizardClick,
             onCustomActionClick = onCustomActionClick
         )
@@ -113,12 +110,12 @@ fun ManageBottomSheet(
 
 @Composable
 internal fun ManageBottomSheetContent(
+    isSimpleMode: Boolean = false,
     showTempTarget: Boolean,
     showTempBasal: Boolean,
     showCancelTempBasal: Boolean,
     showExtendedBolus: Boolean,
     showCancelExtendedBolus: Boolean,
-    showTddStats: Boolean,
     cancelTempBasalText: String,
     cancelExtendedBolusText: String,
     customActions: List<CustomAction>,
@@ -135,7 +132,6 @@ internal fun ManageBottomSheetContent(
     onQuestionClick: () -> Unit = {},
     onAnnouncementClick: () -> Unit = {},
     onSiteRotationClick: () -> Unit = {},
-    onTddStatsClick: () -> Unit = {},
     onQuickWizardClick: () -> Unit = {},
     onCustomActionClick: (CustomAction) -> Unit = {}
 ) {
@@ -220,50 +216,52 @@ internal fun ManageBottomSheetContent(
             )
         }
 
-        // Section: Careportal
-        HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-        SectionHeader(stringResource(CoreUiR.string.careportal))
+        // Section: Careportal (hidden in simple mode)
+        if (!isSimpleMode) {
+            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+            SectionHeader(stringResource(CoreUiR.string.careportal))
 
-        ManageItem(
-            text = stringResource(CoreUiR.string.careportal_bgcheck),
-            iconPainter = rememberVectorPainter(IcBgCheck),
-            color = AapsTheme.elementColors.bgCheck,
-            onDismiss = onDismiss,
-            onClick = onBgCheckClick,
-            coloredText = false
-        )
-        ManageItem(
-            text = stringResource(CoreUiR.string.careportal_note),
-            iconPainter = rememberVectorPainter(IcNote),
-            color = AapsTheme.elementColors.careportal,
-            onDismiss = onDismiss,
-            onClick = onNoteClick,
-            coloredText = false
-        )
-        ManageItem(
-            text = stringResource(CoreUiR.string.careportal_exercise),
-            iconPainter = rememberVectorPainter(IcActivity),
-            color = AapsTheme.elementColors.exercise,
-            onDismiss = onDismiss,
-            onClick = onExerciseClick,
-            coloredText = false
-        )
-        ManageItem(
-            text = stringResource(CoreUiR.string.careportal_question),
-            iconPainter = rememberVectorPainter(IcQuestion),
-            color = AapsTheme.elementColors.careportal,
-            onDismiss = onDismiss,
-            onClick = onQuestionClick,
-            coloredText = false
-        )
-        ManageItem(
-            text = stringResource(CoreUiR.string.careportal_announcement),
-            iconPainter = rememberVectorPainter(IcAnnouncement),
-            color = AapsTheme.elementColors.announcement,
-            onDismiss = onDismiss,
-            onClick = onAnnouncementClick,
-            coloredText = false
-        )
+            ManageItem(
+                text = stringResource(CoreUiR.string.careportal_bgcheck),
+                iconPainter = rememberVectorPainter(IcBgCheck),
+                color = AapsTheme.elementColors.bgCheck,
+                onDismiss = onDismiss,
+                onClick = onBgCheckClick,
+                coloredText = false
+            )
+            ManageItem(
+                text = stringResource(CoreUiR.string.careportal_note),
+                iconPainter = rememberVectorPainter(IcNote),
+                color = AapsTheme.elementColors.careportal,
+                onDismiss = onDismiss,
+                onClick = onNoteClick,
+                coloredText = false
+            )
+            ManageItem(
+                text = stringResource(CoreUiR.string.careportal_exercise),
+                iconPainter = rememberVectorPainter(IcActivity),
+                color = AapsTheme.elementColors.exercise,
+                onDismiss = onDismiss,
+                onClick = onExerciseClick,
+                coloredText = false
+            )
+            ManageItem(
+                text = stringResource(CoreUiR.string.careportal_question),
+                iconPainter = rememberVectorPainter(IcQuestion),
+                color = AapsTheme.elementColors.careportal,
+                onDismiss = onDismiss,
+                onClick = onQuestionClick,
+                coloredText = false
+            )
+            ManageItem(
+                text = stringResource(CoreUiR.string.careportal_announcement),
+                iconPainter = rememberVectorPainter(IcAnnouncement),
+                color = AapsTheme.elementColors.announcement,
+                onDismiss = onDismiss,
+                onClick = onAnnouncementClick,
+                coloredText = false
+            )
+        }
 
         // Section: Tools
         HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
@@ -278,16 +276,6 @@ internal fun ManageBottomSheetContent(
             onDismiss = onDismiss,
             onClick = onSiteRotationClick
         )
-        if (showTddStats) {
-            ManageItem(
-                text = stringResource(CoreUiR.string.tdd_short),
-                iconPainter = rememberVectorPainter(IcStats),
-                color = toolsColor,
-                onDismiss = onDismiss,
-                onClick = onTddStatsClick
-            )
-        }
-
         // Section: Pump actions (only if non-empty)
         if (customActions.isNotEmpty()) {
             HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
@@ -355,7 +343,6 @@ private fun ManageBottomSheetContentPreview() {
             showCancelTempBasal = false,
             showExtendedBolus = true,
             showCancelExtendedBolus = false,
-            showTddStats = true,
             cancelTempBasalText = "",
             cancelExtendedBolusText = "",
             customActions = emptyList()

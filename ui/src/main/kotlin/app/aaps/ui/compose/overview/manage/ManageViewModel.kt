@@ -143,7 +143,6 @@ class ManageViewModel @Inject constructor(
                     showExtendedBolus = showExtendedBolus,
                     showCancelExtendedBolus = showCancelExtendedBolus,
                     showHistoryBrowser = profile != null,
-                    showTddStats = pumpDescription.supportsTDDs,
                     cancelTempBasalText = cancelTempBasalText,
                     cancelExtendedBolusText = cancelExtendedBolusText,
                     customActions = customActions
