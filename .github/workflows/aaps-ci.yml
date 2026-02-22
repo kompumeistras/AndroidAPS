@@ -23,128 +23,42 @@ jobs:
     name: Build AAPS
     runs-on: ubuntu-latest
     steps:
-      - name: Decode Secrets Keystore Set and Oauth2 to Env
+      - name: Decode Secrets Keystore Set to Env
         run: |
           if [ -n "${{ secrets.KEYSTORE_SET }}" ]; then
             echo "🔐 Decoding KEYSTORE_SET..."
             DECODED=$(echo "${{ secrets.KEYSTORE_SET }}" | base64 -d)
-
-            KEYSTORE_BASE64=$(echo "$DECODED" | cut -d'|' -f1)
-            KEYSTORE_PASSWORD=$(echo "$DECODED" | cut -d'|' -f2)
-            KEY_ALIAS=$(echo "$DECODED" | cut -d'|' -f3)
-            KEY_PASSWORD=$(echo "$DECODED" | cut -d'|' -f4)
-
-            echo "KEYSTORE_BASE64=$KEYSTORE_BASE64" >> $GITHUB_ENV
-            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> $GITHUB_ENV
-            echo "KEY_ALIAS=$KEY_ALIAS" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=$KEY_PASSWORD" >> $GITHUB_ENV
-
-            echo "::add-mask::$KEYSTORE_BASE64"
-            echo "::add-mask::$KEYSTORE_PASSWORD"
-            echo "::add-mask::$KEY_ALIAS"
-            echo "::add-mask::$KEY_PASSWORD"
-
-            echo "✅ Keystore parameters extracted from KEYSTORE_SET"
+            echo "KEYSTORE_BASE64=$(echo "$DECODED" | cut -d'|' -f1)" >> $GITHUB_ENV
+            echo "KEYSTORE_PASSWORD=$(echo "$DECODED" | cut -d'|' -f2)" >> $GITHUB_ENV
+            echo "KEY_ALIAS=$(echo "$DECODED" | cut -d'|' -f3)" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=$(echo "$DECODED" | cut -d'|' -f4)" >> $GITHUB_ENV
           else
-            echo "ℹ️ KEYSTORE_SET not provided, using separate secrets."
-            echo "KEYSTORE_BASE64=${{ secrets.KEYSTORE_BASE64 }}" >> $GITHUB_ENV
-            echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+            echo "ℹ️ Using separate secrets."
+            echo "KEYSTORE_BASE64=${{ secrets.RELEASE_KEYSTORE_CONTENTS }}" >> $GITHUB_ENV
+            echo "KEYSTORE_PASSWORD=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+            echo "KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}" >> $GITHUB_ENV
           fi
 
       - name: Check Secrets
         run: |
           echo "🔍 Checking required secrets..."
           MISSING=0
-
-          check_secret() {
-            if [ -z "$1" ]; then
-              echo "❌ Missing secret: $2"
-              MISSING=1
-            fi
-          }
-
-          # Check secrets
-          
-          check_secret "$KEYSTORE_BASE64" "KEYSTORE_BASE64"
-          check_secret "$KEYSTORE_PASSWORD" "KEYSTORE_PASSWORD"
-          check_secret "$KEY_ALIAS" "KEY_ALIAS"
-          check_secret "$KEY_PASSWORD" "KEY_PASSWORD"
-
-          if [ "$MISSING" -eq 1 ]; then
-            echo "🛑 Missing required secrets. Stopping build."
-            exit 1
-          fi
-
-          echo "✅ All required secrets are present."
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "❌ Missing: KEYSTORE_BASE64"; MISSING=1; fi
+          if [ "$MISSING" -eq 1 ]; then exit 1; fi
+          echo "✅ Secrets are present."
 
       - name: Decode keystore file
         run: |
           mkdir -p "$RUNNER_TEMP/keystore"
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/keystore/keystore.jks"
 
-      - name: Validating keystore, alias and password
-        run: |
-          set -x
-          echo "🔐 Validating keystore, alias and password"
-
-          # Create a dummy JAR file (quick method using zip)
-          echo "test" > dummy.txt
-          zip -q dummy.jar dummy.txt
-          rm dummy.txt
-          
-          # Attempt to validate using jarsigner
-          JARSIGNER_LOG=$(mktemp)
-          if ! jarsigner \
-              -keystore "$RUNNER_TEMP/keystore/keystore.jks" \
-              -storepass "$KEYSTORE_PASSWORD" \
-              -keypass "$KEY_PASSWORD" \
-              dummy.jar "$KEY_ALIAS" > "$JARSIGNER_LOG" 2>&1; then
-            echo "❌ Either KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_PASSWORD, or KEY_ALIAS is incorrect"
-            echo "🔍 jarsigner error output:"
-            cat "$JARSIGNER_LOG"
-            rm -f "$JARSIGNER_LOG" dummy.jar
-            exit 1
-          fi
-          rm -f "$JARSIGNER_LOG" dummy.jar
-          echo "✅ Keystore, alias, and key password are valid."
-
-          rm -f "$KEYTOOL_LOG"
-          echo "✅ Keystore and credentials validated."
-
-
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      - name: Set BUILD_VARIANT
-        run: |
-          BUILD_VARIANT="${{ github.event.inputs.buildVariant }}"
-          echo "BUILD_VARIANT=$BUILD_VARIANT" >> $GITHUB_ENV
-          VARIANT_FLAVOR=$(echo "$BUILD_VARIANT" | sed -E 's/(Release|Debug)$//' | tr '[:upper:]' '[:lower:]')
-          VARIANT_TYPE=$(echo "$BUILD_VARIANT" | grep -oE '(Release|Debug)$' | tr '[:upper:]' '[:lower:]')
-          echo "VARIANT_FLAVOR=$VARIANT_FLAVOR" >> $GITHUB_ENV
-          echo "VARIANT_TYPE=$VARIANT_TYPE" >> $GITHUB_ENV
-          VERSION_SUFFIX=""
-          if [[ "$VARIANT_FLAVOR" != "full" ]]; then VERSION_SUFFIX="$VARIANT_FLAVOR"; fi
-          if [[ "$VARIANT_TYPE" == "debug" ]]; then VERSION_SUFFIX="$VERSION_SUFFIX-debug"; fi
-          if [[ -n "$VERSION_SUFFIX" && "$VERSION_SUFFIX" != -* ]]; then VERSION_SUFFIX="-$VERSION_SUFFIX"; fi
-          echo "VERSION_SUFFIX=$VERSION_SUFFIX" >> $GITHUB_ENV
-
-      - name: Extract VERSION
-        run: |
-          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-          if echo "$BRANCH_NAME" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
-            VERSION="$BRANCH_NAME"
-          else
-            VERSION=$(grep 'val appVersion' buildSrc/src/main/kotlin/Versions.kt | awk -F '"' '{print $2}')
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          # When upgrading the JDK, please update this section accordingly as well.
           java-version: 21
           distribution: 'temurin'
           cache: gradle
@@ -154,25 +68,14 @@ jobs:
 
       - name: Build APKs
         run: |
-              ./gradlew :app:assemble${{ env.BUILD_VARIANT }} :wear:assemble${{ env.BUILD_VARIANT }} \
-              -Dorg.gradle.jvmargs="-Xmx8g -XX:+UseParallelGC -Xss1024m" \
-              -Dkotlin.daemon.jvm.options="-Xmx2g" \
-              -Dkotlin.compiler.execution.strategy="in-process" \
-              -Dorg.gradle.daemon=true \
-              -Dorg.gradle.workers.max=8 \
-              -Dorg.gradle.caching=true \
-              -Pandroid.injected.signing.store.file="$RUNNER_TEMP/keystore/keystore.jks" \
-              -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
-              -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
-
-      - name: Rename APKs with version
-        run: |
-          mv app/build/outputs/apk/${{ env.VARIANT_FLAVOR }}/${{ env.VARIANT_TYPE }}/*.apk aaps-${{ env.VERSION }}${{ env.VERSION_SUFFIX }}.apk
-          mv wear/build/outputs/apk/${{ env.VARIANT_FLAVOR }}/${{ env.VARIANT_TYPE }}/*.apk aaps-wear-${{ env.VERSION }}${{ env.VERSION_SUFFIX }}.apk
+          ./gradlew :app:assemble${{ github.event.inputs.buildVariant }} :wear:assemble${{ github.event.inputs.buildVariant }} \
+          -Pandroid.injected.signing.store.file="$RUNNER_TEMP/keystore/keystore.jks" \
+          -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+          -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+          -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
 
       - name: Upload APKs to GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: AAPS-Signed-APKs
-          path: ./*.apk
+          path: "**/build/outputs/apk/**/*.apk"
